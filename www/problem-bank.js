@@ -1229,14 +1229,15 @@
             const prod = a * b;
             const poly = `x² ${signedTerm(sum, 'x')} ${signedTerm(prod, '')}`;
 
-            const f1 = a >= 0 ? `x + ${a}` : `x − ${Math.abs(a)}`;
-            const f2 = b >= 0 ? `x + ${b}` : `x − ${Math.abs(b)}`;
+            const lin = k => (k >= 0 ? `x + ${k}` : `x − ${Math.abs(k)}`);
+            const f1 = lin(a);
+            const f2 = lin(b);
 
             const correct = `(${f1})(${f2})`;
             const distractors = [
               `(${a >= 0 ? 'x − ' + a : 'x + ' + Math.abs(a)})(${b >= 0 ? 'x − ' + b : 'x + ' + Math.abs(b)})`,
               `(${f1})(${b >= 0 ? 'x − ' + b : 'x + ' + Math.abs(b)})`,
-              `(x + ${sum})(x + ${prod})`
+              `(${lin(sum)})(${lin(prod)})`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
@@ -1249,7 +1250,7 @@
               steps: [
                 `상수항이 ${prod}이므로 두 정수의 곱은 ${prod}입니다.`,
                 `일차항의 계수가 ${sum}이므로 두 정수의 합은 ${sum}이어야 합니다.`,
-                `두 조건을 만족하는 두 정수는 ${wj(a, '과/와')} ${b}이므로 인수분해하면 (${f1})(${f2})가 됩니다.`
+                `두 조건을 만족하는 두 정수는 ${wj(a, '과/와')} ${b}이므로 인수분해하면 ${wj(`(${f1})(${f2})`, '이/가')} 됩니다.`
               ]
             };
           }
@@ -1430,7 +1431,7 @@
               variablesInfo: { 다항식: `P(x) = ${poly}`, 나누는식: divStr, 대입값: alpha },
               options,
               answerIndex,
-              hint: `나머지정리에 의해 다항식 P(x)를 (${divStr})로 나눈 나머지는 P(${alpha})의 값과 같습니다.`,
+              hint: `나머지정리에 의해 다항식 P(x)를 (${divStr})${jo(divStr, '으로/로')} 나눈 나머지는 P(${alpha})의 값과 같습니다.`,
               steps: [
                 `나누는 일차식 ${divStr} = 0이 되는 x의 값은 x = ${alpha}입니다.`,
                 `나머지정리에 의해 구하는 나머지는 P(${alpha})입니다.`,
@@ -1472,7 +1473,7 @@
               variablesInfo: { 일차항계수: b, 상수항: `k + (${shift})`, 경계값: bound },
               options,
               answerIndex,
-              hint: `'서로 다른 두 실근'이므로 판별식 D > 0 (등호 제외!)이어야 합니다. 짝수 판별식 D/4 = (${halfB})² − (k + ${shift}) > 0을 풀어 보세요.`,
+              hint: `'서로 다른 두 실근'이므로 판별식 D > 0 (등호 제외!)이어야 합니다. 짝수 판별식 D/4 = (${halfB})² − (k ${shift >= 0 ? '+ ' + shift : '− ' + Math.abs(shift)}) > 0을 풀어 보세요.`,
               steps: [
                 `이차방정식이 서로 다른 두 실근을 가지려면 판별식 D > 0이어야 합니다.`,
                 `짝수 판별식을 적용하면 D/4 = (${halfB})² − 1×(k ${shift >= 0 ? '+ ' + shift : '− ' + Math.abs(shift)}) > 0 입니다.`,
@@ -1556,7 +1557,7 @@
               variablesInfo: { 구간: `[${left}, ${right}]`, 대칭축: `x = ${p}`, 최댓값M: maxVal, 최솟값m: minVal },
               options,
               answerIndex,
-              hint: `완전제곱식 f(x) = (x − ${p})² ${signedTerm(q, '')} 으로 바꾸어 꼭짓점(${p})이 주어진 구간 안에 있는지 확인하세요.`,
+              hint: `완전제곱식 f(x) = ${wj(`(x − ${p})² ${signedTerm(q, '')}`, '으로/로')} 바꾸어 꼭짓점(${p})이 주어진 구간 안에 있는지 확인하세요.`,
               steps: [
                 `이차함수를 표준형으로 변형하면 f(x) = (x − ${p})² ${signedTerm(q, '')} 이므로 꼭짓점은 (${p}, ${q})입니다.`,
                 `x = ${wj(p, '이/가')} 주어진 범위 ${left} ≤ x ≤ ${right} 안에 포함되므로 최솟값 m = f(${p}) = ${minVal}입니다.`,
@@ -2356,7 +2357,7 @@
               hint: `우대율 ${discountPct}%는 20원 수수료 중 ${discountPct}%를 깎아준다는 뜻입니다. 실제 내는 1달러당 수수료는 20 × (1 − ${discountPct / 100})원입니다.`,
               steps: [
                 `우대 전 1달러당 현찰 살 때 환율은 ${baseRate} + 20 = ${baseRate + 20}원입니다.`,
-                `수수료 20원에 우대 ${discountPct}%를 적용하면 실제 수수료는 20 × (1 − ${discountPct / 100}) = ${appliedSpread}원입니다.`,
+                `수수료 20원에 우대 ${discountPct}%를 적용하면 실제 수수료는 20 × (1 − ${discountPct / 100}) = ${Math.round(appliedSpread * 100) / 100}원입니다.`,
                 `따라서 적용 환율은 ${baseRate} + ${appliedSpread} = ${appliedRate}원이며, ${amountUsd}달러 환전에 ${comma(totalKrw)}원이 필요합니다. (우대 미적용 대비 ${comma(saved)}원 절약)`
               ]
             };
@@ -2436,7 +2437,8 @@
             const naiveBase = total - naiveVat;
             const distractors = [
               `공급가액: ${comma(naiveBase)}원, 부가가치세: ${comma(naiveVat)}원 (총액의 10%로 오인)`,
-              `공급가액: ${comma(basePrice - 1000)}원, 부가가치세: ${comma(vat + 1000)}원`,
+              // 세율을 총액의 5%로 오인 (이전 '공급가액 −1,000원' 보기는 100,000원일 때 총액 10% 오인 보기와 숫자가 같았음)
+              `공급가액: ${comma(total - Math.round(total * 0.05))}원, 부가가치세: ${comma(Math.round(total * 0.05))}원`,
               `공급가액: ${comma(total)}원, 부가가치세: 0원`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
@@ -2527,7 +2529,7 @@
               variablesInfo: { 키: `${hCm}cm (${hm}m)`, 체중: `${weight}kg`, BMI: actualBmi },
               options,
               answerIndex,
-              hint: `키 ${hCm} cm를 m 단위로 바꾸면 ${hm} m입니다. BMI = ${weight} ÷ (${hm} × ${hm})을 계산하세요.`,
+              hint: `키 ${hCm} cm를 m 단위로 바꾸면 ${hm} m입니다. BMI = ${weight} ÷ (${hm} × ${hm})${jo(hm, '을/를')} 계산하세요.`,
               steps: [
                 `신장을 m 단위로 환산하면 ${hCm} cm = ${hm} m 입니다.`,
                 `키의 제곱은 ${hm} × ${hm} = ${hmSq} 입니다.`,
