@@ -98,6 +98,14 @@
     return (coef < 0 ? ' − ' : ' + ') + numStr + variable;
   }
 
+  // 복소수 a + bi 표기: 허수부 0 → 실수만, ±1 → ±i, 음수 → "−"
+  function cx(re, im) {
+    if (im === 0) return `${re}`;
+    const mag = Math.abs(im) === 1 ? '' : Math.abs(im);
+    if (re === 0) return `${im < 0 ? '−' : ''}${mag}i`;
+    return `${re} ${im > 0 ? '+' : '−'} ${mag}i`;
+  }
+
   function buildChoiceSet(rng, correct, distractors, fallbackGenerator) {
     const correctStr = String(correct);
     const unique = [correctStr];
@@ -1710,28 +1718,34 @@
             // 깔끔한 정수가 되도록 분자 설정
             const realPart = a * denReal + b;
             const imagPart = b * denReal - a;
-            const scaledReal = realPart * norm;
-            const scaledImag = imagPart * norm;
+            // 분자 = (정답)(분모) = (realPart + imagPart·i)(denReal + i)
+            //      = (realPart·denReal − imagPart) + (realPart + imagPart·denReal)i
+            const numReal = realPart * denReal - imagPart;
+            const numImag = realPart + imagPart * denReal;
+            const numStr = cx(numReal, numImag);
 
-            // ( (scaledReal + scaledImag*i) / (denReal + i) ) = norm * (realPart + imagPart*i) / norm = realPart + imagPart*i
-            const correct = `${realPart} ${imagPart >= 0 ? '+ ' + imagPart : '− ' + Math.abs(imagPart)}i`;
+            const correct = cx(realPart, imagPart);
             const distractors = [
-              `${realPart} ${imagPart >= 0 ? '− ' + imagPart : '+ ' + Math.abs(imagPart)}i`,
-              `${realPart - 2} ${imagPart >= 0 ? '+ ' + imagPart : '− ' + Math.abs(imagPart)}i`,
-              `${realPart * 2} + ${imagPart}i`
+              cx(realPart, -imagPart),          // 켤레 부호 착오
+              cx(realPart - 2, imagPart),       // i² = +1 로 착각
+              cx(realPart * 2, imagPart),       // 분모 실수화 후 약분 누락
+              cx(imagPart, realPart),           // 실수부·허수부 뒤바뀜
+              cx(realPart, imagPart + 2),
+              cx(realPart + 1, imagPart - 1)
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `복소수 z = (${realPart * norm} ${imagPart * norm >= 0 ? '+ ' + (imagPart * norm) : '− ' + Math.abs(imagPart * norm)}i) ÷ (${denReal} + i) 을(를) a + bi 꼴로 바르게 나타낸 것은?`,
-              variablesInfo: { 분자: `${realPart * norm} + ${imagPart * norm}i`, 분모: `${denReal} + i` },
+              question: `복소수 z = ${wj(`(${numStr}) ÷ (${denReal} + i)`, '을/를')} a + bi 꼴로 바르게 나타낸 것은?`,
+              variablesInfo: { 분자: numStr, 분모: `${denReal} + i` },
               options,
               answerIndex,
               hint: `분모의 켤레복소수인 (${denReal} − i)를 분자와 분모에 각각 곱해 분모를 실수로 만드세요. i² = −1 입니다.`,
               steps: [
                 `분모의 켤레복소수는 (${denReal} − i) 입니다.`,
                 `분모에 켤레복소수를 곱하면 (${denReal} + i)(${denReal} − i) = ${denReal}² − i² = ${norm} 입니다.`,
-                `분자에 곱해 전개한 후 ${wj(norm, '으로/로')} 약분하면 ${wj(correct, '이/가')} 됩니다.`
+                `분자에도 곱하면 (${numStr})(${denReal} − i) = ${cx(realPart * norm, imagPart * norm)} 입니다.`,
+                `${wj(norm, '으로/로')} 나누면 z = ${correct} 입니다.`
               ]
             };
           }
