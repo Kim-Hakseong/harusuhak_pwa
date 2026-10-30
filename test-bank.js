@@ -4,7 +4,7 @@
  */
 
 const assert = require('assert');
-require('./problem-bank.js');
+require('./www/problem-bank.js');
 
 const { CURRICULUM_PACKS, generateProblem, getAllTemplates } = global.HaruProblemBank;
 

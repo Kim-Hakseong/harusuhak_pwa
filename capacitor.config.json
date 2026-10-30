@@ -1,9 +1,15 @@
 {
   "appId": "kr.harusuhak.app",
   "appName": "하루수학",
-  "webDir": ".",
-  "bundledWebRuntime": false,
-  "server": {
-    "androidScheme": "https"
+  "webDir": "www",
+  "ios": {
+    "contentInset": "always"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "backgroundColor": "#f6f7f1",
+      "launchAutoHide": true,
+      "launchShowDuration": 1000
+    }
   }
 }

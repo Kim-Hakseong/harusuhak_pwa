@@ -3,8 +3,9 @@
   "version": "2.0.0",
   "description": "하루수학 - 한국 교육과정 기반 파라메트릭 일일 수학 PWA 및 모바일 앱",
   "scripts": {
-    "start": "npx --yes serve . -l 8080",
-    "test": "node test-bank.js"
+    "start": "pnpm dlx serve www -l 8080",
+    "test": "node test-bank.js && node verify/verify-answers.js --rounds 50 --bank www/problem-bank.js",
+    "verify:100": "node verify/verify-answers.js --rounds 100 --bank www/problem-bank.js"
   },
   "keywords": [
     "math",
@@ -12,5 +13,14 @@
     "pwa",
     "mobile-app",
     "problem-bank"
-  ]
+  ],
+  "private": true,
+  "license": "MIT",
+  "devDependencies": {
+    "@capacitor/cli": "^8.6.0"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/ios": "^8.6.0"
+  }
 }
