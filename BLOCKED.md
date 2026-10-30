@@ -19,3 +19,12 @@
 - 원인: 매개변수 공간이 본래 작음(특수각 3종, 명제 몇 개, 주사위 합 등). 이전 test-bank는 dayIdx%7 매핑 탓에 이 템플릿들을 제대로 검사하지 않아 드러나지 않았음.
 - 충돌: 다양성을 늘리려면 problem-bank 수학 로직 수정이 필요하나, CLAUDE.md는 검증기가 FAIL/AMBIG로 잡은 템플릿만 수정 허용.
 - 처리: test-bank.js에 `UNIQUE_FLOOR`(현재 값 = 회귀 하한) 명시, 나머지 40개는 ≥20 유지. 확장 여부는 사람 결정(1.1 후보).
+
+## B-003 `SUPPORT_EMAIL` 없음 — 앱 정보 카드의 "피드백 보내기" 버튼 숨김 상태로 빌드
+- `~/.haku-env`에 `SUPPORT_EMAIL` 키가 없음(값 미출력, 존재 여부만 확인 — logs/env-detected.txt).
+- 처리: 버튼은 값이 있을 때만 표시. App Store 심사는 "지원 URL"이 필수이므로 ASC 입력 시 지원 연락처 필요.
+- 사람 조치: `echo 'SUPPORT_EMAIL=you@example.com' >> ~/.haku-env` 후 `scripts/archive.sh app-store` 재실행.
+
+## B-004 앱 정보 카드 크레딧의 `[원작자 이름]` 자리표시자 (사람 입력 필요)
+- PRD F7·PROMPT 4단계 지시대로 이름 자리를 비워 둠: `www/index.html` `#about-card` "아이디어: 중학생 [원작자 이름]".
+- **이대로 출시하면 앱에 대괄호 문구가 그대로 보임.** 제출 전 사람이 실제 이름(또는 줄 삭제)으로 바꾸고 재빌드.

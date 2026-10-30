@@ -15,3 +15,4 @@
 | D-011 | 2026-10-30 | Capacitor `contentInset` 기본값(never) + CSS `env(safe-area-inset-top)` 사용 (DESIGN §6의 "always" 대신) | 기존 index.html이 이미 `viewport-fit=cover`·하단바 `env(safe-area-inset-bottom)` 사용 → "always"와 겹치면 여백 이중 적용. 실기기에서 사람 확인 필요 |
 | D-012 | 2026-10-30 | `www/config.js`는 iOS 번들(`ios/App/App/public/index.html`)에만 script 태그 주입 | gitignore 파일을 웹 index.html이 참조하면 웹에서 404 콘솔 에러(웹 회귀) |
 | D-013 | 2026-10-30 | MID-04 그림의 두 절편은 "?" 대신 지문과 같은 문자 "p"·"q"로 표기, HIG-09 내분비는 숫자 대신 눈금, HIG-04 구간 끝값은 숫자 없이 "주어진 구간" | 정답 숫자와 우연히 겹쳐 "?"로 가려지는 혼란 제거(마스킹 발생 0/2600) |
+| D-014 | 2026-10-30 | 1024 아이콘은 icon.svg와 같은 색·∑ 비율이지만 모서리 rx 없이 꽉 찬 사각형(알파 없음), 스플래시 다크 변형 제거 | App Store는 알파 채널 아이콘 거부·iOS가 모서리 마스킹. 앱이 라이트 전용이라 다크 스플래시(#111)는 깜빡임 |
