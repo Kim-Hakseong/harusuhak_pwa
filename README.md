@@ -125,3 +125,6 @@ node test-bank.js
 
 ## 📄 라이선스
 MIT License
+
+---
+원작: [jaesang-jeong/harusuhak_pwa](https://github.com/jaesang-jeong/harusuhak_pwa) · iOS 출시: TECHSENSE (MIT License)
