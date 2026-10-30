@@ -1,0 +1,100 @@
+{
+  "appName": "하루수학",
+  "themeId": "clean-light",
+  "locales": [
+    "ko",
+    "en"
+  ],
+  "locale": "ko",
+  "device": "iphone",
+  "orientation": "portrait",
+  "appIcon": "/app-icon.png",
+  "slidesByDevice": {
+    "iphone": [
+      {
+        "id": "iphone-01",
+        "layout": "hero",
+        "label": {
+          "ko": "교육과정 성취기준 56개 유형",
+          "en": "56 curriculum-aligned types"
+        },
+        "headline": {
+          "ko": "하루 한 문제로\n수학 습관 완성",
+          "en": "One problem\na day"
+        },
+        "screenshot": "/screenshots/raw/iphone-01-home.png"
+      },
+      {
+        "id": "iphone-02",
+        "layout": "device-top",
+        "label": {
+          "ko": "같은 유형, 새로운 숫자",
+          "en": "Same type, new numbers"
+        },
+        "headline": {
+          "ko": "숫자만 바꿔\n무한 연습",
+          "en": "New numbers,\nendless practice"
+        },
+        "screenshot": "/screenshots/raw/iphone-02-variation.png",
+        "inverted": true
+      },
+      {
+        "id": "iphone-03",
+        "layout": "device-bottom",
+        "label": {
+          "ko": "도형·그래프 13종 그림",
+          "en": "Figures for 13 types"
+        },
+        "headline": {
+          "ko": "그림으로 보면\n바로 보여요",
+          "en": "See it,\nthen solve it"
+        },
+        "screenshot": "/screenshots/raw/iphone-03-figure.png"
+      },
+      {
+        "id": "iphone-04",
+        "layout": "hero",
+        "label": {
+          "ko": "기초 · 중등 · 고등 · 생활 수학",
+          "en": "Elementary to everyday math"
+        },
+        "headline": {
+          "ko": "초등부터\n고등까지",
+          "en": "From grade 4\nto high school"
+        },
+        "screenshot": "/screenshots/raw/iphone-04-curriculum.png"
+      },
+      {
+        "id": "iphone-05",
+        "layout": "device-top",
+        "label": {
+          "ko": "오답노트",
+          "en": "Mistake notebook"
+        },
+        "headline": {
+          "ko": "틀린 문제를\n내 것으로",
+          "en": "Turn mistakes\ninto wins"
+        },
+        "screenshot": "/screenshots/raw/iphone-05-wrong-notes.png"
+      },
+      {
+        "id": "iphone-06",
+        "layout": "device-bottom",
+        "label": {
+          "ko": "서버 없음 · 수집 없음 · 매일 알림",
+          "en": "No server · No tracking"
+        },
+        "headline": {
+          "ko": "가입 없이\n기기 안에서만",
+          "en": "No sign-up.\nNo tracking."
+        },
+        "screenshot": "/screenshots/raw/iphone-06-settings.png"
+      }
+    ],
+    "android": [],
+    "ipad": [],
+    "android-7": [],
+    "android-10": [],
+    "feature-graphic": []
+  }
+}
