@@ -10,3 +10,7 @@
 - 2026-10-30 | 5 | resources/icon.png 1024 RGB(알파 없음), splash 2732, @capacitor/assets --ios 생성, 다크 스플래시 제거
 - 2026-10-30 | 6 | 실기기 Debug 재빌드·설치·실행 성공(DEVICE_SMOKE.md), DerivedData 삭제
 - 2026-10-30 | 7-9 | Pages privacy 200, 메타데이터 ko/en, 스크린샷 12장 1320×2868 RGB. App Store export 3회 PLA로 실패(B-001), 8단계 키 없어 건너뜀. RELEASE_REPORT 작성, 임시 산출물 정리
+
+## 2026-10-31 · B-001 감시 종료
+- 20분 간격 24회 -exportArchive 재시도(23:48~07:31) 모두 PLA Update available
+- .ipa 미생성 유지 — 사람이 PLA 동의 후 scripts/archive.sh app-store 재실행 필요

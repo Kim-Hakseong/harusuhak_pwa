@@ -30,7 +30,7 @@
 | 대상 | iPhone 전용(`TARGETED_DEVICE_FAMILY=1`), 세로 고정, iOS 15+ |
 | 실기기 Debug | 성공 — iPhone 16 설치·실행 (`DEVICE_SMOKE.md`) |
 | Release archive | 성공 — `archives/HaruSuhak.xcarchive` |
-| App Store .ipa | **미생성** — `PLA Update available` / iOS Distribution 인증서 없음 (B-001, 3회 재시도 동일) |
+| App Store .ipa | **미생성** — `PLA Update available` / iOS Distribution 인증서 없음 (B-001, 수동 3회 + 밤새 자동 24회 재시도 모두 동일, logs/export-watch.log) |
 | TestFlight | 미수행 — `~/.haku-env`에 ASC_KEY_ID·ASC_ISSUER_ID·ASC_KEY_PATH 없음 (8단계 건너뜀, 지시대로) |
 
 ## 공개 URL

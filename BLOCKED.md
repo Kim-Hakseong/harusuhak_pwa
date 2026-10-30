@@ -13,6 +13,7 @@
 - 원인: 개정된 Apple Developer Program License Agreement(PLA)를 계정 소유자가 동의하지 않아 Apple이 배포 인증서·App Store 프로파일 발급을 거부.
 - 사람 조치(1분): https://developer.apple.com/account 로그인 → 상단 배너의 약관 동의. 그 뒤 `scripts/archive.sh app-store` 재실행.
 - 재시도: 23:26, 23:41(try1), 23:49(try2) 모두 동일 오류(logs/step0-appstore.log, step7-appstore-try1.log, step7-appstore-try2.log). 3회 실패 → 독립 단계 계속.
+- 자동 재시도 감시: 2026-10-30 23:48 ~ 10-31 07:31, 20분 간격 24회(`archives/HaruSuhak.xcarchive` → `-exportArchive`) 모두 `PLA Update available` → `** EXPORT FAILED **`(logs/export-watch.log). **여전히 미해결.**
 - archive 는 성공: `archives/HaruSuhak.xcarchive`(1.0.0 (1)). PLA 동의 후 export 만 다시 하면 됨:
   `xcodebuild -exportArchive -archivePath archives/HaruSuhak.xcarchive -exportPath build/export -exportOptionsPlist build/ExportOptions.plist -allowProvisioningUpdates && cp build/export/*.ipa build/HaruSuhak-appstore.ipa`  (또는 `scripts/archive.sh app-store` 전체 재실행)
 
