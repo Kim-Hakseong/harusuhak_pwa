@@ -410,11 +410,12 @@
             const askLarger = rng.next() > 0.5;
             const targetRatio = askLarger ? Math.max(r1, r2) : Math.min(r1, r2);
             const otherRatio = askLarger ? Math.min(r1, r2) : Math.max(r1, r2);
-            const ans = total * (targetRatio / sumR);
+            // total = sumR × unit 이라 정확히 정수지만 부동소수(62.999…) 방지를 위해 반올림
+            const ans = Math.round(total * targetRatio / sumR);
 
             const correct = `${ans}개`;
             const distractors = [
-              `${total * (otherRatio / sumR)}개`,
+              `${Math.round(total * otherRatio / sumR)}개`,
               `${Math.round(total / targetRatio)}개`,
               `${ans + sumR}개`
             ];
