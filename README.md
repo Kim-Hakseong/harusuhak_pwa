@@ -127,4 +127,23 @@ node test-bank.js
 MIT License
 
 ---
+
+## 📱 iOS 빌드·배포 (TECHSENSE)
+
+웹 자산은 `www/`, iOS 프로젝트는 Capacitor 8(SPM) `ios/App/App.xcodeproj` 입니다. 빌드 도구 없이 바닐라 JS 그대로 씁니다.
+
+```bash
+pnpm install
+pnpm test                                   # 문제은행 56×50 + 독립 검증기(50회) + 그림 정답 누출 검사
+pnpm run verify:100                         # 독립 검증기 100회 (FAIL 0 / AMBIG 0 / lint 0)
+DEVICE_UDID=<UDID> scripts/archive.sh debug-device   # 실기기 Debug 빌드 → 설치 → 실행
+scripts/archive.sh app-store                # Release archive → build/HaruSuhak-appstore.ipa (.xcarchive 는 archives/)
+```
+
+- `www/config.js`(gitignore)는 `scripts/archive.sh`가 `~/.haku-env`의 `SUPPORT_EMAIL`·`APP_STORE_ID`로 생성해 iOS 번들에만 넣습니다.
+- `verify/verify-answers.js`는 동결된 독립 검증기입니다(수정 금지).
+- 스토어 산출물: `store/metadata.{ko,en}.md`, `store/screenshots/output/{ko,en}/`(6.9"), 개인정보 처리방침 `docs/privacy.html`(GitHub Pages).
+- 웹 회귀 확인: `www/`를 정적 서버로 띄운 뒤 `node scripts/web-smoke.js http://localhost:<port>` (Playwright 필요).
+
+---
 원작: [jaesang-jeong/harusuhak_pwa](https://github.com/jaesang-jeong/harusuhak_pwa) · iOS 출시: TECHSENSE (MIT License)

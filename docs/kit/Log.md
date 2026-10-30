@@ -9,3 +9,4 @@
 - 2026-10-30 | 4 | platform.js(햅틱·공유·모달·알림·포그라운드), 네이티브 DOM 정리, 토스트 존댓말, 매일 알림·앱 정보 카드, Info.plist(세로·암호화·알림 설명·arm64). 웹 스모크 21/21, 콘솔 에러 0
 - 2026-10-30 | 5 | resources/icon.png 1024 RGB(알파 없음), splash 2732, @capacitor/assets --ios 생성, 다크 스플래시 제거
 - 2026-10-30 | 6 | 실기기 Debug 재빌드·설치·실행 성공(DEVICE_SMOKE.md), DerivedData 삭제
+- 2026-10-30 | 7-9 | Pages privacy 200, 메타데이터 ko/en, 스크린샷 12장 1320×2868 RGB. App Store export 3회 PLA로 실패(B-001), 8단계 키 없어 건너뜀. RELEASE_REPORT 작성, 임시 산출물 정리

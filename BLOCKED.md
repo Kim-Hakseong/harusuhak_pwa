@@ -12,7 +12,9 @@
   ```
 - 원인: 개정된 Apple Developer Program License Agreement(PLA)를 계정 소유자가 동의하지 않아 Apple이 배포 인증서·App Store 프로파일 발급을 거부.
 - 사람 조치(1분): https://developer.apple.com/account 로그인 → 상단 배너의 약관 동의. 그 뒤 `scripts/archive.sh app-store` 재실행.
-- 진행: 독립 단계(1~7)는 계속 진행. 7단계에서 export 재시도.
+- 재시도: 23:26, 23:41(try1), 23:49(try2) 모두 동일 오류(logs/step0-appstore.log, step7-appstore-try1.log, step7-appstore-try2.log). 3회 실패 → 독립 단계 계속.
+- archive 는 성공: `archives/HaruSuhak.xcarchive`(1.0.0 (1)). PLA 동의 후 export 만 다시 하면 됨:
+  `xcodebuild -exportArchive -archivePath archives/HaruSuhak.xcarchive -exportPath build/export -exportOptionsPlist build/ExportOptions.plist -allowProvisioningUpdates && cp build/export/*.ipa build/HaruSuhak-appstore.ipa`  (또는 `scripts/archive.sh app-store` 전체 재실행)
 
 ## B-002 고유 문항 ≥ 20종 — 16개 템플릿 미달 (헌법 충돌, 하한 고정으로 처리)
 - 측정: templateId 기반 50변형(test-bank.js) — BAS-10 5, MID-03 17, MID-06 14, MID-10 15, MID-13 5, MID-14 5, HIG-05 17, HIG-08 12, HIG-11 3, HIG-13 11, LIF-07 16, LIF-10 6, LIF-11 6, LIF-12 14, LIF-13 9→6(2단계에서 명목=물가 조합 제거, 남은 조합 6개 전부), LIF-14 6.
