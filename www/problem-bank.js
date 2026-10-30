@@ -18,6 +18,10 @@
 (function (global) {
   'use strict';
 
+  // 한국어 조사 헬퍼(www/ko.js). 브라우저는 index.html에서 먼저 로드, Node(검증기·테스트)는 여기서 require.
+  if (!global.HaruKo && typeof require === 'function') require('./ko.js');
+  const { withJosa: wj, josa: jo } = global.HaruKo;
+
   // ---------------------------------------------------------------------------
   // 1. 시드 기반 의사난수 생성기 (Mulberry32 알고리즘) & 수학 유틸리티
   // ---------------------------------------------------------------------------
@@ -180,25 +184,25 @@
             const bigger = na > nc ? f1 : f2;
             const diff = Math.abs(na - nc);
 
-            const correct = `${bigger}가 ${diff}/${common}만큼 더 크다`;
+            const correct = `${wj(bigger, '이/가')} ${diff}/${common}만큼 더 크다`;
             const smaller = na > nc ? f2 : f1;
             const distractors = [
-              `${smaller}가 ${diff}/${common}만큼 더 크다`,
-              `${bigger}가 ${Math.abs(a - c) || 1}/${b + d}만큼 더 크다`,
+              `${wj(smaller, '이/가')} ${diff}/${common}만큼 더 크다`,
+              `${wj(bigger, '이/가')} ${Math.abs(a - c) || 1}/${b + d}만큼 더 크다`,
               `두 분수의 크기가 같다`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `두 분수 ${f1}와 ${f2}의 크기를 비교한 설명으로 옳은 것은?`,
+              question: `두 분수 ${wj(f1, '과/와')} ${f2}의 크기를 비교한 설명으로 옳은 것은?`,
               variablesInfo: { 분수1: f1, 분수2: f2, 공통분모: common },
               options,
               answerIndex,
-              hint: `두 분모 ${b}와 ${d}의 최소공배수인 ${common}(으)로 통분해 보세요.`,
+              hint: `두 분모 ${wj(b, '과/와')} ${d}의 최소공배수인 ${wj(common, '으로/로')} 통분해 보세요.`,
               steps: [
-                `두 분모 ${b}와 ${d}의 최소공배수는 ${common}입니다.`,
+                `두 분모 ${wj(b, '과/와')} ${d}의 최소공배수는 ${common}입니다.`,
                 `${f1} = (${a}×${common / b})/(${b}×${common / b}) = ${na}/${common}이고, ${f2} = (${c}×${common / d})/(${d}×${common / d}) = ${nc}/${common}입니다.`,
-                `분자를 비교하면 ${na} ${na > nc ? '>' : '<'} ${nc}이므로, ${bigger}가 ${diff}/${common}만큼 더 큽니다.`
+                `분자를 비교하면 ${na} ${na > nc ? '>' : '<'} ${nc}이므로, ${wj(bigger, '이/가')} ${diff}/${common}만큼 더 큽니다.`
               ]
             };
           }
@@ -234,14 +238,14 @@
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `${items[0]} ${itemA}${items[2]}와 ${items[1]} ${itemB}${items[3]}를 남김없이 최대한 많은 학생에게 똑같이 나누어 주려고 합니다. 최대 몇 명에게 나누어 줄 수 있으며, 한 명이 받는 양은 얼마인가요?`,
+              question: `${items[0]} ${itemA}${wj(items[2], '과/와')} ${items[1]} ${itemB}${wj(items[3], '을/를')} 남김없이 최대한 많은 학생에게 똑같이 나누어 주려고 합니다. 최대 몇 명에게 나누어 줄 수 있으며, 한 명이 받는 양은 얼마인가요?`,
               variablesInfo: { [items[0]]: itemA, [items[1]]: itemB, 최대공약수: g },
               options,
               answerIndex,
-              hint: `${itemA}과 ${itemB}을 동시에 나누어떨어지게 하는 가장 큰 수(최대공약수)를 구해 보세요.`,
+              hint: `${wj(itemA, '과/와')} ${wj(itemB, '을/를')} 동시에 나누어떨어지게 하는 가장 큰 수(최대공약수)를 구해 보세요.`,
               steps: [
-                `남김없이 최대한 많은 학생에게 똑같이 나누어 주어야 하므로 ${itemA}과 ${itemB}의 최대공약수를 구합니다.`,
-                `${itemA} = ${g} × ${m1}, ${itemB} = ${g} × ${m2} (${m1}, ${m2}는 서로소)이므로 최대공약수는 ${g}입니다.`,
+                `남김없이 최대한 많은 학생에게 똑같이 나누어 주어야 하므로 ${wj(itemA, '과/와')} ${itemB}의 최대공약수를 구합니다.`,
+                `${itemA} = ${g} × ${m1}, ${itemB} = ${g} × ${m2} (${m1}, ${wj(m2, '은/는')} 서로소)이므로 최대공약수는 ${g}입니다.`,
                 `따라서 최대 ${g}명에게 나누어 줄 수 있고, 한 명당 ${items[0]} ${itemA}÷${g}=${m1}${items[2]}, ${items[1]} ${itemB}÷${g}=${m2}${items[3]}씩 받습니다.`
               ]
             };
@@ -272,7 +276,7 @@
               if (n >= m) {
                 const whole = Math.floor(n / m);
                 const rem = n % m;
-                return rem === 0 ? `${whole}` : `${whole}과 ${rem}/${m} (${n}/${m})`;
+                return rem === 0 ? `${whole}` : `${wj(whole, '과/와')} ${rem}/${m} (${n}/${m})`;
               }
               return `${n}/${m}`;
             }
@@ -288,10 +292,10 @@
               variablesInfo: { 첫째분수: `${a}/${b}`, 둘째분수: `${c}/${d}` },
               options,
               answerIndex,
-              hint: `분모끼리 직접 더하면 안 돼요! 두 분모 ${b}와 ${d}의 최소공배수 ${den}(으)로 통분한 뒤 분자끼리 더해 보세요.`,
+              hint: `분모끼리 직접 더하면 안 돼요! 두 분모 ${wj(b, '과/와')} ${d}의 최소공배수 ${wj(den, '으로/로')} 통분한 뒤 분자끼리 더해 보세요.`,
               steps: [
-                `분모 ${b}와 ${d}의 최소공배수는 ${den}입니다.`,
-                `${a}/${b} = ${a * (den / b)}/${den}, ${c}/${d} = ${c * (den / d)}/${den}로 통분합니다.`,
+                `분모 ${wj(b, '과/와')} ${d}의 최소공배수는 ${den}입니다.`,
+                `${a}/${b} = ${a * (den / b)}/${den}, ${c}/${d} = ${c * (den / d)}/${wj(den, '으로/로')} 통분합니다.`,
                 `두 분수를 더하면 (${a * (den / b)} + ${c * (den / d)})/${den} = ${num}/${den}이며, 기약분수로 정리하면 ${correct}입니다.`
               ]
             };
@@ -416,7 +420,7 @@
               hint: `비의 전항과 후항의 합은 ${r1} + ${r2} = ${sumR}입니다. 전체 ${total}개 중 ${targetRatio}/${sumR}만큼을 계산해 보세요.`,
               steps: [
                 `전체를 나누는 비의 합은 ${r1} + ${r2} = ${sumR}입니다.`,
-                `${askLarger ? '더 많이' : '더 적게'} 가지는 쪽은 전체의 ${targetRatio}/${sumR}를 차지합니다.`,
+                `${askLarger ? '더 많이' : '더 적게'} 가지는 쪽은 전체의 ${targetRatio}/${wj(sumR, '을/를')} 차지합니다.`,
                 `따라서 ${total} × (${targetRatio}/${sumR}) = ${ans}개입니다.`
               ]
             };
@@ -536,7 +540,7 @@
               answerIndex,
               hint: `사람 수는 자연수(몫)이어야 해요. 남는 양의 소수점 위치는 원래 소수점 자리를 그대로 내려 찍어야 합니다!`,
               steps: [
-                `${total} ÷ ${each}을 계산하면 몫은 자연수 ${people}이 됩니다.`,
+                `${total} ÷ ${wj(each, '을/를')} 계산하면 몫은 자연수 ${wj(people, '이/가')} 됩니다.`,
                 `${people}명에게 나누어준 리본의 총길이는 ${people} × ${each} = ${(people * each).toFixed(1)} m입니다.`,
                 `남는 리본의 길이는 ${total} − ${(people * each).toFixed(1)} = ${rem} m입니다. (소수점 자리에 주의하세요!)`
               ]
@@ -685,15 +689,15 @@
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `성냥개비로 ${type.shape}을 한 줄로 이어 붙여 만들고 있습니다. 1개 만들 때 성냥개비 ${type.add + type.base}개, 2개 만들 때 ${(type.add + type.base) + type.add}개, 3개 만들 때 ${(type.add + type.base) + type.add * 2}개가 필요합니다. ${type.shape} ${n}개를 이어 붙여 만들 때 필요한 성냥개비는 총 몇 개인가요?`,
+              question: `성냥개비로 ${wj(type.shape, '을/를')} 한 줄로 이어 붙여 만들고 있습니다. 1개 만들 때 성냥개비 ${type.add + type.base}개, 2개 만들 때 ${(type.add + type.base) + type.add}개, 3개 만들 때 ${(type.add + type.base) + type.add * 2}개가 필요합니다. ${type.shape} ${n}개를 이어 붙여 만들 때 필요한 성냥개비는 총 몇 개인가요?`,
               variablesInfo: { 도형: type.shape, 도형수: n, 총개수: total },
               options,
               answerIndex,
-              hint: `${type.shape}이 1개 늘어날 때마다 성냥개비는 정확히 ${type.add}개씩 늘어납니다.`,
+              hint: `${wj(type.shape, '이/가')} 1개 늘어날 때마다 성냥개비는 정확히 ${type.add}개씩 늘어납니다.`,
               steps: [
                 `첫 번째 도형에 성냥개비 ${type.add + type.base}개가 필요하고, 그 이후 도형 1개를 추가할 때마다 ${type.add}개씩 더 필요합니다.`,
                 `따라서 ${type.shape} n개와 성냥개비 수 y 사이의 대응 관계식은 y = ${type.add} × n + ${type.base} 입니다.`,
-                `n = ${n}을 대입하면 y = ${type.add} × ${n} + ${type.base} = ${type.add * n} + ${type.base} = ${total}개입니다.`
+                `n = ${wj(n, '을/를')} 대입하면 y = ${type.add} × ${n} + ${type.base} = ${type.add * n} + ${type.base} = ${total}개입니다.`
               ]
             };
           }
@@ -789,11 +793,11 @@
               variablesInfo: { 계수a: a, 상수b: b, 우변일차항계수: c, 해x: x },
               options,
               answerIndex,
-              hint: `좌변에 분배법칙을 적용할 때 ${a}를 x와 ${b} 모두에 곱해야 합니다!`,
+              hint: `좌변에 분배법칙을 적용할 때 ${wj(a, '을/를')} x와 ${b} 모두에 곱해야 합니다!`,
               steps: [
                 `분배법칙을 이용하여 좌변의 괄호를 풀면 ${a}x ${a * b >= 0 ? '+ ' + (a * b) : '− ' + Math.abs(a * b)} = ${cStr}${dStr} 입니다.`,
                 `미지수 x가 있는 항을 좌변으로, 상수항을 우변으로 이항하면 (${a} − ${c})x = ${d} − (${a * b}) 입니다.`,
-                `정리하면 ${a - c}x = ${d - a * b} 이므로 양변을 ${a - c}(으)로 나누면 x = ${x} 입니다.`
+                `정리하면 ${a - c}x = ${d - a * b} 이므로 양변을 ${wj(a - c, '으로/로')} 나누면 x = ${x} 입니다.`
               ]
             };
           }
@@ -825,13 +829,13 @@
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `자연수 ${comma(num)}을(를) 소인수분해하여 구한 양의 약수의 총개수는?`,
+              question: `자연수 ${wj(comma(num), '을/를')} 소인수분해하여 구한 양의 약수의 총개수는?`,
               variablesInfo: { 자연수: num, 소인수분해: `${p}^${a} × ${q}^${b}`, 약수개수: divCount },
               options,
               answerIndex,
-              hint: `${comma(num)}을 소인수분해한 뒤 각 소인수의 지수에 1을 더하여 서로 곱해 보세요.`,
+              hint: `${wj(comma(num), '을/를')} 소인수분해한 뒤 각 소인수의 지수에 1을 더하여 서로 곱해 보세요.`,
               steps: [
-                `${comma(num)}을 소인수분해하면 ${comma(num)} = ${p}^${a} × ${q}^${b} 입니다.`,
+                `${wj(comma(num), '을/를')} 소인수분해하면 ${comma(num)} = ${p}^${a} × ${q}^${b} 입니다.`,
                 `소인수 ${p}의 지수는 ${a}, 소인수 ${q}의 지수는 ${b}입니다.`,
                 `약수의 개수는 각 지수에 1을 더하여 곱한 값이므로 (${a} + 1) × (${b} + 1) = ${a + 1} × ${b + 1} = ${divCount}개입니다.`
               ]
@@ -872,7 +876,7 @@
               hint: `집에서 공원까지의 거리를 x km라고 두면, 갈 때 걸린 시간은 x/${v1}, 올 때 걸린 시간은 x/${v2}입니다.`,
               steps: [
                 `집에서 공원까지의 거리를 x km라 하면 x/${v1} + x/${v2} = ${totalTime} 입니다.`,
-                `양변에 분모의 최소공배수 ${L}을(를) 곱하면 ${L / v1}x + ${L / v2}x = ${totalTime * L} 입니다.`,
+                `양변에 분모의 최소공배수 ${wj(L, '을/를')} 곱하면 ${L / v1}x + ${L / v2}x = ${totalTime * L} 입니다.`,
                 `${L / v1 + L / v2}x = ${totalTime * L} 이므로 x = ${dist}(km)입니다.`
               ]
             };
@@ -955,11 +959,11 @@
               variablesInfo: { 식1: `${a}x + ${bStr} = ${p}`, 식2: `${cStr} − ${bStr} = ${q}` },
               options,
               answerIndex,
-              hint: `y의 계수의 절댓값이 ${b}(으)로 같고 부호가 반대이므로 두 식을 변끼리 더해 보세요!`,
+              hint: `y의 계수의 절댓값이 ${wj(b, '으로/로')} 같고 부호가 반대이므로 두 식을 변끼리 더해 보세요!`,
               steps: [
                 `두 방정식을 변끼리 더하면 y항이 소거되어 (${a} + ${c})x = ${p} + (${q}) 가 됩니다.`,
                 `${a + c}x = ${p + q} 이므로 x = ${x}입니다.`,
-                `x = ${x}을 대입하면 ${bStr} = ${b * y}, 따라서 y = ${y}입니다.`
+                `x = ${wj(x, '을/를')} 대입하면 ${bStr} = ${b * y}, 따라서 y = ${y}입니다.`
               ]
             };
           }
@@ -995,7 +999,7 @@
                 variablesInfo: { 밑변: `${a}cm`, 높이: `${b}cm`, 빗변: `${c}cm` },
                 options,
                 answerIndex,
-                hint: `피타고라스 정리 a² + b² = c² 에 ${a}과 ${b}를 대입해 보세요.`,
+                hint: `피타고라스 정리 a² + b² = c² 에 ${wj(a, '과/와')} ${wj(b, '을/를')} 대입해 보세요.`,
                 steps: [
                   `빗변의 길이를 c cm라 하면 c² = ${a}² + ${b}² = ${a * a} + ${b * b} = ${c * c} 입니다.`,
                   `c > 0이므로 c = ${c}(cm)입니다.`
@@ -1099,7 +1103,7 @@
               variablesInfo: { 항1: `(−${a})²`, 항2: `(−${b}) × ${c}`, 항3: `(−${d}) ÷ 2` },
               options,
               answerIndex,
-              hint: `(−${a})²은 괄호 전체의 제곱이므로 양수 ${a * a}가 됩니다. 뺄셈 기호와 음수 부호에 유의하세요!`,
+              hint: `(−${a})²은 괄호 전체의 제곱이므로 양수 ${wj(a * a, '이/가')} 됩니다. 뺄셈 기호와 음수 부호에 유의하세요!`,
               steps: [
                 `거듭제곱을 먼저 계산하면 (−${a})² = ${term1} 입니다.`,
                 `곱셈과 나눗셈을 계산하면 (−${b}) × ${c} = ${term2} 이고, (−${d}) ÷ 2 = ${term3} 입니다.`,
@@ -1148,7 +1152,7 @@
               steps: [
                 `x를 포함하는 항을 좌변으로, 상수항을 우변으로 이항하면 (${a} − ${c})x < ${d} − (${b}) 입니다.`,
                 `정리하면 −${k}x < ${constDiff} 입니다.`,
-                `양변을 음수 −${k}(으)로 나누면 부등호 방향이 반대로 바뀌어 x > ${ansBound} 가 됩니다.`
+                `양변을 음수 −${wj(k, '으로/로')} 나누면 부등호 방향이 반대로 바뀌어 x > ${ansBound} 가 됩니다.`
               ]
             };
           }
@@ -1188,10 +1192,10 @@
               variablesInfo: { 거듭제곱: p, 계수: coef, x지수: xExp, y지수: yExp },
               options,
               answerIndex,
-              hint: `괄호 밖의 거듭제곱 ${p}를 계수 2와 x^${m}, y^${n}에 각각 분배법칙처럼 곱해 주어야 합니다. 2^${p} = ${coef}입니다.`,
+              hint: `괄호 밖의 거듭제곱 ${wj(p, '을/를')} 계수 2와 x^${m}, y^${n}에 각각 분배법칙처럼 곱해 주어야 합니다. 2^${p} = ${coef}입니다.`,
               steps: [
                 `(2x^${m} y^${n})^${p} = 2^${p} × (x^${m})^${p} × (y^${n})^${p} = ${coef}x^${m * p} y^${n * p} 입니다.`,
-                `여기에 (x^${k} y)를 곱하면 계수는 ${coef}, x의 지수는 ${m * p} + ${k} = ${xExp}, y의 지수는 ${n * p} + 1 = ${yExp}가 됩니다.`,
+                `여기에 (x^${k} y)를 곱하면 계수는 ${coef}, x의 지수는 ${m * p} + ${k} = ${xExp}, y의 지수는 ${n * p} + 1 = ${wj(yExp, '이/가')} 됩니다.`,
                 `따라서 식은 ${coef}x^${xExp} y^${yExp} 이며, 지수의 합은 ${xExp} + ${yExp} = ${sumExp} 입니다.`
               ]
             };
@@ -1228,15 +1232,15 @@
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `이차식 ${poly} 을(를) 바르게 인수분해한 것은?`,
+              question: `이차식 ${wj(poly, '을/를')} 바르게 인수분해한 것은?`,
               variablesInfo: { 일차항계수: sum, 상수항: prod, 두정수: `${a}, ${b}` },
               options,
               answerIndex,
-              hint: `곱해서 ${prod}이 되고 더해서 ${sum}이 되는 두 정수를 찾아보세요.`,
+              hint: `곱해서 ${wj(prod, '이/가')} 되고 더해서 ${wj(sum, '이/가')} 되는 두 정수를 찾아보세요.`,
               steps: [
                 `상수항이 ${prod}이므로 두 정수의 곱은 ${prod}입니다.`,
                 `일차항의 계수가 ${sum}이므로 두 정수의 합은 ${sum}이어야 합니다.`,
-                `두 조건을 만족하는 두 정수는 ${a}와 ${b}이므로 인수분해하면 (${f1})(${f2})가 됩니다.`
+                `두 조건을 만족하는 두 정수는 ${wj(a, '과/와')} ${b}이므로 인수분해하면 (${f1})(${f2})가 됩니다.`
               ]
             };
           }
@@ -1270,7 +1274,7 @@
               variablesInfo: { 무리수: `√${N}`, '제곱수 범위': `${n * n} < ${N} < ${(n + 1) * (n + 1)}`, 정수부분: n },
               options,
               answerIndex,
-              hint: `${n}² = ${n * n} 이고 ${n + 1}² = ${(n + 1) * (n + 1)} 임을 이용하여 √${N}이 어떤 두 정수 사이에 있는지 확인하세요.`,
+              hint: `${n}² = ${n * n} 이고 ${n + 1}² = ${(n + 1) * (n + 1)} 임을 이용하여 √${wj(N, '이/가')} 어떤 두 정수 사이에 있는지 확인하세요.`,
               steps: [
                 `${n * n} < ${N} < ${(n + 1) * (n + 1)} 이므로 각 변에 제곱근을 취하면 ${n} < √${N} < ${n + 1} 입니다.`,
                 `따라서 √${N}의 정수 부분 a = ${n} 입니다.`,
@@ -1353,14 +1357,14 @@
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `서로 다른 주사위 2개를 동시에 던질 때, 나오는 두 눈의 수의 합이 ${targetSum}이 될 확률은?`,
+              question: `서로 다른 주사위 2개를 동시에 던질 때, 나오는 두 눈의 수의 합이 ${wj(targetSum, '이/가')} 될 확률은?`,
               variablesInfo: { 목표합: targetSum, 경우의수: count, 확률: fracStr },
               options,
               answerIndex,
-              hint: `주사위 2개를 던질 때 모든 경우의 수는 6 × 6 = 36입니다. 합이 ${targetSum}이 되는 순서쌍 (a, b)를 직접 세어 보세요.`,
+              hint: `주사위 2개를 던질 때 모든 경우의 수는 6 × 6 = 36입니다. 합이 ${wj(targetSum, '이/가')} 되는 순서쌍 (a, b)를 직접 세어 보세요.`,
               steps: [
                 `모든 경우의 수는 6 × 6 = 36가지입니다.`,
-                `두 눈의 합이 ${targetSum}이 되는 순서쌍은 ${pairsList.join(', ')}로 총 ${count}가지입니다.`,
+                `두 눈의 합이 ${wj(targetSum, '이/가')} 되는 순서쌍은 ${wj(pairsList.join(', '), '으로/로')} 총 ${count}가지입니다.`,
                 `따라서 구하는 확률은 ${count}/36 이며, 기약분수로 나타내면 ${fracStr}입니다.`
               ]
             };
@@ -1413,7 +1417,7 @@
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `다항식 P(x) = ${poly} 을(를) 일차식 (${divStr})(으)로 나누었을 때의 나머지는?`,
+              question: `다항식 P(x) = ${wj(poly, '을/를')} 일차식 (${divStr})${jo(divStr, '으로/로')} 나누었을 때의 나머지는?`,
               variablesInfo: { 다항식: `P(x) = ${poly}`, 나누는식: divStr, 대입값: alpha },
               options,
               answerIndex,
@@ -1499,7 +1503,7 @@
               variablesInfo: { 두근의합: sum, 두근의곱: prod, 제곱합: sqSum },
               options,
               answerIndex,
-              hint: `근과 계수의 관계로 α + β = ${sum}, αβ = ${prod}를 먼저 구한 뒤 곱셈 공식의 변형 α² + β² = (α + β)² − 2αβ에 대입하세요.`,
+              hint: `근과 계수의 관계로 α + β = ${sum}, αβ = ${wj(prod, '을/를')} 먼저 구한 뒤 곱셈 공식의 변형 α² + β² = (α + β)² − 2αβ에 대입하세요.`,
               steps: [
                 `이차방정식의 근과 계수의 관계에 의해 두 근의 합 α + β = ${sum}이고, 두 근의 곱 αβ = ${c}입니다.`,
                 `곱셈 공식의 변형에 의해 α² + β² = (α + β)² − 2αβ 입니다.`,
@@ -1546,8 +1550,8 @@
               hint: `완전제곱식 f(x) = (x − ${p})² ${signedTerm(q, '')} 으로 바꾸어 꼭짓점(${p})이 주어진 구간 안에 있는지 확인하세요.`,
               steps: [
                 `이차함수를 표준형으로 변형하면 f(x) = (x − ${p})² ${signedTerm(q, '')} 이므로 꼭짓점은 (${p}, ${q})입니다.`,
-                `x = ${p}가 주어진 범위 ${left} ≤ x ≤ ${right} 안에 포함되므로 최솟값 m = f(${p}) = ${minVal}입니다.`,
-                `대칭축에서 가장 먼 x = ${right}에서 최댓값 M = f(${right}) = ${maxVal}을 갖습니다.`
+                `x = ${wj(p, '이/가')} 주어진 범위 ${left} ≤ x ≤ ${right} 안에 포함되므로 최솟값 m = f(${p}) = ${minVal}입니다.`,
+                `대칭축에서 가장 먼 x = ${right}에서 최댓값 M = f(${right}) = ${wj(maxVal, '을/를')} 갖습니다.`
               ]
             };
           }
@@ -1677,11 +1681,11 @@
               variablesInfo: { 함수: `f(x) = ${fExpr}`, 접점x좌표: x0, 미분계수: slope },
               options,
               answerIndex,
-              hint: `먼저 f(x)를 미분하여 도함수 f'(x)를 구한 뒤 x = ${x0}을 대입하세요.`,
+              hint: `먼저 f(x)를 미분하여 도함수 f'(x)를 구한 뒤 x = ${wj(x0, '을/를')} 대입하세요.`,
               steps: [
                 `f(x)를 미분하면 f'(x) = ${3 * c3}x² ${signedTerm(2 * c2, 'x')} ${signedTerm(c1, '')} 입니다.`,
                 `곡선 위의 점 (${x0}, f(${x0}))에서의 접선의 기울기는 f'(${x0})입니다.`,
-                `x = ${x0}을 대입하면 f'(${x0}) = ${3 * c3}×(${x0})² + (${2 * c2})×(${x0}) + (${c1}) = ${slope}입니다.`
+                `x = ${wj(x0, '을/를')} 대입하면 f'(${x0}) = ${3 * c3}×(${x0})² + (${2 * c2})×(${x0}) + (${c1}) = ${slope}입니다.`
               ]
             };
           }
@@ -1727,7 +1731,7 @@
               steps: [
                 `분모의 켤레복소수는 (${denReal} − i) 입니다.`,
                 `분모에 켤레복소수를 곱하면 (${denReal} + i)(${denReal} − i) = ${denReal}² − i² = ${norm} 입니다.`,
-                `분자에 곱해 전개한 후 ${norm}으로 약분하면 ${correct}가 됩니다.`
+                `분자에 곱해 전개한 후 ${wj(norm, '으로/로')} 약분하면 ${wj(correct, '이/가')} 됩니다.`
               ]
             };
           }
@@ -1770,7 +1774,7 @@
               answerIndex,
               hint: `내분점 공식의 분모는 (${m} + ${n})이고 분자는 ${m}×(B의 좌표) + ${n}×(A의 좌표) 입니다.`,
               steps: [
-                `선분 AB를 ${m}:${n}으로 내분하므로 분모는 ${m} + ${n} = ${m + n} 입니다.`,
+                `선분 AB를 ${m}:${wj(n, '으로/로')} 내분하므로 분모는 ${m} + ${n} = ${m + n} 입니다.`,
                 `x좌표: (${m}×${x2} + ${n}×${x1}) / ${m + n} = ${realPx} 입니다.`,
                 `y좌표: (${m}×${y2} + ${n}×${y1}) / ${m + n} = ${realPy} 입니다. 따라서 점 P의 좌표는 (${realPx}, ${realPy})입니다.`
               ]
@@ -2115,12 +2119,12 @@
             const priceB = (upB * weightB) / 100;
 
             const cheaperName = aIsCheaper ? 'A 상품' : 'B 상품';
-            const correct = `${cheaperName}이 100g당 ${comma(diffPer100)}원 더 저렴하다`;
+            const correct = `${wj(cheaperName, '이/가')} 100g당 ${comma(diffPer100)}원 더 저렴하다`;
             const otherName = aIsCheaper ? 'B 상품' : 'A 상품';
             const distractors = [
-              `${otherName}이 100g당 ${comma(diffPer100)}원 더 저렴하다`,
+              `${wj(otherName, '이/가')} 100g당 ${comma(diffPer100)}원 더 저렴하다`,
               `두 상품의 100g당 단위 가격이 ${comma(upA)}원으로 같다`,
-              `${cheaperName}이 100g당 ${comma(diffPer100 * 2)}원 더 저렴하다`
+              `${wj(cheaperName, '이/가')} 100g당 ${comma(diffPer100 * 2)}원 더 저렴하다`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
@@ -2129,11 +2133,11 @@
               variablesInfo: { A상품: `${weightA}g / ${comma(priceA)}원`, B상품: `${weightB}g / ${comma(priceB)}원` },
               options,
               answerIndex,
-              hint: `A 상품의 가격을 ${weightA / 100}으로 나누고, B 상품의 가격을 ${weightB / 100}으로 나누어 100g당 가격을 각각 구해 보세요.`,
+              hint: `A 상품의 가격을 ${wj(weightA / 100, '으로/로')} 나누고, B 상품의 가격을 ${wj(weightB / 100, '으로/로')} 나누어 100g당 가격을 각각 구해 보세요.`,
               steps: [
                 `A 상품의 100g당 가격은 ${comma(priceA)} ÷ ${weightA / 100} = ${comma(upA)}원입니다.`,
                 `B 상품의 100g당 가격은 ${comma(priceB)} ÷ ${weightB / 100} = ${comma(upB)}원입니다.`,
-                `따라서 ${cheaperName}이 100g당 ${comma(Math.abs(upA - upB))}원 더 저렴합니다.`
+                `따라서 ${wj(cheaperName, '이/가')} 100g당 ${comma(Math.abs(upA - upB))}원 더 저렴합니다.`
               ]
             };
           }
@@ -2591,7 +2595,7 @@
               steps: [
                 `일시불 결제 시 즉시 아낄 수 있는 금액은 ${comma(price)} × ${discountRate}% = ${comma(discountAmount)}원입니다.`,
                 `6개월 무이자 할부 후 잔액을 파킹통장에 넣어 얻는 총 이자 수익은 약 ${comma(interestEarned)}원입니다.`,
-                `두 혜택을 비교하면 ${discountAmount > interestEarned ? '일시불 할인' : '무이자 할부'}이 ${comma(diff)}원 더 유리합니다.`
+                `두 혜택을 비교하면 ${wj(discountAmount > interestEarned ? '일시불 할인' : '무이자 할부', '이/가')} ${comma(diff)}원 더 유리합니다.`
               ]
             };
           }
