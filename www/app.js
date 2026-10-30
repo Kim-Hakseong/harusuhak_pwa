@@ -224,6 +224,12 @@
 
     $('question-text').textContent = currentProblem.question;
 
+    // 도형·그래프 그림 (figure.js). 그림이 없는 템플릿은 영역을 숨긴다
+    const figEl = $('question-figure');
+    const figSvg = renderFigure(currentProblem);
+    figEl.innerHTML = figSvg;
+    figEl.style.display = figSvg ? '' : 'none';
+
     // 힌트 초기화
     $('hint-box').classList.remove('show');
     $('hint-box').textContent = `💡 힌트: ${currentProblem.hint}`;
@@ -314,6 +320,7 @@
       <div class="feedback-header ${isCorrect ? 'is-correct' : 'is-wrong'}">
         <span>${isCorrect ? '🎉 정답이야! 정확하게 풀었어.' : `🌱 아쉽지만 오답이야. 정답은 ${correctLetter}번이야!`}</span>
       </div>
+      ${renderFigure(problem) ? `<div class="feedback-figure">${renderFigure(problem)}</div>` : ''}
       <div class="solution-steps">${stepsHtml}</div>
       <div class="std-summary-box">
         <strong>📌 한국 교육과정 성취기준 ${problem.standardCode}</strong><br>
@@ -321,6 +328,12 @@
         <span style="color:#555b51">💡 같은 유형을 숫자를 바꿔 한 번 더 풀어보면 개념이 완벽히 내 것이 돼!</span>
       </div>
     `;
+  }
+
+  // 문제 그림 SVG 문자열 (그림 스펙이 없거나 figure.js 미로드 시 빈 문자열)
+  function renderFigure(problem) {
+    if (!problem || !problem.figure || !window.HaruFigure) return '';
+    return window.HaruFigure.render(problem.figure);
   }
 
   // ---------------------------------------------------------------------------

@@ -4,7 +4,7 @@
   "description": "하루수학 - 한국 교육과정 기반 파라메트릭 일일 수학 PWA 및 모바일 앱",
   "scripts": {
     "start": "pnpm dlx serve www -l 8080",
-    "test": "node test-bank.js && node verify/verify-answers.js --rounds 50 --bank www/problem-bank.js",
+    "test": "node test-bank.js && node verify/verify-answers.js --rounds 50 --bank www/problem-bank.js && node verify/figure-leak-check.js",
     "verify:100": "node verify/verify-answers.js --rounds 100 --bank www/problem-bank.js"
   },
   "keywords": [

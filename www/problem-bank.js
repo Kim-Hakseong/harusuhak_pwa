@@ -380,6 +380,7 @@
             return {
               question: `윗변의 길이가 ${top}cm, 아랫변의 길이가 ${bottom}cm, 높이가 ${height}cm인 사다리꼴의 넓이는 몇 cm²인가요?`,
               variablesInfo: { 윗변: `${top}cm`, 아랫변: `${bottom}cm`, 높이: `${height}cm` },
+              figure: { type: 'trapezoid', top, bottom, height, unknown: 'area' },
               options,
               answerIndex,
               hint: `사다리꼴의 넓이 공식은 (윗변 + 아랫변) × 높이 ÷ 2 입니다. 마지막에 2로 나누는 것을 잊지 마세요!`,
@@ -583,6 +584,7 @@
             return {
               question: `반지름의 길이가 ${r} cm인 원의 넓이는 몇 cm²인가요? (원주율: 3.14)`,
               variablesInfo: { 반지름: `${r} cm`, 원주율: pi, 넓이: area },
+              figure: { type: 'circle', r, unknown: 'area' },
               options,
               answerIndex,
               hint: `원의 둘레(2 × 반지름 × 3.14)와 헷갈리지 마세요! 넓이는 반지름 × 반지름 × 3.14 입니다.`,
@@ -622,6 +624,7 @@
             return {
               question: `가로 ${a} cm, 세로 ${b} cm, 높이 ${h} cm인 직육면체의 부피와 겉넓이를 바르게 짝지은 것은?`,
               variablesInfo: { 가로: a, 세로: b, 높이: h, 부피: vol, 겉넓이: surf },
+              figure: { type: 'cuboid', w: a, d: b, h },
               options,
               answerIndex,
               hint: `부피는 세 변의 길이를 모두 곱하고, 겉넓이는 마주 보는 세 쌍의 면의 넓이 합에 2를 곱합니다.`,
@@ -659,6 +662,7 @@
             return {
               question: `두 대각선의 길이가 각각 ${d1} cm, ${d2} cm인 마름모의 넓이는 몇 cm²인가요?`,
               variablesInfo: { 대각선1: `${d1}cm`, 대각선2: `${d2}cm`, 넓이: area },
+              figure: { type: 'rhombus', d1, d2 },
               options,
               answerIndex,
               hint: `마름모의 넓이는 직사각형 넓이(${d1} × ${d2})를 구한 후 반드시 2로 나누어 주어야 합니다.`,
@@ -738,6 +742,7 @@
             return {
               question: `전교생 ${total}명을 대상으로 가장 좋아하는 운동을 조사하여 원그래프로 나타냈더니, 축구를 선택한 학생의 비율이 ${pct}%였습니다. 축구를 좋아하는 학생 수와 이 부채꼴의 중심각의 크기는 얼마인가요?`,
               variablesInfo: { 전교생: total, 축구비율: `${pct}%`, 학생수: count, 중심각: `${deg}°` },
+              figure: { type: 'pie', percent: pct, label: '축구' },
               options,
               answerIndex,
               hint: `학생 수는 전체 ${total}명의 ${pct}%이고, 중심각은 원 전체 360°의 ${pct}%입니다.`,
@@ -920,6 +925,7 @@
             return {
               question: `일차함수 y = ${a}x ${bStr} 의 그래프의 x절편을 p, y절편을 q라 할 때, p + q의 값은?`,
               variablesInfo: { 기울기: a, x절편p: xInt, y절편q: yInt },
+              figure: { type: 'line-graph', slope: a, intercept: b, xLabel: 'p', yLabel: 'q' },
               options,
               answerIndex,
               hint: `y절편 q는 x=0일 때의 y값이고, x절편 p는 y=0일 때의 방정식 ${a}x ${bStr} = 0의 해입니다.`,
@@ -1006,6 +1012,7 @@
               return {
                 question: `직각을 낀 두 변의 길이가 각각 ${a}cm, ${b}cm인 직각삼각형에서 빗변의 길이는 몇 cm인가요?`,
                 variablesInfo: { 밑변: `${a}cm`, 높이: `${b}cm`, 빗변: `${c}cm` },
+                figure: { type: 'right-triangle', sides: { a: b, b: a, c: '?' }, shape: [b, a] },
                 options,
                 answerIndex,
                 hint: `피타고라스 정리 a² + b² = c² 에 ${wj(a, '과/와')} ${wj(b, '을/를')} 대입해 보세요.`,
@@ -1025,6 +1032,7 @@
               return {
                 question: `빗변의 길이가 ${c}cm이고 다른 한 변의 길이가 ${a}cm인 직각삼각형의 나머지 한 변의 길이는 몇 cm인가요?`,
                 variablesInfo: { 빗변: `${c}cm`, 한변: `${a}cm`, 구하는변: `${b}cm` },
+                figure: { type: 'right-triangle', sides: { a: '?', b: a, c }, shape: [b, a] },
                 options,
                 answerIndex,
                 hint: `빗변이 가장 긴 변(${c}cm)이므로 ${a}² + x² = ${c}² 으로 식을 세워야 합니다.`,
@@ -1065,6 +1073,7 @@
             return {
               question: `이차함수 y = ${aStr}(${pInside})² ${qStr} 의 그래프의 꼭짓점의 좌표와 축의 방정식을 바르게 짝지은 것은?`,
               variablesInfo: { 이차항계수: a, 꼭짓점x: p, 꼭짓점y: q },
+              figure: { type: 'parabola', a, h: p, k: q },
               options,
               answerIndex,
               hint: `완전제곱식 (${pInside})² 이 0이 되게 하는 x의 값이 꼭짓점의 x좌표입니다! 부호에 주의하세요.`,
@@ -1319,6 +1328,7 @@
             return {
               question: `빗변의 길이가 ${hypotenuse} cm이고 한 예각의 크기가 30°인 직각삼각형에서 30°의 대변(높이)의 길이는 몇 cm인가요?`,
               variablesInfo: { 빗변: `${hypotenuse}cm`, 예각: '30°', 높이: `${opp}cm` },
+              figure: { type: 'right-triangle', sides: { a: '?', b: '', c: hypotenuse }, shape: [opp, opp * Math.sqrt(3)], angle: '30°' },
               options,
               answerIndex,
               hint: `sin 30° = (높이) / (빗변) = 1/2 임을 이용해 보세요.`,
@@ -1555,6 +1565,7 @@
             return {
               question: `${left} ≤ x ≤ ${right} 에서 이차함수 ${fStr} 의 최댓값을 M, 최솟값을 m이라 할 때, M과 m의 값은?`,
               variablesInfo: { 구간: `[${left}, ${right}]`, 대칭축: `x = ${p}`, 최댓값M: maxVal, 최솟값m: minVal },
+              figure: { type: 'parabola-interval', poly: { a: 1, b, c }, lo: left, hi: right },
               options,
               answerIndex,
               hint: `완전제곱식 f(x) = ${wj(`(x − ${p})² ${signedTerm(q, '')}`, '으로/로')} 바꾸어 꼭짓점(${p})이 주어진 구간 안에 있는지 확인하세요.`,
@@ -1790,6 +1801,7 @@
             return {
               question: `두 점 A(${x1}, ${y1}), B(${x2}, ${y2})를 ${m} : ${wj(n, '으로/로')} 내분하는 점 P의 좌표는?`,
               variablesInfo: { 점A: `(${x1}, ${y1})`, 점B: `(${x2}, ${y2})`, 내분비: `${m}:${n}` },
+              figure: { type: 'segment-division', A: [x1, y1], B: [x2, y2], m, n },
               options,
               answerIndex,
               hint: `내분점 공식의 분모는 (${m} + ${n})이고 분자는 ${m}×(B의 좌표) + ${n}×(A의 좌표) 입니다.`,
@@ -1831,6 +1843,7 @@
             return {
               question: `원의 방정식 (x ${aSign})² + (y ${bSign})² = ${rSq} 의 중심의 좌표와 반지름의 길이를 바르게 짝지은 것은?`,
               variablesInfo: { 방정식: `(x ${aSign})² + (y ${bSign})² = ${rSq}`, 중심: `(${a}, ${b})`, 반지름: r },
+              figure: { type: 'coord-circle', center: [a, b], r },
               options,
               answerIndex,
               hint: `표준형 (x − a)² + (y − b)² = r² 에서 괄호 안의 부호 반대가 중심 좌표이며, 우변의 제곱근이 반지름입니다.`,
@@ -2006,6 +2019,7 @@
             return {
               question: `삼차함수 ${fStr} 의 극댓값과 극솟값을 바르게 구한 것은?`,
               variablesInfo: { 함수: fStr, 극대점: -a, 극소점: a, 극댓값: maxVal, 극솟값: minVal },
+              figure: { type: 'cubic', poly: { a3: 1, a1: -3 * a * a, a0: c }, crit: [-a, a] },
               options,
               answerIndex,
               hint: `도함수 f'(x) = 3x² − ${3 * a * a} = 3(x + ${a})(x − ${a}) = 0 의 두 근 x = ±${a}에서 극값을 갖습니다.`,
@@ -2698,7 +2712,11 @@
       options: generated.options,
       answerIndex: generated.answerIndex,
       hint: generated.hint,
-      steps: generated.steps
+      steps: generated.steps,
+      // 그림 스펙(www/figure.js). mask = 정답 보기에 나오는 숫자 → 그림 라벨에서 '?'로 가림
+      figure: generated.figure
+        ? { ...generated.figure, mask: (String(generated.options[generated.answerIndex]).replace(/−/g, '-').match(/-?\d+(?:\.\d+)?/g) || []).map(Number) }
+        : null
     };
   }
 

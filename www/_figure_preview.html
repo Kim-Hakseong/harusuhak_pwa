@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>그림 미리보기 (개발용)</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* 개발용 미리보기 — 배포 제외(scripts/archive.sh 가 iOS 번들에서 삭제) */
+    body { background: var(--bg); padding: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .cell { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 10px; }
+    .cell h4 { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+    .cell p { margin: 6px 0 0; font-size: 12px; line-height: 1.4; }
+    .row-title { margin: 22px 0 8px; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <h2>하루수학 그림 13종 × 6변형</h2>
+  <div id="root"></div>
+  <script src="ko.js"></script>
+  <script src="figure.js"></script>
+  <script src="problem-bank.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const IDS = ['BAS-05', 'BAS-10', 'BAS-11', 'BAS-12', 'BAS-14', 'MID-04', 'MID-06', 'MID-07', 'MID-13', 'HIG-04', 'HIG-09', 'HIG-10', 'HIG-14'];
+      const root = document.getElementById('root');
+      const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      IDS.forEach(id => {
+        const h = document.createElement('h3');
+        h.className = 'row-title';
+        h.textContent = id;
+        root.appendChild(h);
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        for (let v = 0; v < 6; v++) {
+          const p = HaruProblemBank.generateProblem({ templateId: id, variant: v, dateKey: '2026-10-30' });
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.innerHTML = `<h4>${id} · v${v} · 정답 ${esc(p.options[p.answerIndex])}</h4>${HaruFigure.render(p.figure)}<p>${esc(p.question)}</p>`;
+          grid.appendChild(cell);
+        }
+        root.appendChild(grid);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1119,3 +1119,22 @@ h1 {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* 문제 그림 (figure.js) — 기존 카드 톤 유지 */
+.question-figure {
+  margin: -4px 0 16px;
+  padding: 10px 8px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+.question-figure svg,
+.feedback-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.feedback-figure {
+  width: 60%;
+  margin: 12px auto 4px;
+}
