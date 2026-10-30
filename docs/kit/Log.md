@@ -8,3 +8,4 @@
 - 2026-10-30 | 3 | www/figure.js 12타입·13템플릿, figure-leak-check 650건 FAIL 0(마스크 없이 돌리면 33건 검출 → 검사 유효), 라벨 viewBox 이탈 0
 - 2026-10-30 | 4 | platform.js(햅틱·공유·모달·알림·포그라운드), 네이티브 DOM 정리, 토스트 존댓말, 매일 알림·앱 정보 카드, Info.plist(세로·암호화·알림 설명·arm64). 웹 스모크 21/21, 콘솔 에러 0
 - 2026-10-30 | 5 | resources/icon.png 1024 RGB(알파 없음), splash 2732, @capacitor/assets --ios 생성, 다크 스플래시 제거
+- 2026-10-30 | 6 | 실기기 Debug 재빌드·설치·실행 성공(DEVICE_SMOKE.md), DerivedData 삭제
