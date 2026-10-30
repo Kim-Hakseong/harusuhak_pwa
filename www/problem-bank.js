@@ -1761,28 +1761,32 @@
           conceptSummary: '선분 AB를 m:n으로 내분하는 점 P의 좌표는 ((m·x₂ + n·x₁)/(m+n), (m·y₂ + n·y₁)/(m+n)) 입니다.',
           formula: 'P = ((m x₂ + n x₁)/(m + n),  (m y₂ + n y₁)/(m + n))',
           generate(rng) {
-            const m = rng.pick([1, 2, 3]);
-            const n = rng.pick([1, 2]);
-            const px = rng.int(-3, 4);
-            const py = rng.int(-2, 5);
-            const x1 = px - m * rng.pick([1, 2]);
-            const x2 = px + n * rng.pick([1, 2]);
-            // 깔끔한 정수 내분점을 위해 역산:
-            const realPx = (m * x2 + n * x1) / (m + n);
-            const y1 = py - m * 2;
-            const y2 = py + n * 2;
-            const realPy = (m * y2 + n * y1) / (m + n);
+            // m ≠ n, gcd(m, n) = 1 인 비만 사용(m:m 은 중점이라 퇴화)
+            const [m, n] = rng.pick([[1, 2], [2, 1], [1, 3], [3, 1], [2, 3], [3, 2]]);
+            const k = m + n;
+            // A에서 방향 (dx, dy)로 k칸 간 점을 B로 두면 내분점 P = A + m·(dx, dy) 가 항상 정수
+            const x1 = rng.int(-4, 3);
+            const y1 = rng.int(-3, 4);
+            const dx = rng.pick([-2, -1, 1, 2]);
+            const dy = rng.pick([-2, -1, 1, 2]);
+            const x2 = x1 + k * dx;
+            const y2 = y1 + k * dy;
+            const realPx = x1 + m * dx;
+            const realPy = y1 + m * dy;
 
             const correct = `(${realPx}, ${realPy})`;
             const distractors = [
-              `(${realPy}, ${realPx})`,
-              `(${((n * x2 + m * x1) / (m + n)).toFixed(0)}, ${realPy})`,
-              `(${realPx + 1}, ${realPy - 1})`
+              `(${x1 + n * dx}, ${y1 + n * dy})`, // m:n 을 n:m 으로 뒤바꿈
+              `(${realPy}, ${realPx})`,          // x·y 좌표 뒤바뀜
+              `(${realPx + 1}, ${realPy - 1})`,
+              `(${realPx - 1}, ${realPy + 1})`,
+              `(${realPx + 1}, ${realPy + 1})`,
+              `(${realPx - 1}, ${realPy - 1})`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `두 점 A(${x1}, ${y1}), B(${x2}, ${y2})를 ${m} : ${n} 으로 내분하는 점 P의 좌표는?`,
+              question: `두 점 A(${x1}, ${y1}), B(${x2}, ${y2})를 ${m} : ${wj(n, '으로/로')} 내분하는 점 P의 좌표는?`,
               variablesInfo: { 점A: `(${x1}, ${y1})`, 점B: `(${x2}, ${y2})`, 내분비: `${m}:${n}` },
               options,
               answerIndex,
