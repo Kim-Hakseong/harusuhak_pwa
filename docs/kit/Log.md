@@ -6,3 +6,4 @@
 - 2026-10-30 | 0 | Capacitor iOS 추가, 실기기 Debug 설치·실행 성공. App Store export는 PLA 미동의로 실패(BLOCKED B-001)
 - 2026-10-30 | 2 | 문항 교정: verify --rounds 100 수정 전 PASS 5418/FAIL 165/AMBIG 17/lint 666+674 → 수정 후 PASS 5600/FAIL 0/AMBIG 0/lint 0. 검증기 미수정
 - 2026-10-30 | 3 | www/figure.js 12타입·13템플릿, figure-leak-check 650건 FAIL 0(마스크 없이 돌리면 33건 검출 → 검사 유효), 라벨 viewBox 이탈 0
+- 2026-10-30 | 4 | platform.js(햅틱·공유·모달·알림·포그라운드), 네이티브 DOM 정리, 토스트 존댓말, 매일 알림·앱 정보 카드, Info.plist(세로·암호화·알림 설명·arm64). 웹 스모크 21/21, 콘솔 에러 0

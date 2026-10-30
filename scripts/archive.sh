@@ -31,6 +31,15 @@ EOF
 sync_web() {
   gen_config
   pnpm cap sync ios >/dev/null
+  local pub="ios/App/App/public"
+  # 개발용 미리보기는 배포 번들에서 제외
+  rm -f "$pub/_figure_preview.html"
+  # config.js 는 iOS 번들에만 주입 (웹 index.html 은 config.js 를 참조하지 않아 404 콘솔 에러 없음)
+  if ! grep -q 'src="config.js"' "$pub/index.html"; then
+    sed -i '' 's#<script src="platform.js"></script>#<script src="config.js"></script>\
+  <script src="platform.js"></script>#' "$pub/index.html"
+  fi
+  grep -q 'src="config.js"' "$pub/index.html" || { echo "config.js 주입 실패" >&2; exit 1; }
 }
 
 case "$MODE" in

@@ -12,3 +12,6 @@
 | D-008 | 2026-10-30 | 배포 파이프라인은 `.ipa` + `store/` 산출물까지 자동. ASC 업로드·메타데이터·제출은 기존 앱과 동일하게 사람이 15분(ASC_CHECKLIST.md). `~/.haku-env`에 ASC_KEY_ID/ASC_ISSUER_ID가 있을 때만 fastlane deliver로 자동화 | 기존 출시 흐름과 동일, API 키 부재 가능성 |
 | D-009 | 2026-10-30 | Kids 카테고리 미선택, Education·4+ | 5.1.4 규제 회피 |
 | D-010 | 2026-10-30 | 하루수학은 교육 장르 → "심사 큐 깊이 1" 유틸리티 규칙의 예외(장기·암송 수첩과 동급). 최종 제출 타이밍은 사람이 결정 | 사용자 제출 규칙 |
+| D-011 | 2026-10-30 | Capacitor `contentInset` 기본값(never) + CSS `env(safe-area-inset-top)` 사용 (DESIGN §6의 "always" 대신) | 기존 index.html이 이미 `viewport-fit=cover`·하단바 `env(safe-area-inset-bottom)` 사용 → "always"와 겹치면 여백 이중 적용. 실기기에서 사람 확인 필요 |
+| D-012 | 2026-10-30 | `www/config.js`는 iOS 번들(`ios/App/App/public/index.html`)에만 script 태그 주입 | gitignore 파일을 웹 index.html이 참조하면 웹에서 404 콘솔 에러(웹 회귀) |
+| D-013 | 2026-10-30 | MID-04 그림의 두 절편은 "?" 대신 지문과 같은 문자 "p"·"q"로 표기, HIG-09 내분비는 숫자 대신 눈금, HIG-04 구간 끝값은 숫자 없이 "주어진 구간" | 정답 숫자와 우연히 겹쳐 "?"로 가려지는 혼란 제거(마스킹 발생 0/2600) |

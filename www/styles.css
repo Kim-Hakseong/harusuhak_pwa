@@ -1138,3 +1138,72 @@ h1 {
   width: 60%;
   margin: 12px auto 4px;
 }
+
+/* ===== iOS 앱(Capacitor) 추가 스타일 — 기존 변수·카드 스타일만 사용 ===== */
+html,
+body {
+  overscroll-behavior: none;
+}
+.app {
+  padding-top: calc(18px + env(safe-area-inset-top));
+}
+.is-native body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 커스텀 모달 (alert/confirm 대체) */
+.hs-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: rgba(30, 34, 29, 0.38);
+}
+.hs-modal-card {
+  width: 100%;
+  max-width: 380px;
+  margin-bottom: 0;
+  box-shadow: var(--shadow-md);
+}
+.hs-modal-message {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+.hs-modal-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+}
+.hs-modal-danger {
+  color: var(--wrong-ink);
+  border-color: var(--wrong-border);
+  background: var(--wrong-bg);
+}
+
+/* 매일 알림 · 앱 정보 */
+.hs-time-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+#notify-toggle {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent-dark);
+}
+.hs-byline {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}

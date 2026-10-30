@@ -1,8 +1,11 @@
-const CACHE = 'harusuhak-v2';
+const CACHE = 'harusuhak-v3';
 const FILES = [
   './',
   './index.html',
   './styles.css',
+  './ko.js',
+  './figure.js',
+  './platform.js',
   './problem-bank.js',
   './app.js',
   './manifest.json',

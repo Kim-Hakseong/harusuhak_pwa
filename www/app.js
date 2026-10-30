@@ -37,6 +37,7 @@
   let selectedOption = null;
   let isAnswered = false;
   let deferredInstallPrompt = null;
+  const Platform = window.HaruPlatform;
 
   function safeParseJSON(str, fallback) {
     try {
@@ -187,7 +188,7 @@
         currentVariant = 0;
         customTemplateId = null;
         renderAll();
-        toast(`${DAY_NAMES[i]}요일 (${formatDateKey(target)}) 문제로 이동했어`);
+        toast(`${DAY_NAMES[i]}요일 (${formatDateKey(target)}) 문제로 이동했어요`);
       };
       daysGrid.appendChild(btn);
     }
@@ -413,6 +414,7 @@
     }
 
     renderHistoryView();
+    Platform.haptic(isCorrect ? 'success' : 'error');
     toast(isCorrect ? '정답입니다! 훌륭해요 🎯' : '해설을 읽고 변형 문제로 복습해 보세요 💪');
   }
 
@@ -509,7 +511,7 @@
 
         setTab('home');
         renderAll();
-        toast(`${tId} 유형 문제를 불러왔어!`);
+        toast(`${tId} 유형 문제를 불러왔어요`);
       };
     });
   }
@@ -577,7 +579,7 @@
         currentVariant = Math.floor(Math.random() * 90) + 1;
         setTab('home');
         renderAll();
-        toast('오답 복습용 숫자 변형 문제를 생성했어!');
+        toast('오답 복습용 숫자 변형 문제를 만들었어요');
       };
     });
   }
@@ -632,7 +634,7 @@
         currentVariant = 0;
         customTemplateId = null;
         renderAll();
-        toast(`${HaruProblemBank.CURRICULUM_PACKS[level].level} 과정으로 전환했어`);
+        toast(`${HaruProblemBank.CURRICULUM_PACKS[level].level} 과정으로 전환했어요`);
       };
     });
 
@@ -651,7 +653,7 @@
       currentVariant = 0;
       customTemplateId = null;
       renderAll();
-      toast('오늘 날짜의 공식 문제로 돌아왔어');
+      toast('오늘 날짜의 공식 문제로 돌아왔어요');
     };
 
     // 하단 내비게이션
@@ -714,7 +716,7 @@
       currentVariant = 0;
       customTemplateId = null;
       renderAll();
-      toast('실제 오늘 날짜로 복귀했어');
+      toast('실제 오늘 날짜로 돌아왔어요');
     };
 
     $('dev-date-picker').onchange = e => {
@@ -742,7 +744,7 @@
       currentVariant = 0;
       customTemplateId = null;
       renderAll();
-      toast('학습 수준을 변경했어');
+      toast('학습 수준을 변경했어요');
     };
 
     $('frame-mode-btn').onclick = () => {
@@ -760,18 +762,23 @@
         practiceLog,
         variationSolvedCount
       };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `harusuhak_backup_${formatDateKey()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast('학습 기록 JSON 백업 파일을 저장했어');
+      const fileName = `harusuhak_backup_${formatDateKey()}.json`;
+      Platform.share(fileName, JSON.stringify(backup, null, 2))
+        .then(done => {
+          if (done) toast(Platform.isNative ? '백업 파일을 공유할 수 있어요' : '학습 기록 JSON 백업 파일을 저장했어요');
+        })
+        .catch(() => toast('백업 파일을 만들지 못했어요. 다시 시도해 주세요'));
     };
 
-    $('reset-btn').onclick = () => {
-      if (confirm('이 기기 브라우저에 저장된 모든 학습 기록과 오답노트를 초기화할까요?')) {
+    $('reset-btn').onclick = async () => {
+      const ok = await Platform.dialog({
+        title: '학습 기록 초기화',
+        message: '이 기기에 저장된 모든 학습 기록과 오답노트를 초기화할까요?\n되돌릴 수 없어요.',
+        confirmText: '초기화',
+        cancelText: '취소',
+        danger: true
+      });
+      if (ok) {
         progress = {};
         history = {};
         practiceLog = [];
@@ -783,7 +790,7 @@
         currentVariant = 0;
         customTemplateId = null;
         renderAll();
-        toast('모든 학습 기록을 초기화했어');
+        toast('모든 학습 기록을 초기화했어요');
       }
     };
 
@@ -801,22 +808,158 @@
         await deferredInstallPrompt.userChoice;
         deferredInstallPrompt = null;
       } else {
-        alert(
-          '📱 모바일 홈 화면 설치 방법\n\n' +
-          '• iPhone (Safari): 하단 [공유] 버튼 → [홈 화면에 추가] 선택\n' +
-          '• Android (Chrome): 우측 상단 메뉴(⋮) → [앱 설치] 또는 [홈 화면에 추가] 선택'
-        );
+        Platform.dialog({
+          title: '📱 모바일 홈 화면 설치 방법',
+          message:
+            '• iPhone (Safari): 하단 [공유] 버튼 → [홈 화면에 추가] 선택\n' +
+            '• Android (Chrome): 우측 상단 메뉴(⋮) → [앱 설치] 또는 [홈 화면에 추가] 선택'
+        });
       }
     };
 
     // Service Worker 등록
-    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    if (!Platform.isNative && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
       });
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // 9. iOS 앱(네이티브) 전용 처리 · 매일 알림 · 앱 정보 · 개발 도구 진입
+  // ---------------------------------------------------------------------------
+  function initPlatform() {
+    // 네이티브: PWA 설치·모바일 프레임·SW 상태 카드는 의미가 없으므로 DOM에서 제거
+    if (Platform.isNative) {
+      ['pwa-card', 'pwa-install-btn', 'frame-mode-btn', 'dev-frame-toggle'].forEach(id => {
+        const el = $(id);
+        if (el) el.remove();
+      });
+      const sub = document.querySelector('#view-settings .sub');
+      if (sub) sub.textContent = '학습 수준, 매일 알림, 학습 데이터를 관리합니다.';
+    }
+
+    // 🧪 개발 도구 버튼은 기본 숨김. 로고 7회 연속 탭(1.5초 이내) 또는 웹 ?dev=1 로 표시
+    const devBtn = $('dev-toggle-btn');
+    const showDev = () => {
+      if (devBtn) devBtn.style.display = '';
+    };
+    if (devBtn) devBtn.style.display = 'none';
+    if (!Platform.isNative && /[?&]dev=1\b/.test(location.search)) showDev();
+    const logo = document.querySelector('.logo');
+    if (logo) {
+      let taps = 0;
+      let last = 0;
+      logo.addEventListener('click', () => {
+        const now = Date.now();
+        taps = now - last <= 1500 ? taps + 1 : 1;
+        last = now;
+        if (taps >= 7) {
+          taps = 0;
+          showDev();
+          toast('개발 도구를 표시했어요');
+        }
+      });
+    }
+
+    initNotifyCard();
+    initAboutCard();
+
+    // 포그라운드 복귀 시 날짜가 바뀌었으면 오늘의 문제로 갱신
+    let lastDateKey = formatDateKey(new Date());
+    Platform.onForeground(() => {
+      const nowKey = formatDateKey(new Date());
+      if (nowKey !== lastDateKey) {
+        lastDateKey = nowKey;
+        if (!simDateObj) {
+          currentVariant = 0;
+          customTemplateId = null;
+        }
+        renderAll();
+      }
+    });
+  }
+
+  function initNotifyCard() {
+    const card = $('notify-card');
+    if (!card || !Platform.notify.available()) return;
+    card.style.display = '';
+    const toggle = $('notify-toggle');
+    const timeInput = $('notify-time');
+    const status = $('notify-status');
+    const isOn = () => localStorage.getItem('hs_notify_on') === '1';
+    const getTime = () => localStorage.getItem('hs_notify_time') || '08:00';
+    const paint = () => {
+      toggle.checked = isOn();
+      timeInput.value = getTime();
+      timeInput.disabled = !isOn();
+      status.textContent = isOn() ? `매일 ${getTime()}에 알려 드려요` : '꺼져 있어요';
+    };
+    const apply = async () => {
+      const [h, m] = getTime().split(':').map(Number);
+      await Platform.notify.schedule(h, m);
+    };
+    paint();
+
+    toggle.onchange = async () => {
+      if (toggle.checked) {
+        // 권한은 토글을 켤 때만 요청
+        const granted = await Platform.notify.requestPermission().catch(() => false);
+        if (!granted) {
+          localStorage.setItem('hs_notify_on', '0');
+          paint();
+          Platform.dialog({
+            title: '알림 권한이 필요해요',
+            message: '설정 앱 → 하루수학 → 알림에서 알림을 허용하면 매일 알림을 받을 수 있어요.'
+          });
+          return;
+        }
+        localStorage.setItem('hs_notify_on', '1');
+        await apply().catch(() => {});
+        toast(`매일 ${getTime()}에 알려 드릴게요`);
+      } else {
+        localStorage.setItem('hs_notify_on', '0');
+        await Platform.notify.cancel().catch(() => {});
+        toast('매일 알림을 껐어요');
+      }
+      paint();
+    };
+
+    timeInput.onchange = async () => {
+      if (!/^\d{2}:\d{2}$/.test(timeInput.value)) return;
+      localStorage.setItem('hs_notify_time', timeInput.value);
+      if (isOn()) {
+        await apply().catch(() => {});
+        toast(`알림 시간을 ${timeInput.value}로 바꿨어요`);
+      }
+      paint();
+    };
+  }
+
+  function initAboutCard() {
+    const cfg = Platform.config;
+    Platform.appInfo().then(info => {
+      const ver = $('about-version');
+      if (ver) ver.textContent = info.version === 'web' ? '하루수학 (웹)' : `하루수학 버전 ${info.version} (${info.build})`;
+
+      const rateBtn = $('rate-btn');
+      if (rateBtn && cfg.APP_STORE_ID) {
+        rateBtn.style.display = '';
+        rateBtn.onclick = () => Platform.openExternal(`itms-apps://itunes.apple.com/app/id${cfg.APP_STORE_ID}?action=write-review`);
+      }
+      const fbBtn = $('feedback-btn');
+      if (fbBtn && cfg.SUPPORT_EMAIL) {
+        fbBtn.style.display = '';
+        fbBtn.onclick = () => {
+          const subject = encodeURIComponent('[하루수학] 피드백');
+          const body = encodeURIComponent(`앱 ${info.version} · iOS ${info.osVersion || '-'} · ${info.model}\n\n`);
+          Platform.openExternal(`mailto:${cfg.SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
+        };
+      }
+    });
+  }
+
   initEvents();
+  initPlatform();
   renderAll();
 })();

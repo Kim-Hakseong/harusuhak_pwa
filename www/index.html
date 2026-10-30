@@ -246,7 +246,7 @@
           </p>
         </div>
 
-        <div class="settings-card">
+        <div class="settings-card" id="pwa-card">
           <h4>📲 모바일 앱 설치 (PWA) 및 개발자 뷰</h4>
           <div class="toggle-row">
             <div>
@@ -276,6 +276,35 @@
             <button type="button" class="secondary-btn" id="reset-btn" style="color:#9e2a1b;border-color:#f1c2bc;background:#fff5f3">
               🗑️ 학습 기록 및 오답노트 전체 초기화
             </button>
+          </div>
+        </div>
+
+        <!-- 매일 알림 (iOS 앱에서만 표시) -->
+        <div class="settings-card" id="notify-card" style="display:none">
+          <h4>⏰ 매일 알림</h4>
+          <div class="toggle-row">
+            <div>
+              <strong style="font-size:13px">오늘의 문제 알림 받기</strong>
+              <div class="small-note" id="notify-status">꺼져 있어요</div>
+            </div>
+            <input type="checkbox" id="notify-toggle" aria-label="매일 알림 켜기">
+          </div>
+          <label for="notify-time" style="margin-top:12px">알림 시간</label>
+          <input type="time" id="notify-time" value="08:00" class="hs-time-input">
+        </div>
+
+        <!-- 앱 정보 -->
+        <div class="settings-card" id="about-card">
+          <h4>ℹ️ 앱 정보</h4>
+          <p class="small-note" id="about-version">하루수학</p>
+          <p class="small-note" style="margin-top:8px">
+            원작: jaesang-jeong (하루수학 PWA)<br>
+            아이디어: 중학생 [원작자 이름]
+          </p>
+          <p class="hs-byline">by TECHSENSE</p>
+          <div style="display:grid;gap:8px;margin-top:12px">
+            <button type="button" class="secondary-btn" id="rate-btn" style="display:none">⭐ App Store에서 평가하기</button>
+            <button type="button" class="secondary-btn" id="feedback-btn" style="display:none">✉️ 피드백 보내기</button>
           </div>
         </div>
       </section>
@@ -308,6 +337,7 @@
 
   <script src="ko.js"></script>
   <script src="figure.js"></script>
+  <script src="platform.js"></script>
   <script src="problem-bank.js"></script>
   <script src="app.js"></script>
 </body>
