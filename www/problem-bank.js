@@ -2372,27 +2372,37 @@
           conceptSummary: '인터넷 통신 속도 단위인 Mbps(Mega bit per second)는 비트 단위이며, 1 Byte = 8 bits 이므로 실제 다운로드 속도(MB/s)는 8로 나누어야 합니다.',
           formula: '전송 속도(MB/s) = 전송 속도(Mbps) ÷ 8,  시간(초) = 전체 파일 용량(MB) ÷ 속도(MB/s)',
           generate(rng) {
-            const mbps = rng.pick([80, 160, 240, 400, 800]); // 8의 배수
+            // 정답 시간이 정수 초가 되는 (속도, 용량) 조합만 사용 (240 Mbps = 30 MB/s 는 3 GB만)
+            const combos = [];
+            for (const sp of [80, 160, 240, 400, 800]) {
+              for (const gb of [1, 2, 3, 4, 5]) if ((gb * 1000) % (sp / 8) === 0) combos.push([sp, gb]);
+            }
+            const [mbps, fileSizeGB] = rng.pick(combos); // 속도는 8의 배수
             const speedMBps = mbps / 8;
-            const fileSizeGB = rng.pick([1, 2, 3, 4, 5]);
             const fileSizeMB = fileSizeGB * 1000; // 1GB = 1,000MB 기준
             const timeSec = fileSizeMB / speedMBps;
-            const min = Math.floor(timeSec / 60);
-            const sec = timeSec % 60;
-            const timeStr = min > 0 ? (sec > 0 ? `${min}분 ${sec}초` : `${min}분`) : `${sec}초`;
+            // 초 → "m분 s초" (소수 1자리로 반올림, 반올림이 일어났을 때만 "약")
+            const fmtTime = t => {
+              const mm = Math.floor(t / 60);
+              const exact = t - mm * 60;
+              const ss = Math.round(exact * 10) / 10;
+              const approx = Math.abs(ss - exact) > 1e-9;
+              const body = mm > 0 ? (ss > 0 ? `${mm}분 ${ss}초` : `${mm}분`) : `${ss}초`;
+              return approx ? `약 ${body}` : body;
+            };
+            const timeStr = fmtTime(timeSec);
 
             const correct = `${timeStr} (실제 속도: ${speedMBps} MB/s)`;
             const naiveSec = fileSizeMB / mbps;
-            const naiveTimeStr = naiveSec >= 60 ? `${Math.floor(naiveSec / 60)}분 ${naiveSec % 60}초` : `${naiveSec}초`;
             const distractors = [
-              `${naiveTimeStr} (실제 속도를 ${mbps} MB/s로 오산)`,
+              `${fmtTime(naiveSec)} (실제 속도를 ${mbps} MB/s로 오산)`,
               `${timeSec * 2}초 (실제 속도: ${speedMBps / 2} MB/s)`,
               `${timeStr} (실제 속도: ${mbps} MB/s)`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
-              question: `가정용 인터넷의 다운로드 속도가 ${mbps} Mbps일 때, 크기가 ${fileSizeGB} GB(1,000 MB)인 고화질 영화 파일을 다운로드하는 데 걸리는 실제 이론상 시간은 얼마인가요?`,
+              question: `가정용 인터넷의 다운로드 속도가 ${mbps} Mbps일 때, 크기가 ${fileSizeGB} GB(${comma(fileSizeMB)} MB)인 고화질 영화 파일을 다운로드하는 데 걸리는 실제 이론상 시간은 얼마인가요?`,
               variablesInfo: { 통신속도: `${mbps} Mbps`, 파일용량: `${fileSizeGB} GB (${fileSizeMB} MB)` },
               options,
               answerIndex,
