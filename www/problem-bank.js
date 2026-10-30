@@ -2547,8 +2547,8 @@
           conceptSummary: '피셔 방정식에 의해 (실질금리) ≈ (명목금리) − (물가상승률) 입니다. 명목금리가 높아도 물가상승률이 더 높으면 실질 구매력은 감소합니다.',
           formula: '실질 이자율 ≈ 명목 이자율 − 물가상승률',
           generate(rng) {
-            const nominal = rng.pick([3, 4, 5]);
-            const inflation = rng.pick([4, 5, 6]);
+            // 물가상승률 > 명목금리 조합만 (같으면 손실 0 → '손실×2' 보기와 동일해져 정답 중복)
+            const [nominal, inflation] = rng.pick([[3, 4], [3, 5], [3, 6], [4, 5], [4, 6], [5, 6]]);
             const real = nominal - inflation; // 음수 실질 금리 상황 연출
             const principal = 1000; // 1,000만 원
             const nominalAmount = Math.round(principal * (1 + nominal / 100));

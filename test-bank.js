@@ -21,7 +21,7 @@ const MIN_UNIQUE = 20;
 const UNIQUE_FLOOR = {
   'BAS-10': 5, 'MID-03': 17, 'MID-06': 14, 'MID-10': 15, 'MID-13': 5, 'MID-14': 5,
   'HIG-05': 17, 'HIG-08': 12, 'HIG-11': 3, 'HIG-13': 11, 'LIF-07': 16, 'LIF-10': 6,
-  'LIF-11': 6, 'LIF-12': 14, 'LIF-13': 9, 'LIF-14': 6
+  'LIF-11': 6, 'LIF-12': 14, 'LIF-13': 6, 'LIF-14': 6
 };
 
 console.log('=== 하루수학 문제은행 검증 (templateId 기반) ===\n');
