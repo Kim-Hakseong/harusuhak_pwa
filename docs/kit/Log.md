@@ -18,3 +18,7 @@
 ## 2026-10-31 · B-001 해결
 - PLA 동의 후 archive.sh app-store: ARCHIVE/EXPORT SUCCEEDED, build/HaruSuhak-appstore.ipa (Apple Distribution, App Store 프로파일)
 - B-003·B-004 미반영 상태 빌드 — 반영 후 재빌드
+
+## 2026-10-31 · B-004 해결
+- 원작자 이름 "정한결" 반영, test-bank 2800 · 검증기 100회 5600/0/0 · 웹 스모크 21/21
+- 설정 스크린샷 ko/en 재생성, archive.sh app-store → EXPORT SUCCEEDED (Apple Distribution)
