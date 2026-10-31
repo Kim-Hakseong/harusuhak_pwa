@@ -193,8 +193,11 @@ async function media() {
 }
 
 async function latestBuild(appId) {
-  const b = await api("GET", `/v1/builds?filter[app]=${appId}&filter[preReleaseVersion.version]=${VERSION}&sort=-uploadedDate&limit=1`);
-  return b.data[0] ?? null;
+  // 빌드 번호가 가장 큰 것 (업로드 직후 목록 반영이 늦어도 이전 빌드를 고르지 않도록 BUILD 로 지정 가능)
+  const b = await api("GET", `/v1/builds?filter[app]=${appId}&filter[preReleaseVersion.version]=${VERSION}&sort=-uploadedDate&limit=20`);
+  const want = process.env.BUILD;
+  const list = want ? b.data.filter((x) => x.attributes.version === want) : b.data;
+  return list.sort((x, y) => Number(y.attributes.version) - Number(x.attributes.version))[0] ?? null;
 }
 
 async function attach() {
