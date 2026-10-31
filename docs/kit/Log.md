@@ -14,3 +14,7 @@
 ## 2026-10-31 · B-001 감시 종료
 - 20분 간격 24회 -exportArchive 재시도(23:48~07:31) 모두 PLA Update available
 - .ipa 미생성 유지 — 사람이 PLA 동의 후 scripts/archive.sh app-store 재실행 필요
+
+## 2026-10-31 · B-001 해결
+- PLA 동의 후 archive.sh app-store: ARCHIVE/EXPORT SUCCEEDED, build/HaruSuhak-appstore.ipa (Apple Distribution, App Store 프로파일)
+- B-003·B-004 미반영 상태 빌드 — 반영 후 재빌드

@@ -1,6 +1,6 @@
 # BLOCKED.md
 
-## B-001 App Store 배포 서명 — Apple Developer PLA 미동의 (사람 필요)
+## B-001 App Store 배포 서명 — Apple Developer PLA 미동의 → **해결 2026-10-31 10:28**
 - 일시: 2026-10-30 23:26
 - 명령: `scripts/archive.sh app-store`
 - 결과: `** ARCHIVE SUCCEEDED **` → `-exportArchive` 실패
@@ -14,6 +14,7 @@
 - 사람 조치(1분): https://developer.apple.com/account 로그인 → 상단 배너의 약관 동의. 그 뒤 `scripts/archive.sh app-store` 재실행.
 - 재시도: 23:26, 23:41(try1), 23:49(try2) 모두 동일 오류(logs/step0-appstore.log, step7-appstore-try1.log, step7-appstore-try2.log). 3회 실패 → 독립 단계 계속.
 - 자동 재시도 감시: 2026-10-30 23:48 ~ 10-31 07:31, 20분 간격 24회(`archives/HaruSuhak.xcarchive` → `-exportArchive`) 모두 `PLA Update available` → `** EXPORT FAILED **`(logs/export-watch.log). **여전히 미해결.**
+- 해결: 사람이 PLA 동의 → `scripts/archive.sh app-store` → `** ARCHIVE SUCCEEDED **` / `** EXPORT SUCCEEDED **`, `build/HaruSuhak-appstore.ipa` 1087071 B. 서명 `Apple Distribution: Hakseong Kim (HFDSR2HFT4)`, 프로파일 `iOS Team Store Provisioning Profile: kr.harusuhak.app`, get-task-allow false, 1.0.0 (1) (logs/appstore-after-pla.log). 단 B-003·B-004 미반영 빌드.
 - archive 는 성공: `archives/HaruSuhak.xcarchive`(1.0.0 (1)). PLA 동의 후 export 만 다시 하면 됨:
   `xcodebuild -exportArchive -archivePath archives/HaruSuhak.xcarchive -exportPath build/export -exportOptionsPlist build/ExportOptions.plist -allowProvisioningUpdates && cp build/export/*.ipa build/HaruSuhak-appstore.ipa`  (또는 `scripts/archive.sh app-store` 전체 재실행)
 

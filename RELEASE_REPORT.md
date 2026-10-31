@@ -17,7 +17,7 @@
 # RELEASE_REPORT — 하루수학 iOS 1.0 (2026-10-30)
 
 ## ⚠️ 사람이 먼저 할 일 (이것 없이는 제출 불가)
-1. **developer.apple.com 개정 약관(PLA) 동의** — App Store 배포 서명이 막혀 `.ipa` 미생성 (BLOCKED B-001)
+1. ~~developer.apple.com 개정 약관(PLA) 동의~~ — 완료(2026-10-31), 배포 서명 정상
 2. **`[원작자 이름]` 채우기** — `www/index.html` `#about-card` (B-004). 그대로 두면 앱·설정 스크린샷에 대괄호가 보임
 3. **`SUPPORT_EMAIL`** 을 `~/.haku-env`에 추가 (B-003) — 피드백 버튼, ASC 지원 연락처
 4. 위 2·3 반영 후 `scripts/archive.sh app-store` 재실행 → `build/HaruSuhak-appstore.ipa`. (2 반영 시 설정 스크린샷도 `scripts/capture-raw.js` → 편집기 export 로 재생성 권장)
@@ -30,7 +30,7 @@
 | 대상 | iPhone 전용(`TARGETED_DEVICE_FAMILY=1`), 세로 고정, iOS 15+ |
 | 실기기 Debug | 성공 — iPhone 16 설치·실행 (`DEVICE_SMOKE.md`) |
 | Release archive | 성공 — `archives/HaruSuhak.xcarchive` |
-| App Store .ipa | **미생성** — `PLA Update available` / iOS Distribution 인증서 없음 (B-001, 수동 3회 + 밤새 자동 24회 재시도 모두 동일, logs/export-watch.log) |
+| App Store .ipa | `build/HaruSuhak-appstore.ipa` 생성 (2026-10-31 10:28, 1.0.0 (1), Apple Distribution 서명·App Store 프로파일). ⚠️ B-003(SUPPORT_EMAIL)·B-004(원작자 이름) 미반영 — 반영 후 재빌드 필요 |
 | TestFlight | 미수행 — `~/.haku-env`에 ASC_KEY_ID·ASC_ISSUER_ID·ASC_KEY_PATH 없음 (8단계 건너뜀, 지시대로) |
 
 ## 공개 URL
