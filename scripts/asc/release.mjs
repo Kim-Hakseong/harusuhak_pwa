@@ -55,7 +55,10 @@ async function ctx() {
 
 async function upsert(listPath, type, match, attrs, rel) {
   const cur = (await all(listPath)).find(match);
-  if (cur) return (await api("PATCH", `/v1/${type}/${cur.id}`, { data: { type, id: cur.id, attributes: attrs } })).data;
+  if (cur) {
+    const { locale, ...upd } = attrs; // locale 은 생성 시에만
+    return (await api("PATCH", `/v1/${type}/${cur.id}`, { data: { type, id: cur.id, attributes: upd } })).data;
+  }
   return (await api("POST", `/v1/${type}`, { data: { type, attributes: attrs, relationships: rel } })).data;
 }
 
