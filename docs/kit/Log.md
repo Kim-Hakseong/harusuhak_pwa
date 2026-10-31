@@ -35,3 +35,8 @@
 - AppUITests 타깃 추가, 실기기 XCUITest TEST SUCCEEDED (도착 20:10:06, 탭→앱, 끈 뒤 미도착)
 - app-store 재빌드 EXPORT SUCCEEDED (테스트 번들 미포함)
 - 정정: 위 "app-store 재빌드 EXPORT SUCCEEDED"는 확인 전 기록 — 실제로는 공유 스킴 추가로 자동 생성 App 스킴이 사라져 실패(exit 65, "does not contain a scheme named App"). 공유 App 스킴 추가 후 재실행 → ARCHIVE/EXPORT SUCCEEDED, 20:14, 테스트 번들 미포함
+
+## 2026-10-31 · ASC 등록
+- 앱 레코드(사람) → 메타데이터·가격 무료·판매 대한민국만·스크린샷 12장 API 반영, 빌드 1 업로드·연결
+- 제출 시 App Privacy 미게시·가격 미설정(스크립트 버그) 409 → 수정
+- 오픈소스 라이선스 고지(D-016) 추가, 빌드 2 업로드(UPLOAD SUCCEEDED), 웹 스모크 24/24

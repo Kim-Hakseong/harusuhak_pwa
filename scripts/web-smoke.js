@@ -99,6 +99,13 @@ const check = (name, ok, detail = '') => {
   // 앱 정보 카드
   check('앱 정보 카드: by TECHSENSE', (await page.textContent('#about-card')).includes('by TECHSENSE'));
 
+  // 오픈소스 라이선스 모달
+  await page.click('#license-btn');
+  const licText = await page.textContent('.hs-modal-overlay .hs-modal-message');
+  check('오픈소스 라이선스 모달(원작자·MIT·Capacitor·Lucide)', ['정한결, 정재상', 'MIT License', 'Permission is hereby granted', 'Capacitor', 'ISC License'].every(t => licText.includes(t)));
+  await page.click('.hs-modal-overlay .primary');
+  check('라이선스 모달 닫힘', !(await page.isVisible('.hs-modal-overlay')));
+
   // ?dev=1 → 🧪 버튼 표시
   await page.goto(`${BASE}/index.html?dev=1`, { waitUntil: 'networkidle' });
   check('?dev=1 → 🧪 버튼 표시', await page.isVisible('#dev-toggle-btn'));
