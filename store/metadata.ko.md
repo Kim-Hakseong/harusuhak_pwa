@@ -38,7 +38,7 @@
 · 회원가입·로그인 없음, 광고·추적 없음, 서버 통신 없음
 · 학습 기록은 기기에만 저장되며, 원하면 JSON 파일로 백업해 공유할 수 있어요
 
-원작: jaesang-jeong의 하루수학 웹앱(MIT 라이선스)을 TECHSENSE가 iOS 앱으로 출시했습니다.
+원작: 정한결, 정재상의 하루수학 웹앱(MIT 라이선스)을 TECHSENSE가 iOS 앱으로 출시했습니다.
 
 ## 키워드 (100자, 쉼표 구분)
 수학,수학문제,교육과정,성취기준,초등수학,중학수학,고등수학,오답노트,매일,연산,함수,확률,도형,분수,방정식,학습
@@ -53,7 +53,7 @@
 
 ## URL
 - 개인정보 처리방침: https://kim-hakseong.github.io/harusuhak_pwa/privacy.html
-- 지원 URL: (사람 결정 — SUPPORT_EMAIL 미설정, BLOCKED B-003. 임시로 개인정보 처리방침 URL 사용 가능)
+- 지원 URL: https://kim-hakseong.github.io/harusuhak_pwa/support.html (문의: GitHub Issues)
 - 마케팅 URL: 없음
 
 ## App Privacy

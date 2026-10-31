@@ -38,7 +38,7 @@ HaruSuhak ("a math problem a day") gives you one problem a day aligned to the ac
 · No account, no ads, no tracking, no network requests
 · Progress is stored on your device only; export a JSON backup via the share sheet anytime
 
-Based on the HaruSuhak web app by jaesang-jeong (MIT License), released for iOS by TECHSENSE. The app content is in Korean.
+Based on the HaruSuhak web app by 정한결 and 정재상 (MIT License), released for iOS by TECHSENSE. The app content is in Korean.
 
 ## Keywords (100)
 math,korean,curriculum,daily,problem,algebra,geometry,fraction,equation,function,probability,quiz
@@ -51,7 +51,7 @@ Education (primary). Not in the Kids category.
 
 ## URLs
 - Privacy Policy: https://kim-hakseong.github.io/harusuhak_pwa/privacy.html
-- Support URL: to be decided by a human (SUPPORT_EMAIL not set — BLOCKED B-003)
+- Support URL: https://kim-hakseong.github.io/harusuhak_pwa/support.html (contact via GitHub Issues)
 
 ## App Privacy
 Data Not Collected
