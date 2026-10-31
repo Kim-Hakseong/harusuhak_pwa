@@ -1,5 +1,5 @@
 // 하루수학 App Store 등록 자동화 (ASC API) — 단계별·재실행 안전
-//   node scripts/asc/release.mjs setup    버전 문자열·앱 정보(이름·부제·개인정보 URL)·카테고리·연령 등급·콘텐츠 권리·가격(무료)·판매 지역·버전 현지화·저작권·심사 정보
+//   node scripts/asc/release.mjs setup    버전 문자열·앱 정보(이름·부제·개인정보 URL)·카테고리·연령 등급·콘텐츠 권리·가격(무료)·판매 지역(대한민국만)·버전 현지화·저작권·심사 정보
 //   node scripts/asc/release.mjs media    6.9" 스크린샷 업로드 (ko, en-US) — store/screenshots/output/{ko,en}/0N-*.png
 //   node scripts/asc/release.mjs attach   처리 완료된 최신 빌드를 버전에 연결
 //   node scripts/asc/release.mjs submit   심사 제출
@@ -124,17 +124,21 @@ async function setup() {
   }
   console.log("price free ok");
 
-  // 판매 지역: 전 지역 + 새 지역 자동
+  // 판매 지역: 대한민국만 (한국 교육과정 전용 · 새 지역 자동 추가 안 함)
   const avail = await api("GET", `/v1/apps/${app.id}/appAvailabilityV2`).catch(() => null);
   if (!avail?.data) {
-    const terr = await all("/v1/territories?limit=200");
-    const inc = terr.map((t, i) => ({ type: "territoryAvailabilities", id: `\${t${i}}`, attributes: { available: true, releaseDate: null, preOrderEnabled: false }, relationships: { territory: { data: { type: "territories", id: t.id } } } }));
     await api("POST", "/v2/appAvailabilities", {
-      data: { type: "appAvailabilities", attributes: { availableInNewTerritories: true }, relationships: { app: { data: { type: "apps", id: app.id } }, territoryAvailabilities: { data: inc.map((x) => ({ type: x.type, id: x.id })) } } },
-      included: inc,
+      data: { type: "appAvailabilities", attributes: { availableInNewTerritories: false }, relationships: { app: { data: { type: "apps", id: app.id } }, territoryAvailabilities: { data: [{ type: "territoryAvailabilities", id: "${k}" }] } } },
+      included: [{ type: "territoryAvailabilities", id: "${k}", attributes: { available: true, releaseDate: null, preOrderEnabled: false }, relationships: { territory: { data: { type: "territories", id: "KOR" } } } }],
     });
-    console.log("availability", terr.length, "territories ok");
-  } else console.log("availability 이미 설정됨");
+  } else {
+    // 이미 있으면 지역별로 KOR 만 켠다 (availableInNewTerritories 는 API 로 변경 불가 — ASC 웹에서)
+    for (const t of await all(`/v2/appAvailabilities/${avail.data.id}/territoryAvailabilities?limit=200`)) {
+      const want = JSON.parse(Buffer.from(t.id, "base64url").toString()).t === "KOR";
+      if (t.attributes.available !== want) await api("PATCH", `/v1/territoryAvailabilities/${t.id}`, { data: { type: "territoryAvailabilities", id: t.id, attributes: { available: want } } });
+    }
+  }
+  console.log("availability KOR only ok");
 
   // 심사 정보: 연락처는 같은 계정의 기존 앱 심사 정보에서 복사, 메모는 metadata.ko.md + en 심사 노트
   const notes = [readMeta("ko").notes, readFileSync(join(ROOT, "store/metadata.en.md"), "utf8").split(/^## Review Notes\s*$/m)[1]?.trim()].filter(Boolean).join("\n\n---\n\n");

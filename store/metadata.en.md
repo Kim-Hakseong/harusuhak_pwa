@@ -46,6 +46,9 @@ math,korean,curriculum,daily,problem,algebra,geometry,fraction,equation,function
 ## Category
 Education (primary). Not in the Kids category.
 
+## Availability
+South Korea only (Korean curriculum, Korean-only content).
+
 ## Age Rating
 4+
 
