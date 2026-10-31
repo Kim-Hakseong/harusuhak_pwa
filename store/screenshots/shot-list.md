@@ -16,4 +16,4 @@ with the "Export bundle" button, 6.9" set copied to `output/{ko,en}/` and flatte
 | 6 | 설정 (매일 알림 · 앱 정보) | device-bottom | 가입 없이 / 기기 안에서만 | No sign-up. / No tracking. |
 
 Note: the app UI is Korean only, so the en set shows Korean screens under English captions.
-Settings shot recaptured 2026-10-31 with the credit filled in ("아이디어: 중학생 정한결").
+Settings shot recaptured 2026-10-31 ; the about card (credit "원작: 정한결, 정재상") is below the fold, so it is not visible in the shot.

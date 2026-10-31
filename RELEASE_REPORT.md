@@ -18,7 +18,7 @@
 
 ## ⚠️ 사람이 먼저 할 일 (이것 없이는 제출 불가)
 1. ~~developer.apple.com 개정 약관(PLA) 동의~~ — 완료(2026-10-31), 배포 서명 정상
-2. ~~`[원작자 이름]` 채우기~~ — 완료: "아이디어: 중학생 정한결", 설정 스크린샷(06 ko/en) 재생성
+2. ~~`[원작자 이름]` 채우기~~ — 완료: "원작: 정한결, 정재상" + by TECHSENSE (사용자 지정)
 3. **`SUPPORT_EMAIL`** 을 `~/.haku-env`에 추가 (B-003) — 피드백 버튼, ASC 지원 연락처
 4. 위 2·3 반영 후 `scripts/archive.sh app-store` 재실행 → `build/HaruSuhak-appstore.ipa`. (2 반영 시 설정 스크린샷도 `scripts/capture-raw.js` → 편집기 export 로 재생성 권장)
 
