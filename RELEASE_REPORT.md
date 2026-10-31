@@ -1,3 +1,10 @@
+# ✅ 심사 제출 완료 — 2026-10-31 21:40 KST (WAITING_FOR_REVIEW)
+- 앱: 하루수학 · ASC 앱 ID 6829197013 · 1.0.0 (2) · 판매 지역 대한민국만 · 무료 · 교육 · 4+
+- 자동화: `scripts/asc/upload.sh`(altool) + `node scripts/asc/release.mjs setup|media|attach|submit|check` (키는 ~/.haku-env)
+- 사람이 한 것: ASC 앱 레코드 생성, App Privacy "데이터 미수집" 게시
+- 남은 사람 일: 가격 및 사용 가능 여부 → "새로운 국가 또는 지역에서 자동으로 사용 가능" 해제(API 불가)
+- 다음 업데이트: APP_STORE_ID=6829197013 을 ~/.haku-env 에 넣어 "App Store에서 평가하기" 활성화, SUPPORT_EMAIL(선택)
+
 # ASC_CHECKLIST.md — 사람이 하는 15분 (Ralph 완료 후)
 
 전제: Ralph가 `build/HaruSuhak-appstore.ipa`, `store/metadata.ko.md`, `store/metadata.en.md`, `store/screenshots/output/*.png`, `docs/privacy.html` URL을 RELEASE_REPORT.md에 기록해 둔 상태.
