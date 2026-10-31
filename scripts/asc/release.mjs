@@ -112,8 +112,9 @@ async function setup() {
   console.log("age rating", ai.data.attributes.appStoreAgeRating, "korea", ai.data.attributes.koreaAgeRating);
 
   // 가격: 무료 (기준 지역 대한민국)
-  const sched = await api("GET", `/v1/apps/${app.id}/appPriceSchedule`).catch(() => null);
-  if (!sched?.data) {
+  // 새 앱에도 빈 가격 일정(manualPrices 0개)이 있으므로 실제 가격 유무로 판단
+  const sched = await api("GET", `/v1/apps/${app.id}/appPriceSchedule?include=manualPrices`).catch(() => null);
+  if (!sched?.data?.relationships?.manualPrices?.data?.length) {
     const pts = await api("GET", `/v1/apps/${app.id}/appPricePoints?filter[territory]=KOR&limit=5`);
     const free = pts.data.find((p) => Number(p.attributes.customerPrice) === 0);
     await api("POST", "/v1/appPriceSchedules", {
