@@ -73,7 +73,7 @@
 - `store/screenshots/output/ko/01~06.png`, `output/en/01~06.png` — 12장 모두 `sips` 1320×2868, RGB(알파 없음)
 
 ## BLOCKED (BLOCKED.md)
-- B-001 PLA 미동의 → .ipa 미생성 (사람 1분)
+- ~~B-001 PLA 미동의~~ → 해결(2026-10-31), .ipa 생성
 - B-002 16개 템플릿 고유 문항 < 20 (수학 로직 동결과 충돌 → 현재 값을 회귀 하한으로)
 - B-003 SUPPORT_EMAIL 없음
 - B-004 `[원작자 이름]` 자리표시자
