@@ -34,3 +34,4 @@
 ## 2026-10-31 · 매일 알림 E2E
 - AppUITests 타깃 추가, 실기기 XCUITest TEST SUCCEEDED (도착 20:10:06, 탭→앱, 끈 뒤 미도착)
 - app-store 재빌드 EXPORT SUCCEEDED (테스트 번들 미포함)
+- 정정: 위 "app-store 재빌드 EXPORT SUCCEEDED"는 확인 전 기록 — 실제로는 공유 스킴 추가로 자동 생성 App 스킴이 사라져 실패(exit 65, "does not contain a scheme named App"). 공유 App 스킴 추가 후 재실행 → ARCHIVE/EXPORT SUCCEEDED, 20:14, 테스트 번들 미포함
