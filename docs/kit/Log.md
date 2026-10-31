@@ -30,3 +30,7 @@
 ## 2026-10-31 · 앱 정보 크레딧 변경
 - "원작: 정한결, 정재상" 한 줄, by TECHSENSE 유지. 웹 스모크 22/22
 - .ipa 재빌드(EXPORT SUCCEEDED), 실기기 Debug 설치·실행
+
+## 2026-10-31 · 매일 알림 E2E
+- AppUITests 타깃 추가, 실기기 XCUITest TEST SUCCEEDED (도착 20:10:06, 탭→앱, 끈 뒤 미도착)
+- app-store 재빌드 EXPORT SUCCEEDED (테스트 번들 미포함)

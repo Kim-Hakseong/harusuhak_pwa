@@ -24,3 +24,18 @@ Launched application with kr.harusuhak.app bundle identifier.
 2. 그림 문제(교육과정 탭 → MID-06 등) SVG 표시, 정답 확인 후 풀이 상단 60% 그림
 3. 정답/오답 햅틱, 설정 → 매일 알림 토글 시에만 권한 팝업, 백업 → 공유 시트
 4. 로고 7번 탭 → 🧪 버튼 표시, 설정 탭에 PWA 설치 카드 없음
+
+## 매일 알림 E2E — XCUITest 실기기 (2026-10-31 20:07~20:12, iPhone 16)
+- 명령: `xcodebuild test -project ios/App/App.xcodeproj -scheme AppUITests -destination "id=00008140-001611222E2B001C" -allowProvisioningUpdates`
+- 테스트: `ios/App/AppUITests/NotifyUITests.swift` — 설정 → 알림 켜기(권한 허용) → 시간 휠을 2분 뒤로 → 홈 → 배너 대기 → 배너 탭 → 2분 뒤로 재설정 후 끄기 → 대기
+- 결과(logs/uitest-notify.log):
+  ```
+  NOTIFY-E2E 대기 139초 (예정 20:10)
+  NOTIFY-E2E 배너 도착: 2026-10-31 11:10:06 +0000 label=하루수학, 지금, 하루수학, 오늘의 한 문제가 준비되었어요. 3분만 풀어 볼까요?
+  NOTIFY-E2E 배너 탭 → 앱 포그라운드
+  NOTIFY-E2E 끈 상태 대기 144초 (예정이었던 20:12)
+  NOTIFY-E2E 끈 뒤 배너 없음 확인
+  Executed 1 test, with 0 failures (0 unexpected) in 257.857 seconds
+  ** TEST SUCCEEDED **
+  ```
+- 미검증: 다음 날 같은 시각 반복(UNCalendarNotificationTrigger repeats:true 코드 경로만 확인), 첫 설치 시 권한 팝업 문구(이미 허용된 상태였음)
