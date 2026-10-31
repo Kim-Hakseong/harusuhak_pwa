@@ -1,4 +1,4 @@
-const CACHE = 'harusuhak-v3';
+const CACHE = 'harusuhak-v4';
 const FILES = [
   './',
   './index.html',

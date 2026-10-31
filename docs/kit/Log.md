@@ -22,3 +22,7 @@
 ## 2026-10-31 · B-004 해결
 - 원작자 이름 "정한결" 반영, test-bank 2800 · 검증기 100회 5600/0/0 · 웹 스모크 21/21
 - 설정 스크린샷 ko/en 재생성, archive.sh app-store → EXPORT SUCCEEDED (Apple Distribution)
+
+## 2026-10-31 · 하단 탭 아이콘 통일 (D-015)
+- 인라인 SVG 4개 22×22, 웹 스모크 22/22, 스토어 스크린샷 재생성(10장 변경)
+- app-store .ipa 재빌드(EXPORT SUCCEEDED), 실기기 Debug 설치

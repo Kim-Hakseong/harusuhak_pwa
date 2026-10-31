@@ -33,6 +33,13 @@ const check = (name, ok, detail = '') => {
   check('매일 알림 카드 숨김(웹)', !(await page.isVisible('#notify-card')));
   check('HaruPlatform.isNative = false', (await page.evaluate(() => window.HaruPlatform.isNative)) === false);
 
+  // 하단 탭 아이콘: 4개 모두 같은 크기의 SVG
+  const navIcons = await page.$$eval('.bottom-nav .nav-icon', els => els.map(e => {
+    const r = e.getBoundingClientRect();
+    return `${e.tagName.toLowerCase()}:${Math.round(r.width)}x${Math.round(r.height)}`;
+  }));
+  check('하단 탭 아이콘 4개 동일 크기 SVG', navIcons.length === 4 && new Set(navIcons).size === 1 && navIcons[0].startsWith('svg:'), navIcons.join(' '));
+
   // 정답 확인 → 풀이 표시
   await page.click('#options button >> nth=0');
   await page.click('#check-btn');
