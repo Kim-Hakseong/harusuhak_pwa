@@ -52,3 +52,4 @@
 - 새 버전 팝업(D-017), 평가 버튼 활성화, Android 뒤로 가기·Play 평가 대비, 개인정보 처리방침 정정
 - 1.0.1 (3) 아카이브·업로드(UPLOAD SUCCEEDED), ASC 1.0.1 생성·메타데이터·스크린샷 12장 재생성·빌드 연결, 웹 스모크 24/24
 - 안드로이드 작업서(docs/android/ANDROID_RELEASE.md)·루트 CLAUDE.md 추가. 업데이트 팝업 실기기 테스트는 폰 잠금으로 보류
+- 1.0.1 심사 제출 → WAITING_FOR_REVIEW (2026-11-05T05:39:32Z)
