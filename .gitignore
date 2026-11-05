@@ -15,3 +15,11 @@ node_modules/
 store/screenshots/raw/
 archives/
 store/screenshots/public/screenshots/raw/
+
+# Android 서명·서비스 계정 (리포 밖에 보관)
+*.jks
+*.keystore
+play-service-account*.json
+android/app/build/
+android/.gradle/
+android/local.properties

@@ -25,3 +25,8 @@
 - MIT 의 유일한 조건(복사본에 저작권·허가 고지 포함)을 지키기 위해 설정 → 앱 정보에 "📄 오픈소스 라이선스" 버튼 추가. 모달에 원작(정한결, 정재상) MIT 전문, Capacitor·공식 플러그인(MIT), Lucide(ISC) 고지.
 - LICENSE 저작권자를 사용자 지정 원작자 표기(정한결, 정재상)로 정정. 빌드 번호 2.
 - 판매 지역 대한민국만(사용자 지정). availableInNewTerritories 는 API 변경 불가 → ASC 웹에서 해제 필요.
+
+## D-017 새 버전 알림 팝업 (2026-11-05, 사용자 요청)
+- `@capawesome/capacitor-app-update` 8.1.1. 실행·포그라운드 복귀 시 12시간에 한 번 스토어 조회(iOS: itunes lookup, country=kr). 새 버전이면 "새 버전이 나왔어요" 모달 → 업데이트(iOS: App Store 페이지 / Android: Play 인앱 즉시 업데이트) · 나중에(그 버전은 그날 다시 묻지 않음).
+- 앱 최초의 네트워크 요청 → 개인정보 처리방침·심사 메모의 "서버와 통신하지 않음"을 "버전 번호만 스토어에 조회"로 정정. App Privacy "데이터 미수집"은 유지(개발자 수집 없음).
+- APP_STORE_ID=6829197013 을 ~/.haku-env 에 추가 → "App Store에서 평가하기" 버튼 활성화. Android 뒤로 가기·Play 평가 링크도 미리 넣음.

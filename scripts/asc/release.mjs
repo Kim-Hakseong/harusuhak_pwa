@@ -13,16 +13,18 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const VERSION = "1.0.0";
+// 버전은 Xcode 프로젝트(MARKETING_VERSION)를 따른다
+const VERSION = readFileSync(join(ROOT, "ios/App/App.xcodeproj/project.pbxproj"), "utf8").match(/MARKETING_VERSION = ([0-9.]+);/)[1];
 const PRIVACY_URL = "https://kim-hakseong.github.io/harusuhak_pwa/privacy.html";
 const SUPPORT_URL = "https://kim-hakseong.github.io/harusuhak_pwa/support.html";
 const COPYRIGHT = "2026 TECHSENSE";
 // 메타데이터 파일의 섹션 제목 → 필드
 const LOCS = {
-  ko: { file: "store/metadata.ko.md", shots: "ko", keys: { name: "앱 이름", subtitle: "부제", promotionalText: "홍보 문구", description: "설명", keywords: "키워드", notes: "심사 노트" } },
-  "en-US": { file: "store/metadata.en.md", shots: "en", keys: { name: "Name", subtitle: "Subtitle", promotionalText: "Promotional Text", description: "Description", keywords: "Keywords" } },
+  ko: { file: "store/metadata.ko.md", shots: "ko", keys: { name: "앱 이름", subtitle: "부제", promotionalText: "홍보 문구", description: "설명", keywords: "키워드", notes: "심사 노트", whatsNew: "새로운 기능" } },
+  "en-US": { file: "store/metadata.en.md", shots: "en", keys: { name: "Name", subtitle: "Subtitle", promotionalText: "Promotional Text", description: "Description", keywords: "Keywords", whatsNew: "What's New" } },
 };
-const LIMITS = { name: 30, subtitle: 30, promotionalText: 170, description: 4000, keywords: 100 };
+const LIMITS = { name: 30, subtitle: 30, promotionalText: 170, description: 4000, keywords: 100, whatsNew: 4000 };
+const OPTIONAL = new Set(["whatsNew"]); // 첫 버전에는 없음
 
 // "## 제목 (n자)" 섹션 본문 추출
 function readMeta(loc) {
@@ -35,7 +37,7 @@ function readMeta(loc) {
   const out = {};
   for (const [field, title] of Object.entries(LOCS[loc].keys)) {
     const k = Object.keys(sec).find((t) => t.startsWith(title));
-    if (!k) throw new Error(`${loc}: 섹션 "${title}" 없음`);
+    if (!k) { if (OPTIONAL.has(field)) continue; throw new Error(`${loc}: 섹션 "${title}" 없음`); }
     out[field] = sec[k];
     if (LIMITS[field] && [...out[field]].length > LIMITS[field]) throw new Error(`${loc}.${field} ${[...out[field]].length}자 > ${LIMITS[field]}`);
   }
@@ -50,7 +52,9 @@ async function ctx() {
     ?? inc.included.find((x) => x.type === "appInfos");
   const ver = inc.included.find((x) => x.type === "appStoreVersions" && x.attributes.platform === "IOS"
     && ["PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED"].includes(x.attributes.appStoreState));
-  return { app, info, ver };
+  // 이미 출시된 버전이 있으면 업데이트 버전 ("새로운 기능" 문구 필요)
+  const isUpdate = inc.included.some((x) => x.type === "appStoreVersions" && x.attributes.platform === "IOS" && x.attributes.appStoreState === "READY_FOR_SALE");
+  return { app, info, ver, isUpdate };
 }
 
 async function upsert(listPath, type, match, attrs, rel) {
@@ -63,8 +67,14 @@ async function upsert(listPath, type, match, attrs, rel) {
 }
 
 async function setup() {
-  const { app, info, ver } = await ctx();
-  console.log("app", app.id, "appInfo", info.id, "version", ver?.id, ver?.attributes.versionString);
+  let { app, info, ver, isUpdate } = await ctx();
+  if (!ver) {
+    // 업데이트: 새 버전 생성 (이전 버전의 현지화·스크린샷은 ASC 가 복사)
+    await api("POST", "/v1/appStoreVersions", { data: { type: "appStoreVersions", attributes: { platform: "IOS", versionString: VERSION }, relationships: { app: { data: { type: "apps", id: app.id } } } } });
+    console.log("new version created", VERSION);
+    ({ app, info, ver, isUpdate } = await ctx());
+  }
+  console.log("app", app.id, "appInfo", info.id, "version", ver?.id, ver?.attributes.versionString, isUpdate ? "(update)" : "(first)");
   if (!ver) throw new Error("편집 가능한 iOS 버전 없음");
 
   if (ver.attributes.versionString !== VERSION || ver.attributes.copyright !== COPYRIGHT) {
@@ -79,7 +89,7 @@ async function setup() {
       { appInfo: { data: { type: "appInfos", id: info.id } } });
     console.log("appInfoLoc", loc, m.name, "/", m.subtitle);
     await upsert(`/v1/appStoreVersions/${ver.id}/appStoreVersionLocalizations`, "appStoreVersionLocalizations", (x) => x.attributes.locale === loc,
-      { locale: loc, description: m.description, keywords: m.keywords, promotionalText: m.promotionalText, supportUrl: SUPPORT_URL },
+      { locale: loc, description: m.description, keywords: m.keywords, promotionalText: m.promotionalText, supportUrl: SUPPORT_URL, ...(isUpdate && m.whatsNew ? { whatsNew: m.whatsNew } : {}) },
       { appStoreVersion: { data: { type: "appStoreVersions", id: ver.id } } });
     console.log("versionLoc", loc, "description", [...m.description].length, "keywords", [...m.keywords].length);
   }

@@ -35,10 +35,17 @@ HaruSuhak ("a math problem a day") gives you one problem a day aligned to the ac
 · Get a reminder at the time you choose (8:00 AM by default). Notification permission is requested only when you turn it on
 
 ■ Privacy
-· No account, no ads, no tracking, no network requests
+· No account, no ads, no tracking, no server of our own (only an App Store version check)
 · Progress is stored on your device only; export a JSON backup via the share sheet anytime
 
 Based on the HaruSuhak web app by 정한결 and 정재상 (MIT License), released for iOS by TECHSENSE. The app content is in Korean.
+
+## What's New (4000, updates only)
+1.0.1
+· Corrected every problem's achievement-standard code and wording to match the official 2022 revised Korean math curriculum
+· Cleaned up grade and track labels (Elementary: grades 5–6; Everyday Math: Economics Math and Vocational Math)
+· The app now lets you know when a new version is available
+· You can rate HaruSuhak on the App Store from Settings → About
 
 ## Keywords (100)
 math,korean,curriculum,daily,problem,algebra,geometry,fraction,equation,function,probability,quiz
@@ -60,6 +67,6 @@ South Korea only (Korean curriculum, Korean-only content).
 Data Not Collected
 
 ## Review Notes
-HaruSuhak is an offline math practice app with no login. There is no server: all content (problems, choices, solutions, figures) is generated on-device from a seed. No network requests, accounts, payments, ads or tracking.
+HaruSuhak is an offline math practice app with no login. There is no server: all content (problems, choices, solutions, figures) is generated on-device from a seed. The only network request is an App Store lookup (itunes.apple.com/lookup) at launch to check for a newer version; if one exists, an "Update" pop-up opens the App Store page (no personal data sent). No accounts, payments, ads or tracking.
 How to review: (1) Solve today's problem on the Home tab and tap "정답 확인" (Check answer) to see the step-by-step solution. (2) "숫자 바꿔 변형 문제 풀기" generates a new variation. (3) The Curriculum tab lets you open any of the 56 types (e.g. MID-06 includes a figure). (4) Settings → "매일 알림" (Daily reminder) requests notification permission only when switched on. (5) Settings → JSON backup opens the iOS share sheet.
 The app content is in Korean.

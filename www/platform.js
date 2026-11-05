@@ -163,6 +163,56 @@
     return { version: 'web', build: '', osVersion, model };
   }
 
+  // ---------------------------------------------------------------- 스토어 새 버전 확인
+  // iOS: App Store 조회(대한민국 스토어) → 스토어 페이지 열기 / Android: Play 인앱 즉시 업데이트(끝나면 새 버전으로 재실행)
+  const update = {
+    async check() {
+      const AU = plugin('AppUpdate');
+      if (!AU) return null;
+      const info = await AU.getAppUpdateInfo({ country: 'kr' });
+      return {
+        available: info.updateAvailability === 2, // UPDATE_AVAILABLE
+        version: info.availableVersionName || '',
+        immediate: !!info.immediateUpdateAllowed
+      };
+    },
+    async open(immediate) {
+      const AU = plugin('AppUpdate');
+      if (!AU) return;
+      if (Cap.getPlatform() === 'android' && immediate) {
+        await AU.performImmediateUpdate();
+        return;
+      }
+      if (Cap.getPlatform() === 'ios' && !config.APP_STORE_ID) return; // iOS 는 앱 ID 필수
+      await AU.openAppStore(config.APP_STORE_ID ? { appId: config.APP_STORE_ID } : {});
+    }
+  };
+
+  // ---------------------------------------------------------------- 스토어 평가 페이지
+  // iOS: 리뷰 작성 화면(앱 ID 필요) / Android: Play 스토어 앱 페이지
+  const review = {
+    available: () => isNative && (Cap.getPlatform() === 'android' || !!config.APP_STORE_ID),
+    open() {
+      if (Cap.getPlatform() === 'android') {
+        const AU = plugin('AppUpdate');
+        if (AU) AU.openAppStore({}).catch(() => {});
+        return;
+      }
+      openExternal(`itms-apps://itunes.apple.com/app/id${config.APP_STORE_ID}?action=write-review`);
+    }
+  };
+
+  // ---------------------------------------------------------------- Android 뒤로 가기 버튼 (iOS 에는 없음)
+  function onBackButton(cb) {
+    const A = plugin('App');
+    if (A && Cap.getPlatform() === 'android') A.addListener('backButton', cb);
+  }
+
+  function exitApp() {
+    const A = plugin('App');
+    if (A && A.exitApp) A.exitApp();
+  }
+
   function openExternal(url) {
     // WKWebView 는 mailto:/itms-apps: 링크를 시스템에 넘긴다
     global.location.href = url;
@@ -177,5 +227,5 @@
   }
   initNative();
 
-  global.HaruPlatform = { isNative, config, haptic, share, dialog, notify, onForeground, appInfo, openExternal };
+  global.HaruPlatform = { isNative, config, haptic, share, dialog, notify, update, review, onForeground, onBackButton, exitApp, appInfo, openExternal };
 })(typeof window !== 'undefined' ? window : globalThis);

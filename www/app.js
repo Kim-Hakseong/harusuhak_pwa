@@ -864,6 +864,8 @@
 
     initNotifyCard();
     initAboutCard();
+    initUpdateCheck();
+    initBackButton();
 
     // 포그라운드 복귀 시 날짜가 바뀌었으면 오늘의 문제로 갱신
     let lastDateKey = formatDateKey(new Date());
@@ -963,6 +965,58 @@ Permission to use, copy, modify, and/or distribute this software for any purpose
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.`;
 
+  // 새 버전 알림: 실행·복귀 시 12시간에 한 번 스토어 조회, "나중에"를 누른 버전은 다음 날 다시 묻는다
+  function initUpdateCheck() {
+    if (!Platform.isNative) return;
+    const CHECK_EVERY = 12 * 60 * 60 * 1000;
+    let lastCheck = 0;
+    let showing = false;
+    const run = async () => {
+      if (showing || Date.now() - lastCheck < CHECK_EVERY) return;
+      lastCheck = Date.now();
+      let info = null;
+      try {
+        info = await Platform.update.check();
+      } catch (e) {
+        return; // 오프라인 등 — 조용히 넘어간다
+      }
+      if (!info || !info.available) return;
+      const today = formatDateKey(new Date());
+      if (localStorage.getItem('hs_update_later') === `${info.version}|${today}`) return;
+      showing = true;
+      const ok = await Platform.dialog({
+        title: '새 버전이 나왔어요',
+        message: `하루수학 ${info.version ? info.version + ' ' : ''}버전으로 업데이트할 수 있어요. 지금 업데이트할까요?`,
+        confirmText: '업데이트',
+        cancelText: '나중에'
+      });
+      showing = false;
+      if (ok) {
+        Platform.update.open(info.immediate).catch(() => {});
+      } else {
+        localStorage.setItem('hs_update_later', `${info.version}|${today}`);
+      }
+    };
+    run();
+    Platform.onForeground(run);
+  }
+
+  // Android 뒤로 가기: 모달 닫기 → 홈 탭으로 → 앱 종료
+  function initBackButton() {
+    Platform.onBackButton(() => {
+      const modal = document.querySelector('.hs-modal-overlay');
+      if (modal) {
+        modal.click();
+        return;
+      }
+      if (activeTab !== 'home') {
+        setTab('home');
+        return;
+      }
+      Platform.exitApp();
+    });
+  }
+
   function initAboutCard() {
     const cfg = Platform.config;
     const licBtn = $('license-btn');
@@ -972,9 +1026,10 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
       if (ver) ver.textContent = info.version === 'web' ? '하루수학 (웹)' : `하루수학 버전 ${info.version} (${info.build})`;
 
       const rateBtn = $('rate-btn');
-      if (rateBtn && cfg.APP_STORE_ID) {
+      if (rateBtn && Platform.review.available()) {
         rateBtn.style.display = '';
-        rateBtn.onclick = () => Platform.openExternal(`itms-apps://itunes.apple.com/app/id${cfg.APP_STORE_ID}?action=write-review`);
+        if (window.Capacitor && window.Capacitor.getPlatform() === 'android') rateBtn.textContent = '⭐ Play 스토어에서 평가하기';
+        rateBtn.onclick = () => Platform.review.open();
       }
       const fbBtn = $('feedback-btn');
       if (fbBtn && cfg.SUPPORT_EMAIL) {
