@@ -39,3 +39,15 @@ Launched application with kr.harusuhak.app bundle identifier.
   ** TEST SUCCEEDED **
   ```
 - 미검증: 다음 날 같은 시각 반복(UNCalendarNotificationTrigger repeats:true 코드 경로만 확인), 첫 설치 시 권한 팝업 문구(이미 허용된 상태였음)
+
+## 새 버전 팝업 E2E (XCUITest, 2026-11-06, iPhone 16)
+명령: `xcodebuild test -scheme AppUITests -only-testing:AppUITests/UpdateUITests MARKETING_VERSION=0.9.0` (스토어 1.0.1보다 낮은 버전으로 빌드)
+```
+UPDATE-E2E 팝업 표시
+UPDATE-E2E 업데이트 → App Store 포그라운드
+UPDATE-E2E 나중에 → 닫힘
+UPDATE-E2E 같은 날 재실행 → 팝업 없음
+Test Case '-[AppUITests.UpdateUITests testUpdatePopupOpensAppStoreAndLaterSuppresses]' passed (24.557 seconds).
+** TEST SUCCEEDED **
+```
+테스트 후 정상 Debug 빌드(1.0.1)로 재설치.

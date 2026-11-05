@@ -53,3 +53,6 @@
 - 1.0.1 (3) 아카이브·업로드(UPLOAD SUCCEEDED), ASC 1.0.1 생성·메타데이터·스크린샷 12장 재생성·빌드 연결, 웹 스모크 24/24
 - 안드로이드 작업서(docs/android/ANDROID_RELEASE.md)·루트 CLAUDE.md 추가. 업데이트 팝업 실기기 테스트는 폰 잠금으로 보류
 - 1.0.1 심사 제출 → WAITING_FOR_REVIEW (2026-11-05T05:39:32Z)
+
+- 2026-11-06 · 업데이트 팝업 실기기 E2E · XCUITest(MARKETING_VERSION=0.9.0) 팝업→App Store 열림, 나중에→같은 날 재표시 없음 TEST SUCCEEDED
+- 2026-11-06 · 1.0.1 심사 · ASC 상태 READY_FOR_SALE (승인·출시 완료), 폰은 1.0.1 Debug로 복구
