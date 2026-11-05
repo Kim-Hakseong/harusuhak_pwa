@@ -10,10 +10,10 @@ Curriculum math, one a day
 A daily math problem aligned to Korea's national curriculum, from elementary to high school. Change the numbers and practice endlessly. No sign-up, no server.
 
 ## Description (4000)
-HaruSuhak ("a math problem a day") gives you one problem a day aligned to the achievement standards of Korea's 2015/2022 revised mathematics curriculum. No server, no data collected — every problem is generated on your device, and your progress stays on your device.
+HaruSuhak ("a math problem a day") gives you one problem a day aligned to the achievement standards of Korea's 2022 revised mathematics curriculum. No server, no data collected — every problem is generated on your device, and your progress stays on your device.
 
 ■ One problem a day, mapped to the curriculum
-· Four tracks — Elementary (grades 4–6), Middle school, High school (Common Math, Algebra, Calculus I) and Everyday Math — with 56 representative problem types
+· Four tracks — Elementary (grades 5–6), Middle school, High school (Common Math, Algebra, Calculus I) and Everyday Math — with 56 representative problem types
 · Each problem shows its achievement-standard code, unit, difficulty and reference material
 · Everyone gets the same "problem of the day" on the same date
 

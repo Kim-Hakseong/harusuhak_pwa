@@ -43,3 +43,7 @@
 
 ## 2026-10-31 · 심사 제출
 - 빌드 2 VALID → 1.0.0 연결, reviewSubmission 제출 → WAITING_FOR_REVIEW (12:40:46Z)
+
+## 2026-11-05 · 교육과정 정합성 점검
+- 56개 중 50개 성취기준 코드 오류 → 2022 개정 코드·공식 문안으로 수정(CURRICULUM_AUDIT.md), HIG-11 문구 수정
+- 검증기 100회 5600/0/0 · test-bank 2800 · figure 650 FAIL 0 · 웹 스모크 24/24
