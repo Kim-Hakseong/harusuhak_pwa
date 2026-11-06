@@ -4,7 +4,7 @@ Windows PC(Ryzen 5600 / RAM 32GB / RTX 3050)의 Claude Code 세션이 이 문서
 각 단계는 **실제 실행 출력으로 확인한 뒤** 다음으로 넘어가고, 끝날 때마다 커밋 + `docs/kit/Log.md` 기록.
 사람만 할 수 있는 단계는 **[사람]** 으로 표시했다. 그 단계에 도달하면 멈추고 무엇을 해야 하는지 정확히 안내한다.
 
-## 이미 되어 있는 것 (iOS 1.0.1 기준)
+## 이미 되어 있는 것 (iOS 1.0.2 기준 — 문제 유형 140개, 난이도 하·중·상)
 - 웹 앱(`www/`)은 플랫폼 공통. 네이티브 차이는 `www/platform.js` 한 곳에 모여 있다.
 - Android 대응 코드가 이미 들어가 있음:
   - 뒤로 가기 버튼: 모달 닫기 → 홈 탭 → 앱 종료 (`app.js` `initBackButton`)
@@ -21,7 +21,7 @@ Windows PC(Ryzen 5600 / RAM 32GB / RTX 3050)의 Claude Code 세션이 이 문서
 |---|---|
 | applicationId | `kr.harusuhak.app` (iOS 번들 ID와 동일) |
 | 앱 이름 | 하루수학 |
-| versionName / versionCode | iOS `MARKETING_VERSION`과 같은 이름(현재 1.0.1) / Android는 1부터 시작, 업로드마다 +1 |
+| versionName / versionCode | iOS `MARKETING_VERSION`과 같은 이름(현재 1.0.2) / Android는 1부터 시작, 업로드마다 +1 |
 | 기본 언어 | 한국어(ko-KR), 추가 언어 영어(en-US) |
 | 가격 / 판매 국가 | 무료 / **대한민국만** (한국 교육과정 전용) |
 | 카테고리 | 교육 |
@@ -41,7 +41,7 @@ cd harusuhak_pwa
 pnpm install
 pnpm test
 ```
-- `pnpm test`가 통과해야 시작한다(검증기 FAIL 0 / AMBIG 0).
+- `pnpm test`가 통과해야 시작한다(문제은행 140×50, 동결 검증기·난이도 확장 검증기 FAIL 0 / AMBIG 0, 그림 누출 0).
 - 검증기 해시 확인: PowerShell `Get-FileHash verify\verify-answers.js -Algorithm SHA256` → `8D9F3967…`
 
 ## 2. Android 플랫폼 추가
