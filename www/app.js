@@ -209,7 +209,7 @@
 
     $('std-badge').textContent = currentProblem.standardCode;
     $('unit-badge').textContent = currentProblem.unit;
-    $('diff-badge').textContent = currentProblem.difficulty;
+    // 난이도는 카드 오른쪽 하·중·상 버튼으로 표시 (diff-switcher)
     $('source-ref-text').textContent = `📚 출처: ${currentProblem.sourceRef}`;
 
     const varTag = $('variant-tag');

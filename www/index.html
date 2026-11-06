@@ -113,7 +113,12 @@
           <div class="curriculum-meta-bar">
             <span class="std-badge" id="std-badge">[9수02-04]</span>
             <span class="unit-badge" id="unit-badge">중1 · 일차방정식</span>
-            <span class="diff-badge" id="diff-badge">★★☆ 표준</span>
+            <!-- 난이도 빠른 전환 (하·중·상) -->
+            <div class="diff-switcher" role="tablist" aria-label="문제 난이도 선택" id="diff-switcher">
+              <button type="button" class="diff-tab" data-diff="easy" aria-label="난이도 하">하</button>
+              <button type="button" class="diff-tab active" data-diff="normal" aria-label="난이도 중">중</button>
+              <button type="button" class="diff-tab" data-diff="hard" aria-label="난이도 상">상</button>
+            </div>
           </div>
           <div class="source-ref">
             <span id="source-ref-text">📚 출처: 교과서 대표 유형</span>

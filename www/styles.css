@@ -1220,3 +1220,52 @@ body {
   font-size: 11px;
   color: var(--muted);
 }
+
+/* 난이도 빠른 전환 (하·중·상) — 문제 카드 메타 줄 오른쪽, level-switcher 와 같은 톤 */
+.diff-switcher {
+  display: inline-grid;
+  grid-template-columns: repeat(3, auto);
+  gap: 3px;
+  margin-left: auto;
+  background: var(--soft);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+.diff-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 11px;
+  border-radius: 8px;
+  transition: 0.15s;
+}
+.diff-tab.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 배지·태그는 항상 한 줄 (좁은 화면에서 줄바꿈되며 둥근 사각형이 커지던 문제) */
+.variant-tag,
+.status-pill,
+.pill,
+.std-badge,
+.unit-badge {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+/* 수준 배지가 길면 제목 줄 아래로 내려가되 한 줄 유지 */
+.week-top { flex-wrap: wrap; row-gap: 6px; }
+/* 메타 줄: 1행 [성취기준 코드 … 하·중·상], 2행 [단원] — 단원 이름 길이와 무관하게 같은 모양 */
+.curriculum-meta-bar {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  row-gap: 7px;
+}
+.curriculum-meta-bar .std-badge { grid-column: 1; grid-row: 1; justify-self: start; }
+.curriculum-meta-bar .diff-switcher { grid-column: 2; grid-row: 1; justify-self: end; }
+.curriculum-meta-bar .unit-badge { grid-column: 1 / -1; grid-row: 2; justify-self: start; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
