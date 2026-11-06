@@ -13,14 +13,15 @@ A daily math problem aligned to Korea's national curriculum, from elementary to 
 HaruSuhak ("a math problem a day") gives you one problem a day aligned to the achievement standards of Korea's 2022 revised mathematics curriculum. No server, no data collected — every problem is generated on your device, and your progress stays on your device.
 
 ■ One problem a day, mapped to the curriculum
-· Four tracks — Elementary (grades 5–6), Middle school, High school (Common Math, Algebra, Calculus I) and Everyday Math — with 56 representative problem types
+· Four tracks — Elementary (grades 5–6), Middle school, High school (Common Math, Algebra, Calculus I, Probability & Statistics) and Everyday Math — with 140 representative problem types
+· Every problem comes in Easy, Normal and Hard — one tap switches the difficulty of the same type
 · Each problem shows its achievement-standard code, unit, difficulty and reference material
 · Everyone gets the same "problem of the day" on the same date
 
 ■ Unlimited variations
 · One tap generates new numbers, conditions, choices and a full solution for the same type
 · Wrong choices reflect real student mistakes: sign errors, reciprocal confusion, unit slips
-· Every answer key has been checked by an independent verifier across 100 variations per type
+· Every answer key has been checked by an independent verifier across 100 variations per type and difficulty
 
 ■ Figures for geometry and graphs
 · 13 problem types include a figure: trapezoids, circles, cuboids, right triangles, quadratic and cubic graphs, circles on the coordinate plane, internal division points
@@ -41,11 +42,11 @@ HaruSuhak ("a math problem a day") gives you one problem a day aligned to the ac
 Based on the HaruSuhak web app by 정한결 and 정재상 (MIT License), released for iOS by TECHSENSE. The app content is in Korean.
 
 ## What's New (4000, updates only)
-1.0.1
-· Corrected every problem's achievement-standard code and wording to match the official 2022 revised Korean math curriculum
-· Cleaned up grade and track labels (Elementary: grades 5–6; Everyday Math: Economics Math and Vocational Math)
-· The app now lets you know when a new version is available
-· You can rate HaruSuhak on the App Store from Settings → About
+1.0.2
+· 140 problem types, up from 56 (35 per track — a different type every day for five weeks)
+· New Easy / Normal / Hard buttons on the problem card switch the difficulty instantly
+· High school track now includes Probability & Statistics (conditional probability)
+· Fixed a garbled answer choice that appeared in some problems
 
 ## Keywords (100)
 math,korean,curriculum,daily,problem,algebra,geometry,fraction,equation,function,probability,quiz
@@ -68,5 +69,5 @@ Data Not Collected
 
 ## Review Notes
 HaruSuhak is an offline math practice app with no login. There is no server: all content (problems, choices, solutions, figures) is generated on-device from a seed. The only network request is an App Store lookup (itunes.apple.com/lookup) at launch to check for a newer version; if one exists, an "Update" pop-up opens the App Store page (no personal data sent). No accounts, payments, ads or tracking.
-How to review: (1) Solve today's problem on the Home tab and tap "정답 확인" (Check answer) to see the step-by-step solution. (2) "숫자 바꿔 변형 문제 풀기" generates a new variation. (3) The Curriculum tab lets you open any of the 56 types (e.g. MID-06 includes a figure). (4) Settings → "매일 알림" (Daily reminder) requests notification permission only when switched on. (5) Settings → JSON backup opens the iOS share sheet.
+How to review: (1) Solve today's problem on the Home tab and tap "정답 확인" (Check answer) to see the step-by-step solution. (2) "숫자 바꿔 변형 문제 풀기" generates a new variation. (3) The Curriculum tab lets you open any of the 140 types (e.g. MID-06 includes a figure). (4) Settings → "매일 알림" (Daily reminder) requests notification permission only when switched on. (5) Settings → JSON backup opens the iOS share sheet.
 The app content is in Korean.

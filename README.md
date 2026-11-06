@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![PWA](https://img.shields.io/badge/PWA-Ready-success.svg)
 ![Curriculum](https://img.shields.io/badge/Curriculum-2022%20Revised-orange.svg)
-![Templates](https://img.shields.io/badge/Templates-56%20Types-brightgreen.svg)
+![Templates](https://img.shields.io/badge/Templates-140%20Types-brightgreen.svg)
 
 ---
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 📚 수록 교육과정 (총 56개 대표 유형)
+## 📚 수록 교육과정 (총 140개 대표 유형 · 난이도 하·중·상)
 
 ### 📘 기초 수학 (초등 5~6학년 14개 성취기준)
 1. `[6수01-07]` 약분과 통분 (분모가 다른 두 분수 크기 비교)
@@ -105,7 +105,7 @@ npm test
 # 또는
 node test-bank.js
 ```
-총 56개 유형 × 25회 무작위 변형 = 1,400개 문항에 대해 4지선다 중복 없음, 정답 범위, 3단계 풀이 해설, 시드 일관성을 자동 검증합니다.
+총 140개 유형 × 50회 변형(난이도 하·중·상 각각) 문항에 대해 4지선다 중복 없음, 정답 범위, 3단계 풀이 해설, 시드 일관성을 자동 검증합니다.
 
 ---
 
@@ -134,7 +134,7 @@ MIT License
 
 ```bash
 pnpm install
-pnpm test                                   # 문제은행 56×50 + 독립 검증기(50회) + 그림 정답 누출 검사
+pnpm test                                   # 문제은행 140×50(+하·상) + 독립 검증기 + 난이도 확장 검증기 + 그림 정답 누출 검사
 pnpm run verify:100                         # 독립 검증기 100회 (FAIL 0 / AMBIG 0 / lint 0)
 DEVICE_UDID=<UDID> scripts/archive.sh debug-device   # 실기기 Debug 빌드 → 설치 → 실행
 scripts/archive.sh app-store                # Release archive → build/HaruSuhak-appstore.ipa (.xcarchive 는 archives/)
