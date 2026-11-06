@@ -1,4 +1,8 @@
-# ✅ 1.0.1 출시 — 2026-11-05 제출, 2026-11-06 확인 READY_FOR_SALE
+# ✅ 1.0.2 심사 제출 — 2026-11-06 11:01 KST (WAITING_FOR_REVIEW)
+- 1.0.2 (4): 문제 유형 56 → 140(수준당 35), 모든 유형 난이도 하·중·상 버튼, 고등에 확률과 통계 추가, HIG-04 등 보기 깨짐 수정, 배지 줄바꿈 수정, 스크린샷 재생성
+- 검증: verify-tiers 140×3×100 = 42000 PASS / 0 FAIL / 0 AMBIG / lint 0 · 동결 검증기 5600 PASS(해시 불변) · test-bank 140×50 · 웹 스모크 30/30 · 실기기 TierUITests TEST SUCCEEDED
+
+## 1.0.1 출시 — 2026-11-05 제출, 2026-11-06 확인 READY_FOR_SALE
 - 1.0.1 (3): 성취기준 코드 2022 개정 정정(CURRICULUM_AUDIT.md), 새 버전 알림 팝업(D-017), 평가 버튼, 개인정보 처리방침 정정, 스크린샷 재생성
 - 보류: 업데이트 팝업 실기기 XCUITest(`AppUITests/UpdateUITests`, MARKETING_VERSION=0.9.0 로 실행) — 폰 잠금
 - 안드로이드: `docs/android/ANDROID_RELEASE.md`
