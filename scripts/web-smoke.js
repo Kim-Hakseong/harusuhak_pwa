@@ -115,6 +115,22 @@ const check = (name, ok, detail = '') => {
   for (let i = 0; i < 7; i++) await page.click('.logo');
   check('로고 7탭 → 🧪 버튼 표시', await page.isVisible('#dev-toggle-btn'));
 
+  // 난이도 하·중·상 전환
+  await page.goto(`${BASE}/index.html`, { waitUntil: 'networkidle' });
+  const tierOf = () => page.evaluate(() => document.querySelector('#diff-switcher .diff-tab.active').dataset.diff);
+  check('난이도 기본값 중', (await tierOf()) === 'normal');
+  const qNormal = await page.textContent('#question-text');
+  await page.click('#diff-switcher [data-diff="hard"]');
+  check('난이도 상 → 버튼 활성·문제 바뀜', (await tierOf()) === 'hard' && (await page.textContent('#question-text')) !== qNormal);
+  check('난이도 상에서도 오늘의 공식 문제', (await page.textContent('#variant-tag')).includes('오늘의 공식 문제'));
+  await page.reload({ waitUntil: 'networkidle' });
+  check('난이도 선택 유지(새로고침)', (await tierOf()) === 'hard');
+  await page.click('#diff-switcher [data-diff="normal"]');
+  check('난이도 중 → 원래 문제로', (await page.textContent('#question-text')) === qNormal);
+  const chipAll = await page.textContent('[data-bank-filter="all"]');
+  const total = await page.evaluate(() => window.HaruProblemBank.getAllTemplates().length);
+  check('교육과정 유형 수 = 실제 템플릿 수', chipAll.includes(`(${total}유형)`), chipAll);
+
   check('콘솔/페이지 에러 0', errors.length === 0, errors.slice(0, 3).join(' | '));
 
   await browser.close();

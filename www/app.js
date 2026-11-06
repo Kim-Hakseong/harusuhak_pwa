@@ -32,6 +32,10 @@
   let simDateObj = null; // null이면 실제 오늘 날짜 사용
   let currentVariant = 0; // 0이면 오늘의 공식 문제, 1 이상이면 숫자 변형 연습 문제
   let customTemplateId = null; // 교육과정 문제은행에서 특정 유형을 직접 선택한 경우
+  // 난이도 하(easy)·중(normal)·상(hard). 마지막 선택을 기억한다
+  let tier = localStorage.getItem('hs_tier') || 'normal';
+  if (!HaruProblemBank.TIERS.includes(tier)) tier = 'normal';
+  const TIER_NAME = { easy: '하', normal: '중', hard: '상' };
 
   let currentProblem = null;
   let selectedOption = null;
@@ -199,7 +203,13 @@
       dayIdx,
       dateKey: dKey,
       variant: currentVariant,
-      templateId: customTemplateId
+      templateId: customTemplateId,
+      tier
+    });
+    document.querySelectorAll('#diff-switcher .diff-tab').forEach(btn => {
+      const on = btn.dataset.diff === tier;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
     });
 
     // 메타데이터 표시
@@ -237,7 +247,9 @@
 
     // 오늘의 공식 문제인지 확인하여 기존 풀이 기록 복원
     const historyKey = `${level}_${dKey}`;
-    const savedRecord = (currentVariant === 0 && !customTemplateId) ? history[historyKey] : null;
+    // 기록은 푼 난이도의 문제에만 복원한다 (예전 기록은 중)
+    const rec = (currentVariant === 0 && !customTemplateId) ? history[historyKey] : null;
+    const savedRecord = rec && ((typeof rec === 'object' && rec.tier) || 'normal') === tier ? rec : null;
     selectedOption = null;
     isAnswered = savedRecord !== undefined && savedRecord !== null;
 
@@ -348,14 +360,18 @@
     const isCorrect = selectedOption === currentProblem.answerIndex;
 
     // 1) 오늘의 공식 문제(variant === 0, customTemplateId === null)인 경우 일일 학습 완료 기록
-    if (currentVariant === 0 && !customTemplateId) {
+    //    (같은 날 다른 난이도로 다시 풀면 기록을 덮지 않고 추가 연습으로 센다)
+    const isOfficial = currentVariant === 0 && !customTemplateId;
+    const firstOfDay = isOfficial && !history[`${level}_${dKey}`];
+    if (firstOfDay) {
       const historyKey = `${level}_${dKey}`;
       history[historyKey] = {
         choice: selectedOption,
         answerIndex: currentProblem.answerIndex,
         isCorrect,
         templateId: currentProblem.templateId,
-        dateKey: dKey
+        dateKey: dKey,
+        tier
       };
       localStorage.setItem('hs_history', JSON.stringify(history));
 
@@ -382,6 +398,7 @@
       standardCode: currentProblem.standardCode,
       unit: currentProblem.unit,
       variant: currentVariant,
+      tier,
       question: currentProblem.question,
       selectedText: currentProblem.options[selectedOption],
       correctText: currentProblem.options[currentProblem.answerIndex],
@@ -394,7 +411,7 @@
     showSolutionFeedback(currentProblem, selectedOption);
 
     $('check-btn').disabled = true;
-    $('check-btn').textContent = (currentVariant === 0 && !customTemplateId)
+    $('check-btn').textContent = firstOfDay
       ? '오늘 공식 학습 완료 ✓'
       : '변형 문제 확인 완료 ✓';
 
@@ -479,7 +496,7 @@
           <div class="bank-card-top">
             <span class="std-badge">${t.standardCode}</span>
             <span class="unit-badge">${t.levelName} · ${t.unit}</span>
-            <span class="diff-badge">${t.difficulty}</span>
+            <span class="diff-badge">하·중·상</span>
           </div>
           <h4>${t.standardName}</h4>
           <p>
@@ -635,6 +652,26 @@
         customTemplateId = null;
         renderAll();
         toast(`${HaruProblemBank.CURRICULUM_PACKS[level].level} 과정으로 전환했어요`);
+      };
+    });
+
+    // 문제은행 유형 수는 실제 템플릿 수로 표시
+    const packs = HaruProblemBank.CURRICULUM_PACKS;
+    const total = HaruProblemBank.getAllTemplates().length;
+    if ($('bank-total')) $('bank-total').textContent = total;
+    document.querySelectorAll('[data-bank-filter]').forEach(chip => {
+      const n = chip.dataset.bankFilter === 'all' ? `${total}유형` : packs[chip.dataset.bankFilter] ? packs[chip.dataset.bankFilter].templates.length : null;
+      if (n !== null) chip.textContent = chip.textContent.replace(/\(.*\)/, `(${n})`);
+    });
+
+    // 난이도 하·중·상 — 같은 유형·같은 날짜에서 난이도만 바꿔 바로 다시 출제
+    document.querySelectorAll('#diff-switcher .diff-tab').forEach(btn => {
+      btn.onclick = () => {
+        if (btn.dataset.diff === tier) return;
+        tier = btn.dataset.diff;
+        localStorage.setItem('hs_tier', tier);
+        renderHomeView();
+        toast(`난이도 ${TIER_NAME[tier]} 문제로 바꿨어요`);
       };
     });
 
