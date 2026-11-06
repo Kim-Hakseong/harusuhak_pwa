@@ -57,6 +57,8 @@ for (const tpl of templates) {
       const lintHit = iss => { row.lint[iss] = (row.lint[iss] || 0) + 1; totals.lint++; };
       H.lint(p.question).forEach(lintHit);
       p.options.forEach(o => H.lint(o).forEach(lintHit));
+      // buildChoiceSet 예비 생성기 잔여물(예: "-2최댓값  최솟값  (합: )") — 동결 lint 가 못 잡는 형식 결함
+      p.options.forEach(o => { if (/ {2}|\(\S*: \)|: ,|undefined|NaN/.test(o)) lintHit('보기 생성 잔여물'); });
       const core = p.options.map(o => H.stripSp(o.replace(/\([^()]*(오산|착오|오인)[^()]*\)/g, '').replace(/약\s*/g, '')));
       if (p.options.length !== 4 || new Set(core).size < 4) { row.lint['보기 4개 아님/실질 중복'] = (row.lint['보기 4개 아님/실질 중복'] || 0) + 1; totals.dupOptions++; }
       const bad = (kind, extra) => { row.fail++; row.ex.length < 3 && row.ex.push({ tier, dateKey, variant: v, kind, question: p.question, options: p.options, answerIndex: p.answerIndex, ...extra }); };

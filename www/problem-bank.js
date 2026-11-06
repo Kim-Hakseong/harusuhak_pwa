@@ -1075,7 +1075,10 @@
             const distractors = [
               `부피: ${vol} cm³, 겉넓이: ${surf / 2} cm²`,
               `부피: ${surf} cm³, 겉넓이: ${vol} cm²`,
-              `부피: ${vol + 20} cm³, 겉넓이: ${surf + 10} cm²`
+              `부피: ${vol + 20} cm³, 겉넓이: ${surf + 10} cm²`,
+              // 예비 오답(앞의 오답이 정답과 겹칠 때만 쓰임 — 기존 출제 결과는 그대로)
+              `부피: ${vol} cm³, 겉넓이: ${surf + 12} cm²`,
+              `부피: ${vol + 12} cm³, 겉넓이: ${surf} cm²`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
@@ -5484,7 +5487,10 @@
             const distractors = [
               `최댓값 ${maxVal}, 최솟값 ${fLeft} (합: ${maxVal + fLeft})`,
               `최댓값 ${c}, 최솟값 ${minVal} (합: ${c + minVal})`,
-              `최댓값 ${maxVal + 2}, 최솟값 ${minVal - 1} (합: ${maxVal + minVal + 1})`
+              `최댓값 ${maxVal + 2}, 최솟값 ${minVal - 1} (합: ${maxVal + minVal + 1})`,
+              // 예비 오답(앞의 오답이 겹칠 때만 쓰임 — 기존 출제 결과는 그대로)
+              `최댓값 ${maxVal + 1}, 최솟값 ${minVal} (합: ${maxVal + 1 + minVal})`,
+              `최댓값 ${maxVal}, 최솟값 ${minVal - 2} (합: ${maxVal + minVal - 2})`
             ];
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
@@ -9962,6 +9968,8 @@
             } else {
               cands = [pair(s[0] * p + s[2] * q, s[1] * p + s[3] * q), pair(s[0] * q + s[1] * p, s[2] * q + s[3] * p), pair(r2, r1), pair((s[0] + s[1]) * p, (s[2] + s[3]) * q)];
               if (Hd) cands.unshift(pair(...rev(m)), pair(...rev(m2)));
+              // 대칭 행렬 등으로 오답이 겹칠 때 쓰는 예비 오답
+              cands.push(pair(r1 + p, r2), pair(r1, r2 + q), pair(r1 - q, r2 - p));
               correct = pair(r1, r2);
             }
             const ds = cands.filter((x, i) => x !== correct && cands.indexOf(x) === i).slice(0, 3);
