@@ -121,7 +121,9 @@
           id: NOTIFY_ID,
           title: '하루수학',
           body: '오늘의 한 문제가 준비되었어요. 3분만 풀어 볼까요?',
-          schedule: { on: { hour, minute }, allowWhileIdle: true }
+          schedule: { on: { hour, minute }, allowWhileIdle: true },
+          // Android: 정확한 알람 권한을 요청하지 않는다(몇 분 오차 허용). iOS는 무시
+          isExactNotification: false
         }]
       });
       return true;
