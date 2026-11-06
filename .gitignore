@@ -23,3 +23,6 @@ play-service-account*.json
 android/app/build/
 android/.gradle/
 android/local.properties
+
+# 키 백업 zip (사람이 리포 밖으로 옮긴 뒤 삭제)
+harusuhak-android-keys*.zip
