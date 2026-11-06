@@ -5856,7 +5856,41 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '기본 할인 후 쿠폰으로 추가 할인을 받을 때는 1차 할인된 금액에 대해 2차 할인율을 적용합니다.',
           formula: '최종 결제 금액 = 정가 × (1 − 1차 할인율) × (1 − 2차 할인율)',
-          generate(rng) {
+          tierGuide: {
+            easy: '1만 원 단위 정가에 10%·20% 할인 두 번',
+            normal: '정가에 10~30% 할인 후 10~20% 추가 할인',
+            hard: '정가가 딱 떨어지지 않고 12~45% 할인이 겹쳐 총 할인율 계산이 까다로움'
+          },
+          generate(rng, { tier } = {}) {
+            // 하·상: 수의 범위만 바꾸고 지문·보기 형식은 중과 같다(동결 oracle 호환)
+            if (tier === 'easy' || tier === 'hard') {
+              const E = tier === 'easy';
+              const item = E ? '운동화' : rng.pick(['운동화', '겨울 외투', '블루투스 이어폰', '여행용 캐리어']);
+              const basePrice = E ? rng.pick([10000, 20000, 30000, 40000, 50000, 60000]) : rng.pick([36000, 45000, 58000, 64000, 72000, 88000, 96000, 128000]);
+              // (100 − d1)(100 − d2)가 100의 배수인 조합만 → 총 할인율이 정수 %
+              const [d1, d2] = E ? [rng.pick([10, 20]), rng.pick([10, 20])] : rng.pick([[15, 20], [25, 20], [35, 20], [12, 25], [25, 40], [40, 15], [45, 20], [20, 15]]);
+              const afterFirst = basePrice * (100 - d1) / 100;
+              const finalPrice = afterFirst * (100 - d2) / 100;
+              const naivePrice = basePrice * (100 - d1 - d2) / 100;
+              const realRate = 100 - (100 - d1) * (100 - d2) / 100;
+              const { options, answerIndex } = buildChoiceSet(rng, `${comma(finalPrice)}원 (실제 총 할인율 ${realRate}%)`, [
+                `${comma(naivePrice)}원 (단순 합산 ${d1 + d2}% 할인 오산)`,
+                `${comma(afterFirst)}원 (1차 할인만 적용)`,
+                `${comma(finalPrice - 1000)}원 (실제 총 할인율 ${realRate + 2}%)`
+              ]);
+              return {
+                question: `정가가 ${comma(basePrice)}원인 ${item}${jo(item, '이/가')} 시즌 오프로 ${d1}% 할인 중입니다. 여기에 할인된 금액에서 ${d2}%를 추가로 할인해 주는 쿠폰을 적용할 때, 최종 결제 금액은 얼마인가요?`,
+                variablesInfo: { 정가: `${comma(basePrice)}원`, '1차할인': `${d1}%`, '2차추가할인': `${d2}%` },
+                options,
+                answerIndex,
+                hint: `${d1}% 할인과 ${d2}% 추가 할인은 단순 합산(${d1 + d2}%)이 아닙니다! 정가에 (1 − ${d1 / 100})${jo(d1 / 100, '과/와')} (1 − ${d2 / 100})${jo(d2 / 100, '을/를')} 차례로 곱하세요.`,
+                steps: [
+                  `1차로 ${d1}% 할인된 가격은 ${comma(basePrice)} × ${(100 - d1) / 100} = ${comma(afterFirst)}원입니다.`,
+                  `쿠폰 ${d2}%는 할인된 금액 기준이므로 ${comma(afterFirst)} × ${(100 - d2) / 100} = ${comma(finalPrice)}원입니다.`,
+                  `정가 대비 남은 비율은 ${(100 - d1) / 100} × ${(100 - d2) / 100} = ${(100 - realRate) / 100}이므로 실제 총 할인율은 ${d1 + d2}%가 아니라 ${realRate}%입니다.`
+                ]
+              };
+            }
             const basePrice = rng.pick([20000, 30000, 40000, 50000, 60000, 80000]);
             const d1 = rng.pick([10, 20, 30]);
             const d2 = rng.pick([10, 20]);
@@ -5897,9 +5931,15 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '단리는 원금에만 이자가 붙고, 복리는 (원금 + 이자)에 다시 이자가 붙습니다.',
           formula: '단리 원리합계 = P(1 + r·n),   복리 원리합계 = P(1 + r)^n',
-          generate(rng) {
-            const principalMan = rng.pick([100, 200, 300, 500, 1000]);
-            const rate = rng.pick([4, 5, 6, 8, 10]);
+          tierGuide: {
+            easy: '연이율 5%·10%로 2년 복리 이자 계산',
+            normal: '연이율 4~10%로 2년 복리 이자와 단리 차이',
+            hard: '1,000만 원대 원금, 소수 연이율(2.5~6.5%)로 2년 복리와 단리 차이'
+          },
+          generate(rng, { tier } = {}) {
+            // 하·상은 원금·이율 범위만 다르고 계산 구조(2년 복리 vs 단리)는 같다
+            const principalMan = rng.pick(tier === 'easy' ? [100, 200, 300, 400, 500, 600, 800, 1000] : tier === 'hard' ? [1200, 1500, 2500, 3000, 4000, 5000] : [100, 200, 300, 500, 1000]);
+            const rate = rng.pick(tier === 'easy' ? [5, 10] : tier === 'hard' ? [2.5, 3.5, 4.5, 5.5, 6.5] : [4, 5, 6, 8, 10]);
             const r = rate / 100;
             const P = principalMan * 10000;
             const simpleInterest = Math.round(P * r * 2);
@@ -5938,15 +5978,22 @@
           difficulty: '★☆☆ 기초',
           conceptSummary: '용량과 가격이 서로 다른 상품을 비교할 때는 100g(또는 100mL)당 가격인 단위 가격으로 환산하여 비교합니다.',
           formula: '100g당 단위 가격 = (전체 가격 ÷ 전체 용량(g)) × 100',
-          generate(rng) {
-            const unitPriceA = rng.pick([1200, 1500, 1800, 2000, 2400]);
-            const diffPer100 = rng.pick([150, 200, 250, 300]);
+          tierGuide: {
+            easy: '100g·200g 대 300g·500g, 100g당 가격이 딱 떨어지는 비교',
+            normal: '200~400g 대 500~800g 상품의 100g당 가격 비교',
+            hard: '250g·350g 같은 용량과 1,000원대 단위 가격, 나눗셈이 소수로 걸림'
+          },
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            // 하·상은 수의 범위만 바꾼다(rng 호출 순서는 중과 동일)
+            const unitPriceA = rng.pick(E ? [1000, 1500, 2000] : Hd ? [1240, 1380, 1560, 1720, 1960] : [1200, 1500, 1800, 2000, 2400]);
+            const diffPer100 = rng.pick(E ? [100, 200, 500] : Hd ? [120, 160, 240, 280] : [150, 200, 250, 300]);
             const aIsCheaper = rng.next() > 0.5;
             const upA = aIsCheaper ? unitPriceA : unitPriceA + diffPer100;
             const upB = aIsCheaper ? unitPriceA + diffPer100 : unitPriceA;
 
-            const weightA = rng.pick([200, 300, 400]);
-            const weightB = rng.pick([500, 600, 800]);
+            const weightA = rng.pick(E ? [100, 200] : Hd ? [250, 350, 450] : [200, 300, 400]);
+            const weightB = rng.pick(E ? [300, 500] : Hd ? [750, 900, 1200] : [500, 600, 800]);
             const priceA = (upA * weightA) / 100;
             const priceB = (upB * weightB) / 100;
 
@@ -5984,13 +6031,19 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '용액의 농도(%) = (용질의 양 ÷ 전체 용액의 양) × 100 이며, 물을 더 넣어도 녹아 있는 용질의 양은 변하지 않습니다.',
           formula: '용질의 양 = 전체 용액의 양 × (농도 / 100)',
-          generate(rng) {
-            const initWeight = rng.pick([200, 300, 400]);
-            const initConc = rng.pick([12, 15, 16, 20]);
-            const targetConc = rng.pick([6, 8, 10]);
+          tierGuide: {
+            easy: '10%·20% 소금물을 4%·5%로 묽히기(물의 양이 원래의 몇 배)',
+            normal: '12~20% 소금물 200~400g을 6~10%로 묽히기',
+            hard: '소금 양이 소수(예 67.5g)로 나오는 240~750g, 4~10% 목표 농도'
+          },
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const initWeight = rng.pick(E ? [100, 200, 300, 400, 500] : Hd ? [240, 360, 450, 480, 600, 750] : [200, 300, 400]);
+            const initConc = rng.pick(E ? [10, 20] : Hd ? [12, 15, 18, 24, 25] : [12, 15, 16, 20]);
+            const targetConc = rng.pick(E ? [4, 5] : Hd ? [4, 6, 8, 9, 10] : [6, 8, 10]);
             const solute = (initWeight * initConc) / 100;
             const finalWeight = (solute * 100) / targetConc;
-            if (!Number.isInteger(finalWeight) || finalWeight <= initWeight) return this.generate(rng);
+            if (!Number.isInteger(finalWeight) || finalWeight <= initWeight) return this.generate(rng, { tier });
             const addedWater = finalWeight - initWeight;
 
             const correct = `${addedWater} g`;
@@ -6025,11 +6078,18 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '연비(km/L)는 연료 1L로 주행할 수 있는 거리입니다. (필요한 연료량) = (총 주행 거리) ÷ (연비)로 구합니다.',
           formula: '총 유류비 = (총 주행 거리 ÷ 연비) × 1L당 유가',
-          generate(rng) {
-            const eff = rng.pick([10, 12, 15, 16, 20]);
-            const liters = rng.int(15, 35);
+          tierGuide: {
+            easy: '연비 12~20km/L, 10~20L, 1L당 100원 단위 가격',
+            normal: '연비 10~20km/L, 15~35L, 1L당 1,600~1,750원',
+            hard: '연비가 소수(11.5km/L 등)이고 1L당 가격이 1,685원처럼 딱 떨어지지 않음'
+          },
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const eff = rng.pick(E ? [12, 15, 20] : Hd ? [11.5, 12.5, 13.5, 14.5, 16.5] : [10, 12, 15, 16, 20]);
+            // 상: 연비가 x.5 이므로 연료량을 짝수로 해 주행 거리를 정수로
+            const liters = E ? rng.int(10, 20) : Hd ? 2 * rng.int(9, 20) : rng.int(15, 35);
             const dist = eff * liters;
-            const pricePerL = rng.pick([1600, 1650, 1700, 1750]);
+            const pricePerL = rng.pick(E ? [1500, 1600, 1700, 1800] : Hd ? [1685, 1720, 1795, 1830, 1865] : [1600, 1650, 1700, 1750]);
             const totalCost = liters * pricePerL;
 
             const correct = `${comma(totalCost)}원 (소모 연료 ${liters}L)`;
@@ -6064,7 +6124,43 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '기본요금이 낮고 건당 요금이 있는 A안과 무제한 정액제 B안을 비교할 때는 (A안 총요금) > (B안 정액 요금)이 되는 횟수를 구합니다.',
           formula: '(기본료 + 1회당 요금 × n) > 무제한 정액 요금',
-          generate(rng) {
+          tierGuide: {
+            easy: '1회 1,000원, 경계 횟수가 정확히 나누어떨어짐',
+            normal: '1회 1,500~2,500원, 경계 횟수에서 같아지고 그다음부터 정기권이 저렴',
+            hard: '나누어떨어지지 않아 n > (소수)에서 가장 작은 자연수를 골라야 함'
+          },
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              const Hd = tier === 'hard';
+              const baseFee = Hd ? rng.pick([3300, 4900, 7700, 8800]) : rng.pick([3000, 4000, 5000]);
+              const perUse = Hd ? rng.pick([1200, 1800, 2200]) : 1000;
+              const k = Hd ? rng.int(12, 24) : rng.int(5, 12);
+              // 상: 정기권 요금에 1회 요금보다 작은 자투리를 더해 경계가 소수가 되게 함
+              const extra = Hd ? rng.pick([300, 500, 700]) : 0;
+              const flatFee = baseFee + perUse * k + extra;
+              const minCount = k + 1;
+              const bound = (flatFee - baseFee) / perUse;
+              const { options, answerIndex } = buildChoiceSet(rng, `월 ${minCount}회 이상 이용할 때`, [
+                `월 ${k}회 이상 이용할 때`,
+                `월 ${Math.ceil(flatFee / perUse)}회 이상 이용할 때`,
+                `월 ${k - 1}회 이상 이용할 때`,
+                `월 ${k + 2}회 이상 이용할 때`
+              ]);
+              return {
+                question: `공유 자전거 서비스의 일반 요금제는 월 기본료 ${comma(baseFee)}원에 1회 이용 시마다 ${comma(perUse)}원이 추가되고, 정기권 요금제는 월 ${comma(flatFee)}원에 횟수 제한 없이 무제한 이용할 수 있습니다. 한 달에 최소 몇 회 이상 이용해야 정기권 요금제가 일반 요금제보다 더 저렴한가요?`,
+                variablesInfo: { 일반기본료: `${comma(baseFee)}원`, 회당요금: `${comma(perUse)}원`, 정기권: `${comma(flatFee)}원` },
+                options,
+                answerIndex,
+                hint: `한 달 이용 횟수를 n회라 할 때, ${comma(baseFee)} + ${comma(perUse)}n > ${comma(flatFee)} 를 만족하는 가장 작은 자연수 n을 구해 보세요.`,
+                steps: [
+                  `한 달 이용 횟수를 n회라 하면 일반 요금제의 총요금은 (${comma(baseFee)} + ${comma(perUse)}n)원입니다.`,
+                  `정기권이 더 저렴하려면 ${comma(baseFee)} + ${comma(perUse)}n > ${comma(flatFee)}, 즉 ${comma(perUse)}n > ${comma(flatFee - baseFee)} 이어야 합니다.`,
+                  Hd
+                    ? `n > ${comma(flatFee - baseFee)} ÷ ${comma(perUse)} = ${k}.${String(Math.round((bound - k) * 100)).padStart(2, '0')}… 이므로 이를 만족하는 가장 작은 자연수는 ${minCount}입니다. 최소 ${minCount}회 이상 이용할 때 정기권이 더 저렴합니다.`
+                    : `n > ${bound} 이므로(n = ${k}이면 두 요금이 같음), 최소 ${minCount}회 이상 이용할 때 정기권이 더 저렴합니다.`
+                ]
+              };
+            }
             const baseFee = rng.pick([5000, 6000, 8000, 10000]);
             const perUse = rng.pick([1500, 2000, 2500]);
             const k = rng.int(10, 18);
@@ -6103,12 +6199,19 @@
           difficulty: '★★★ 실력',
           conceptSummary: '두 백분율 수치 자체의 단순 차이는 퍼센트포인트(%p)로 나타내고, 기존 백분율 대비 상대적인 변화 비율은 퍼센트(%)로 나타냅니다.',
           formula: '변화폭(%p) = r₂ − r₁,   상대 증가율(%) = ((r₂ − r₁) / r₁) × 100',
-          generate(rng) {
-            const r1 = rng.pick([10, 15, 20, 25]);
-            const relIncrease = rng.pick([20, 40, 50, 60, 80, 100]);
+          tierGuide: {
+            easy: '10~50% 기준값에서 10·20·50·100% 상대 증가',
+            normal: '10~25% 기준값에서 20~100% 상대 증가',
+            hard: '12.5%·37.5% 같은 상대 증가율로 %p 차이가 소수(예 1.5%p)'
+          },
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const r1 = rng.pick(E ? [10, 20, 30, 40, 50] : Hd ? [12, 16, 24, 32, 36, 48] : [10, 15, 20, 25]);
+            const relIncrease = rng.pick(E ? [10, 20, 50, 100] : Hd ? [12.5, 25, 37.5, 62.5, 75] : [20, 40, 50, 60, 80, 100]);
             const diffP = (r1 * relIncrease) / 100;
-            if (!Number.isInteger(diffP)) return this.generate(rng);
-            const r2 = r1 + diffP;
+            // 상: %p 차이는 소수 첫째 자리까지 허용(r1 × 상대증가율이 10의 배수), 중·하: 정수만
+            if (Hd ? (r1 * relIncrease) % 10 !== 0 : !Number.isInteger(diffP)) return this.generate(rng, { tier });
+            const r2 = Hd ? Math.round((r1 + diffP) * 10) / 10 : r1 + diffP;
 
             const correct = `${diffP}%p 상승 (상대 증가율은 ${relIncrease}% 증가)`;
             const distractors = [
@@ -6142,7 +6245,43 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '환율 우대율(스프레드 할인율)은 매매기준율 전체를 깎아주는 것이 아니라, 은행의 환전 수수료(스프레드)를 할인해 주는 비율입니다.',
           formula: '적용 환율 = 매매기준율 + 환전수수료 × (1 − 우대율/100)',
-          generate(rng) {
+          tierGuide: {
+            easy: '수수료 20원에 우대 50%, 100~500달러 환전',
+            normal: '수수료 20원에 우대 50~90%, 500·1,000달러 환전',
+            hard: '수수료 25~40원, 우대 60~85%로 1달러당 수수료가 소수(예 5.25원)'
+          },
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              const Hd = tier === 'hard';
+              const baseRate = Hd ? rng.pick([1294, 1318, 1346, 1372, 1405]) : rng.pick([1300, 1310, 1320, 1330, 1340, 1350, 1360]);
+              const spread = Hd ? rng.pick([25, 30, 35, 40]) : 20;
+              const discountPct = Hd ? rng.pick([60, 70, 75, 85]) : 50;
+              const amountUsd = Hd ? rng.pick([300, 700, 1200, 1500]) : rng.pick([100, 200, 300, 500]);
+              // 1달러당 실제 수수료: spread × (100 − 우대율)/100 → 0.25 단위라 이진 소수로 정확
+              const appliedSpread = spread * (100 - discountPct) / 100;
+              const appliedRate = baseRate + appliedSpread;
+              const totalKrw = amountUsd * appliedRate;
+              const noDiscountKrw = amountUsd * (baseRate + spread);
+              const saved = noDiscountKrw - totalKrw;
+              const { options, answerIndex } = buildChoiceSet(rng, `${comma(totalKrw)}원 (${comma(saved)}원 절약)`, [
+                `${comma(noDiscountKrw)}원 (우대 미적용 금액)`,
+                `${comma(Math.round(amountUsd * baseRate * (100 - discountPct) / 100))}원 (기준율 전체 할인 오산)`,
+                `${comma(totalKrw - 10000)}원 (${comma(saved + 10000)}원 절약)`
+              ]);
+              return {
+                question: `미국 달러의 매매기준율이 1달러당 ${comma(baseRate)}원이고 은행의 현찰 살 때 기본 수수료(스프레드)가 ${spread}원입니다. 주거래 은행에서 환율 우대 ${discountPct}%를 적용받아 ${amountUsd}달러를 환전할 때, 필요한 원화 금액과 우대받아 절약한 금액은?`,
+                variablesInfo: { 기준율: `${baseRate}원`, 우대율: `${discountPct}%`, 환전달러: `${amountUsd}$` },
+                options,
+                answerIndex,
+                hint: `우대율 ${discountPct}%는 ${spread}원 수수료 중 ${discountPct}%를 깎아준다는 뜻입니다. 실제 내는 1달러당 수수료는 ${spread} × (1 − ${discountPct / 100})원입니다.`,
+                steps: [
+                  `우대 전 1달러당 현찰 살 때 환율은 ${comma(baseRate)} + ${spread} = ${comma(baseRate + spread)}원입니다.`,
+                  `수수료 ${spread}원에 우대 ${discountPct}%를 적용하면 실제 수수료는 ${spread} × ${(100 - discountPct) / 100} = ${appliedSpread}원입니다.`,
+                  `적용 환율은 ${comma(baseRate)} + ${appliedSpread} = ${comma(appliedRate)}원이므로 ${amountUsd}달러 환전에 ${comma(amountUsd)} × ${comma(appliedRate)} = ${comma(totalKrw)}원이 필요합니다.`,
+                  `절약액은 1달러당 깎인 수수료 ${spread * discountPct / 100}원 × ${amountUsd}달러 = ${comma(saved)}원입니다.`
+                ]
+              };
+            }
             const baseRate = rng.pick([1300, 1320, 1350, 1380]);
             const spread = 20; // 기본 스프레드: 20원
             const discountPct = rng.pick([50, 80, 90]); // 우대율
@@ -6185,11 +6324,19 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '인터넷 통신 속도 단위인 Mbps(Mega bit per second)는 비트 단위이며, 1 Byte = 8 bits 이므로 실제 다운로드 속도(MB/s)는 8로 나누어야 합니다.',
           formula: '전송 속도(MB/s) = 전송 속도(Mbps) ÷ 8,  시간(초) = 전체 파일 용량(MB) ÷ 속도(MB/s)',
-          generate(rng) {
+          tierGuide: {
+            easy: '400~1,600Mbps로 1~5GB, 대부분 1분 안쪽의 초 단위 답',
+            normal: '80~800Mbps로 1~5GB, 분·초로 환산',
+            hard: '100·300·500Mbps처럼 8로 나누면 소수(12.5MB/s 등)가 되는 속도, 2~9GB'
+          },
+          generate(rng, { tier } = {}) {
             // 정답 시간이 정수 초가 되는 (속도, 용량) 조합만 사용 (240 Mbps = 30 MB/s 는 3 GB만)
+            // 하·상은 속도·용량 후보만 바뀌고 나머지 흐름은 같다
+            const speeds = tier === 'easy' ? [400, 800, 1000, 1600] : tier === 'hard' ? [100, 200, 300, 500, 600] : [80, 160, 240, 400, 800];
+            const sizes = tier === 'hard' ? [2, 3, 4, 5, 6, 7, 8, 9] : [1, 2, 3, 4, 5];
             const combos = [];
-            for (const sp of [80, 160, 240, 400, 800]) {
-              for (const gb of [1, 2, 3, 4, 5]) if ((gb * 1000) % (sp / 8) === 0) combos.push([sp, gb]);
+            for (const sp of speeds) {
+              for (const gb of sizes) if ((gb * 1000) % (sp / 8) === 0) combos.push([sp, gb]);
             }
             const [mbps, fileSizeGB] = rng.pick(combos); // 속도는 8의 배수
             const speedMBps = mbps / 8;
@@ -6239,7 +6386,37 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '부가가치세 10%가 포함된 총 결제 금액은 공급가액의 1.1배입니다. 따라서 공급가액 = (총 결제액) ÷ 1.1 입니다.',
           formula: '공급가액 = 총 결제 금액 ÷ 1.1,  부가가치세 = 총 결제 금액 − 공급가액',
-          generate(rng) {
+          tierGuide: {
+            easy: '공급가액이 1,000원 단위인 작은 결제 금액 역산',
+            normal: '공급가액 1만~10만 원 단위 결제 금액 역산',
+            hard: '공급가액이 10원 단위(예 46,870원)라 결제 금액이 딱 떨어지지 않는 역산'
+          },
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              const Hd = tier === 'hard';
+              const basePrice = Hd ? rng.int(1100, 9900) * 10 : rng.pick([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 12000, 15000, 18000]);
+              const vat = basePrice / 10;
+              const total = basePrice + vat;
+              const naiveVat = Math.round(total / 10);
+              const fiveVat = Math.round(total * 5 / 100);
+              const { options, answerIndex } = buildChoiceSet(rng, `공급가액: ${comma(basePrice)}원, 부가가치세: ${comma(vat)}원`, [
+                `공급가액: ${comma(total - naiveVat)}원, 부가가치세: ${comma(naiveVat)}원 (총액의 10%로 오인)`,
+                `공급가액: ${comma(total - fiveVat)}원, 부가가치세: ${comma(fiveVat)}원`,
+                `공급가액: ${comma(total)}원, 부가가치세: 0원`
+              ]);
+              return {
+                question: `${Hd ? '거래처 납품 대금으로' : '식당에서'} 부가가치세(10%)가 포함된 금액으로 총 ${comma(total)}원을 결제했습니다. 영수증에 표기될 ${Hd ? '물품 가격' : '순수 음식 가격'}(공급가액)과 부가가치세(VAT)는 각각 얼마인가요?`,
+                variablesInfo: { 결제총액: `${comma(total)}원`, 부가세율: '10%' },
+                options,
+                answerIndex,
+                hint: `총 결제액은 (공급가액) × 1.1 입니다. ${comma(total)}원의 10%를 빼는 것이 아니라 1.1로 나누어야 합니다!`,
+                steps: [
+                  `(총 결제 금액) = (공급가액) + (공급가액의 10%) = (공급가액) × 1.1 입니다.`,
+                  `따라서 공급가액 = ${comma(total)} ÷ 1.1 = ${comma(basePrice)}원입니다.`,
+                  `부가가치세는 ${comma(total)} − ${comma(basePrice)} = ${comma(vat)}원입니다. (확인: ${comma(basePrice)}의 10%)`
+                ]
+              };
+            }
             const basePrice = rng.pick([10000, 20000, 30000, 50000, 70000, 100000]);
             const vat = basePrice * 0.1;
             const total = basePrice + vat;
@@ -6279,7 +6456,37 @@
           difficulty: '★☆☆ 기초',
           conceptSummary: '전력(W, 와트)은 전압(V, 볼트)과 전류(A, 암페어)의 곱입니다. 전력이 높을수록 단위 시간당 충전 속도가 빠릅니다.',
           formula: '전력(W) = 전압(V) × 전류(A)',
-          generate(rng) {
+          tierGuide: {
+            easy: '5V-1A(5W) 충전기와 비교, 배수가 정수 또는 소수 한 자리',
+            normal: '5V-2A(10W) 충전기와 9~20V 고속 충전기 비교',
+            hard: '15W·18W 충전기끼리 비교, 배수가 나누어떨어지지 않아 반올림(예 3.3배)'
+          },
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              const Hd = tier === 'hard';
+              const [v1, a1] = Hd ? rng.pick([[5, 3], [9, 2]]) : [5, 1];
+              const [v2, a2] = Hd ? rng.pick([[15, 3], [20, 3], [20, 5], [12, 3], [9, 3]]) : rng.pick([[5, 2], [5, 3], [9, 2], [15, 2], [20, 2], [15, 3], [20, 3]]);
+              const p1 = v1 * a1, p2 = v2 * a2;
+              const times = Math.round((p2 / p1) * 10) / 10;
+              const exact = Number.isInteger((p2 * 10) / p1);
+              const { options, answerIndex } = buildChoiceSet(rng, `충전기 B (${p2}W)가 충전기 A (${p1}W)보다 ${times}배 더 빠름`, [
+                `충전기 B (${v2 + a2}W)가 충전기 A (${v1 + a1}W)보다 빠름`,
+                `두 충전기의 전력이 ${p1}W로 동일함`,
+                `충전기 A가 충전기 B보다 ${times}배 더 빠름`
+              ]);
+              return {
+                question: `스마트폰 충전기 A는 ${v1}V-${a1}A 규격이고, 초고속 충전기 B는 ${v2}V-${a2}A 규격입니다. 두 충전기의 전력(W)과 충전 속도를 바르게 비교한 것은?${exact ? '' : ' (배수는 소수 첫째 자리까지 반올림)'}`,
+                variablesInfo: { 충전기A: `${v1}V-${a1}A (${p1}W)`, 충전기B: `${v2}V-${a2}A (${p2}W)`, 배수: `${times}배` },
+                options,
+                answerIndex,
+                hint: `전력 공식은 전력(W) = 전압(V) × 전류(A) 입니다. 각각 곱해서 와트(W)를 구한 뒤 나누어 비교하세요.`,
+                steps: [
+                  `충전기 A의 전력 = ${v1}V × ${a1}A = ${p1}W 입니다.`,
+                  `충전기 B의 전력 = ${v2}V × ${a2}A = ${p2}W 입니다.`,
+                  `${p2} ÷ ${p1} ${exact ? '=' : '≈'} ${times} 이므로 충전기 B가 충전기 A보다 약 ${times}배 더 높은 전력으로 빠르게 충전됩니다.`
+                ]
+              };
+            }
             const v1 = 5, a1 = 2; // 10W 일반
             const v2 = rng.pick([9, 15, 20]);
             const a2 = rng.pick([2, 3]);
@@ -6319,7 +6526,43 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '체질량지수(BMI) = 체중(kg) ÷ (키(m))² 입니다. 키를 cm가 아닌 m 단위로 환산하여 제곱해야 합니다.',
           formula: 'BMI = 체중(kg) ÷ (신장(m))²',
-          generate(rng) {
+          tierGuide: {
+            easy: '판정 경계(23·25)에서 멀리 떨어진 BMI, 정수 체중',
+            normal: '키 160~180cm, BMI 20~26 부근 판정',
+            hard: '키 158·163cm 등, 소수 체중으로 BMI가 판정 경계(23·25) 바로 근처'
+          },
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              const Hd = tier === 'hard';
+              const hCm = Hd ? rng.pick([158, 163, 167, 172, 177, 183]) : rng.pick([150, 155, 160, 165, 170, 175, 180, 185]);
+              const hm = hCm / 100;
+              const hmSqRaw = hm * hm;
+              const hmSq = Number(hmSqRaw.toFixed(4));
+              const targetBmi = Hd ? rng.pick([22.7, 23.3, 24.6, 25.4]) : rng.pick([20, 21, 27, 29]);
+              // 상: 체중을 0.1kg 단위로
+              const weight = Hd ? Math.round(targetBmi * hmSqRaw * 10) / 10 : Math.round(targetBmi * hmSqRaw);
+              const actualBmi = Math.round((weight / hmSqRaw) * 10) / 10;
+              const status = actualBmi >= 25 ? '비만' : (actualBmi >= 23 ? '과체중' : '정상 체중');
+              // 오답 판정: 바로 옆 구간으로 잘못 판정
+              const wrong = actualBmi < 23 ? '과체중' : actualBmi < 25 ? (actualBmi < 24 ? '정상 체중' : '비만') : '과체중';
+              const { options, answerIndex } = buildChoiceSet(rng, `BMI 약 ${actualBmi} (${status})`, [
+                `BMI 약 ${actualBmi} (${wrong})`,
+                `BMI 약 ${(weight / hm).toFixed(1)} (키를 제곱하지 않은 오산)`,
+                `BMI 약 ${(actualBmi + 3).toFixed(1)} (${status === '비만' ? '과체중' : '비만'})`
+              ]);
+              return {
+                question: `신장 ${hCm} cm, 체중 ${weight} kg인 사람의 체질량지수(BMI)와 건강 판정(대한비만학회 기준: 18.5~22.9 정상, 23~24.9 과체중, 25 이상 비만)으로 옳은 것은? (BMI는 소수 첫째 자리까지 반올림)`,
+                variablesInfo: { 키: `${hCm}cm (${hm}m)`, 체중: `${weight}kg`, BMI: actualBmi },
+                options,
+                answerIndex,
+                hint: `키 ${hCm} cm를 m 단위로 바꾸면 ${hm} m입니다. BMI = ${weight} ÷ (${hm} × ${hm})${jo(hm, '을/를')} 계산하세요.`,
+                steps: [
+                  `신장을 m 단위로 환산하면 ${hCm} cm = ${hm} m 입니다.`,
+                  `키의 제곱은 ${hm} × ${hm} = ${hmSq} 입니다.`,
+                  `BMI = ${weight} ÷ ${hmSq} ≈ ${actualBmi} 입니다. 기준에 따라 ${status}에 해당합니다.`
+                ]
+              };
+            }
             const hCm = rng.pick([160, 170, 175, 180]);
             const hm = hCm / 100;
             const hmSq = Number((hm * hm).toFixed(4));
@@ -6360,7 +6603,38 @@
           difficulty: '★★★ 실력',
           conceptSummary: '피셔 방정식에 의해 (실질금리) ≈ (명목금리) − (물가상승률) 입니다. 명목금리가 높아도 물가상승률이 더 높으면 실질 구매력은 감소합니다.',
           formula: '실질 이자율 ≈ 명목 이자율 − 물가상승률',
-          generate(rng) {
+          tierGuide: {
+            easy: '물가상승률이 명목금리보다 1~2%p 높은 경우, 1,000만~3,000만 원',
+            normal: '1,000만 원, 명목금리 3~5%와 물가상승률 4~6%',
+            hard: '2,500만~8,000만 원, 금리와 물가 차이가 3~5%p로 큰 경우의 구매력 손실'
+          },
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              const Hd = tier === 'hard';
+              const principal = Hd ? rng.pick([2500, 4000, 6000, 8000]) : rng.pick([1000, 2000, 3000]); // 만 원
+              const [nominal, inflation] = Hd ? rng.pick([[2, 5], [3, 7], [4, 8], [1, 6], [2, 6]]) : rng.pick([[2, 3], [2, 4], [3, 4], [1, 3], [3, 5]]);
+              const real = nominal - inflation;
+              const nominalAmount = principal * (100 + nominal) / 100;
+              const realPurchasing = nominalAmount / (1 + inflation / 100);
+              const loss = Math.round(principal - realPurchasing);
+              const { options, answerIndex } = buildChoiceSet(rng, `실질 수익률: 약 ${real}% (구매력 기준 약 ${loss}만 원 실질 손실)`, [
+                `실질 수익률: ${nominal + inflation}% (구매력 증가)`,
+                `실질 수익률: ${nominal}% (물가 무관 이득)`,
+                `실질 수익률: 약 ${real}% (구매력 기준 ${loss * 2}만 원 실질 손실)`
+              ]);
+              return {
+                question: `연이율 ${nominal}%인 1년 만기 정기예금에 ${comma(principal)}만 원을 가입했는데, 1년 동안 소비자물가상승률이 ${inflation}%를 기록했습니다. 이 예금의 '실질 수익률'과 실제 구매력 변화에 대한 설명으로 옳은 것은? (손실액은 만 원 단위로 반올림)`,
+                variablesInfo: { 명목금리: `${nominal}%`, 물가상승률: `${inflation}%`, 실질수익률: `${real}%` },
+                options,
+                answerIndex,
+                hint: `실질 수익률은 통장에 찍히는 명목 이율(${nominal}%)에서 물가상승률(${inflation}%)을 뺀 값입니다!`,
+                steps: [
+                  `피셔 방정식에 의해 (실질 수익률) ≈ (명목 이자율) − (물가상승률) = ${nominal}% − ${inflation}% = ${real}% 입니다.`,
+                  `1년 후 통장 잔고는 ${comma(principal)} × ${(100 + nominal) / 100} = ${comma(nominalAmount)}만 원이지만, 물가가 ${inflation}% 올랐으므로 구매력 가치는 ${comma(nominalAmount)} ÷ ${(100 + inflation) / 100} ≈ ${comma(Math.round(realPurchasing * 10) / 10)}만 원입니다.`,
+                  `즉, 돈의 액수는 늘었으나 실질 구매력은 ${comma(principal)} − ${comma(Math.round(realPurchasing * 10) / 10)} ≈ ${loss}만 원 감소했습니다.`
+                ]
+              };
+            }
             // 물가상승률 > 명목금리 조합만 (같으면 손실 0 → '손실×2' 보기와 동일해져 정답 중복)
             const [nominal, inflation] = rng.pick([[3, 4], [3, 5], [3, 6], [4, 5], [4, 6], [5, 6]]);
             const real = nominal - inflation; // 음수 실질 금리 상황 연출
@@ -6401,7 +6675,44 @@
           difficulty: '★★☆ 표준',
           conceptSummary: '일시불 할인 금액과 무이자 할부로 남은 돈을 예치했을 때의 이자 수익을 비교하여 더 이득인 결제 방식을 선택합니다.',
           formula: '순혜택 비교 = 일시불 할인 금액 vs 파킹통장 이자 수익',
-          generate(rng) {
+          tierGuide: {
+            easy: '50만~300만 원, 6개월 할부 이자와 일시불 2~5% 할인 비교',
+            normal: '60만~240만 원, 6개월 할부(연 3.6%)와 일시불 3·5% 할인 비교',
+            hard: '10·12개월 할부, 연 4.8·6% 예치 이자와 1~3% 할인 — 할부가 이길 수도 있음'
+          },
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              const Hd = tier === 'hard';
+              const price = Hd ? rng.pick([1200000, 1800000, 2400000, 3600000]) : rng.pick([500000, 1000000, 2000000, 3000000]);
+              const discountRate = Hd ? rng.pick([1, 2, 3]) : rng.pick([2, 3, 5]);
+              const months = Hd ? rng.pick([10, 12]) : 6;
+              const annualInterest = Hd ? rng.pick([4.8, 6]) : 3.6;
+              const discountAmount = price * discountRate / 100;
+              // m개월 무이자 할부: 평균 잔액 = 가격 × (m + 1) / (2m), 그 돈을 m개월 예치
+              const interestEarned = Math.round(price * (months + 1) / 2 * annualInterest / 1200);
+              if (discountAmount === interestEarned) return this.generate(rng, { tier });
+              const isDiscountBetter = discountAmount > interestEarned;
+              const diff = Math.abs(discountAmount - interestEarned);
+              const correct = isDiscountBetter
+                ? `일시불 할인 (${comma(discountAmount)}원 절약으로 할부 이자 ${comma(interestEarned)}원보다 ${comma(diff)}원 더 유리)`
+                : `무이자 할부 (예치 이자 ${comma(interestEarned)}원으로 일시불 할인보다 ${comma(diff)}원 더 유리)`;
+              const otherOption = isDiscountBetter
+                ? `무이자 할부 (예치 이자 ${comma(interestEarned)}원이 더 유리)`
+                : `일시불 할인 (${comma(discountAmount)}원 절약이 더 유리)`;
+              const { options, answerIndex } = buildChoiceSet(rng, correct, [otherOption, `두 결제 방식의 혜택이 정확히 동일함`, `어떤 방식이든 결제 금액 차이가 없음`]);
+              return {
+                question: `${comma(price)}원짜리 가전을 구매할 때, [선택 A] 일시불 즉시 ${discountRate}% 할인 결제와 [선택 B] ${months}개월 무이자 할부(남은 잔액을 연 ${annualInterest}% 파킹통장에 예치하여 약 ${comma(interestEarned)}원 이자 수령) 중 수리적으로 더 이득인 선택은?`,
+                variablesInfo: { 상품가격: `${comma(price)}원`, 일시불할인: `${comma(discountAmount)}원`, 할부예치이자: `${comma(interestEarned)}원` },
+                options,
+                answerIndex,
+                hint: `일시불로 즉시 할인받는 금액과 할부로 매달 갚으며 통장에 남은 돈으로 얻는 총 이자(${comma(interestEarned)}원)의 크기를 직접 비교하세요.`,
+                steps: [
+                  `일시불 결제 시 즉시 아낄 수 있는 금액은 ${comma(price)} × ${discountRate}% = ${comma(discountAmount)}원입니다.`,
+                  `${months}개월 무이자 할부 후 잔액을 연 ${annualInterest}% 파킹통장에 넣어 얻는 총 이자 수익은 약 ${comma(interestEarned)}원입니다.`,
+                  `두 혜택을 비교하면 ${wj(isDiscountBetter ? '일시불 할인' : '무이자 할부', '이/가')} ${comma(diff)}원 더 유리합니다.`
+                ]
+              };
+            }
             const price = rng.pick([600000, 1200000, 2400000]);
             const discountRate = rng.pick([3, 5]); // 일시불 즉시할인 %
             const discountAmount = (price * discountRate) / 100;
@@ -6441,6 +6752,1274 @@
                 `두 혜택을 비교하면 ${wj(discountAmount > interestEarned ? '일시불 할인' : '무이자 할부', '이/가')} ${comma(diff)}원 더 유리합니다.`
               ]
             };
+          }
+        },
+        {
+          id: 'LIF-15',
+          dayIndex: 14,
+          unit: '경제 수학 · 급여와 실수령액',
+          standardCode: '[12경수01-03]',
+          standardName: '세금과 관련된 실생활 문제를 해결할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (세금 — 급여에서 공제되는 보험료·소득세와 실수령액)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '공제율 두 가지를 더해 세전 월급에 한 번 적용',
+            normal: '공제율 세 가지 합 + 소득세(금액)를 빼서 실수령액',
+            hard: '비과세 수당을 뺀 금액에만 공제율을 적용하고 소득세까지 빼기'
+          },
+          conceptSummary: '세전 월급에서 비율로 정해진 보험료 공제액과 소득세를 빼면 실제로 받는 돈(실수령액)이 됩니다. 비과세 수당은 공제율 계산 기준에서 빠집니다.',
+          formula: '실수령액 = 세전 월급 − (과세 대상 급여 × 공제율 합) − 소득세',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const S = rng.int(22, 48) * 100000; // 세전 월급
+            const a = rng.pick([4.5, 5]); // 국민연금(가정)
+            const b = rng.pick([3.5, 4]); // 건강보험(가정)
+            const items = E ? [['국민연금', a], ['건강보험', b]] : [['국민연금', a], ['건강보험', b], ['고용보험', 1]];
+            const R = items.reduce((s, it) => s + it[1], 0); // 공제율 합(%)
+            const tax = E ? 0 : rng.int(20, 150) * 1000;
+            const free = Hd ? rng.pick([100000, 200000]) : 0; // 비과세 식대(가정)
+            const baseAmt = S - free;
+            const ded = baseAmt * R / 100;
+            const net = S - ded - tax;
+            const rateText = items.map(it => `${it[0]} ${it[1]}%`).join(', ');
+            const cands = E
+              ? [ded, S - S * a / 100, Math.round(S * (100 - a) * (100 - b) / 10000), S - S * b / 100]
+              : Hd
+                ? [S - S * R / 100 - tax, net + tax, net - free, ded + tax, S - tax]
+                : [net + tax, ded + tax, S - tax, net - tax, S - S * a / 100 - tax];
+            const ds = cands.filter((x, i) => x > 0 && x !== net && cands.indexOf(x) === i).slice(0, 3).map(x => `${comma(x)}원`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${comma(net)}원`, ds);
+            const cond = '(공제율과 세금은 이 문제에서 정한 가정입니다.)';
+            const question = E
+              ? `세전 월급이 ${comma(S)}원인 직장인의 급여에서 ${rateText}가 세전 월급을 기준으로 공제됩니다. 이 직장인이 실제로 받는 월급(실수령액)은 얼마인가요? ${cond}`
+              : Hd
+                ? `세전 월급 ${comma(S)}원 중 식대 ${comma(free)}원은 비과세 수당입니다. ${rateText}는 비과세 수당을 뺀 금액을 기준으로 공제되고, 소득세 등 세금으로 ${comma(tax)}원이 추가로 공제됩니다. 실수령액은 얼마인가요? ${cond}`
+                : `세전 월급이 ${comma(S)}원인 직장인의 급여에서 ${rateText}가 세전 월급을 기준으로 공제되고, 소득세 등 세금으로 ${comma(tax)}원이 추가로 공제됩니다. 실수령액은 얼마인가요? ${cond}`;
+            const variablesInfo = { 세전월급: `${comma(S)}원`, 공제율: rateText };
+            if (!E) variablesInfo.소득세 = `${comma(tax)}원`;
+            if (Hd) variablesInfo.비과세 = `${comma(free)}원`;
+            const steps = [
+              `공제율을 모두 더하면 ${items.map(it => it[1]).join(' + ')} = ${R}%입니다. (항목마다 따로 빼도 기준 금액이 같으므로 합쳐서 계산할 수 있습니다.)`,
+              Hd
+                ? `공제율을 적용할 기준 금액은 ${comma(S)} − ${comma(free)} = ${comma(baseAmt)}원이고, 보험료 공제액은 ${comma(baseAmt)} × ${R / 100} = ${comma(ded)}원입니다.`
+                : `보험료 공제액은 ${comma(S)} × ${R / 100} = ${comma(ded)}원입니다.`,
+              E
+                ? `실수령액은 ${comma(S)} − ${comma(ded)} = ${comma(net)}원입니다.`
+                : `실수령액은 ${comma(S)} − ${comma(ded)} − ${comma(tax)} = ${comma(net)}원입니다.`
+            ];
+            return { question, variablesInfo, options, answerIndex, hint: Hd ? '비과세 수당은 공제율을 곱하는 기준 금액에서 먼저 빼고, 실수령액을 구할 때는 세전 월급 전체에서 공제액을 뺍니다.' : '공제율을 모두 더한 뒤 세전 월급에 곱하면 보험료 공제액이 됩니다.', steps };
+          }
+        },
+        {
+          id: 'LIF-16',
+          dayIndex: 15,
+          unit: '경제 수학 · 대출 원금균등분할상환',
+          standardCode: '[12경수01-04]',
+          standardName: '단리와 복리를 이용하여 이자와 원리 합계를 구하고, 미래에 받을 금액의 현재 가치를 구할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (단리 — 남은 원금에 붙는 이자와 대출 상환)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '첫 달 이자 = 원금 × 연이율 ÷ 12',
+            normal: '첫 달 상환액 = 원금 ÷ 개월 수 + 첫 달 이자',
+            hard: '남은 원금이 매달 줄어드는 것을 반영한 대출 기간 총 이자'
+          },
+          conceptSummary: '원금균등분할상환은 매달 원금을 똑같이 나누어 갚고, 이자는 그달 남아 있는 원금에 월 이율(연이율 ÷ 12)을 곱해 냅니다. 남은 원금이 줄어들수록 이자도 줄어듭니다.',
+          formula: '월 원금 = P ÷ n,  k번째 달 이자 = (P − (k − 1)·P/n) × r/12,  총 이자 = P × r/12 × (n + 1)/2',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const combos = [];
+            for (const pm of [1200, 2400, 3600, 4800, 6000]) for (const n of [12, 24, 36, 48, 60]) if ((pm * 10000) % n === 0) combos.push([pm, n]);
+            const [pm, n] = rng.pick(combos);
+            const P = pm * 10000;
+            const r = rng.pick(E ? [3, 6] : [3, 3.6, 4.2, 4.8, 5.4, 6]);
+            const I1 = P / 12000 * Math.round(r * 10); // 첫 달 이자 (P가 1,200만의 배수라 정수, 부동소수 피하려고 r×10 사용)
+            const monthP = P / n;
+            let ans, cands, ask;
+            if (E) {
+              ans = I1; ask = '첫 달에 내는 이자는 얼마인가요?';
+              cands = [I1 * 12, monthP, I1 * 2, I1 / 2];
+            } else if (!Hd) {
+              ans = monthP + I1; ask = '첫 달 상환액(원금 + 이자)은 얼마인가요?';
+              cands = [monthP, I1, monthP + I1 * 12, monthP + I1 * 2];
+            } else {
+              ans = I1 * (n + 1) / 2; ask = '대출 기간 동안 내는 총 이자는 얼마인가요?';
+              cands = [I1 * n, I1 * n / 2, I1 * (n - 1) / 2, I1 * (n + 1)];
+            }
+            const ds = cands.filter((x, i) => Number.isInteger(x) && x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${comma(x)}원`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${comma(ans)}원`, ds);
+            const steps = [
+              `월 이율은 ${r}% ÷ 12이므로 첫 달 이자는 ${comma(P)} × ${r}/100 ÷ 12 = ${comma(I1)}원입니다.`
+            ];
+            if (E) steps.push(`연이율을 그대로 곱하면 1년 치 이자(${comma(I1 * 12)}원)가 되므로 반드시 12로 나누어야 합니다. 첫 달 이자는 ${comma(I1)}원입니다.`);
+            else if (!Hd) steps.push(`매달 갚는 원금은 ${comma(P)} ÷ ${n} = ${comma(monthP)}원입니다.`, `첫 달 상환액은 ${comma(monthP)} + ${comma(I1)} = ${comma(ans)}원입니다.`);
+            else steps.push(
+              `매달 원금 ${comma(monthP)}원씩 줄어드므로 이자도 매달 ${comma(I1 / n)}원씩 줄어 마지막 달 이자는 ${comma(I1 / n)}원입니다.`,
+              `이자는 ${comma(I1)}원부터 ${comma(I1 / n)}원까지 ${n}개월의 등차수열이므로 총 이자 = (${comma(I1)} + ${comma(I1 / n)}) × ${n} ÷ 2 = ${comma(ans)}원입니다.`
+            );
+            return {
+              question: `${comma(pm)}만 원을 연이율 ${r}%, ${n}개월 원금균등분할상환 조건으로 빌렸습니다. 매달 원금을 똑같이 나누어 갚고, 이자는 그달 남아 있는 원금에 월 이율(연이율 ÷ 12)을 곱해 냅니다. ${ask}`,
+              variablesInfo: { 대출원금: `${comma(P)}원`, 연이율: `${r}%`, 상환기간: `${n}개월` },
+              options,
+              answerIndex,
+              hint: Hd ? '남은 원금이 매달 일정하게 줄어드니 이자도 등차수열로 줄어듭니다. (첫 달 이자 + 마지막 달 이자) × 개월 수 ÷ 2' : '이자는 연이율이 아니라 월 이율(연이율 ÷ 12)로 계산합니다.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'LIF-17',
+          dayIndex: 16,
+          unit: '경제 수학 · 정기적금 만기 수령액',
+          standardCode: '[12경수01-04]',
+          standardName: '단리와 복리를 이용하여 이자와 원리 합계를 구하고, 미래에 받을 금액의 현재 가치를 구할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (단리 적금의 원리 합계)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '12개월 단리 적금의 세전 이자',
+            normal: '12·24개월 단리 적금의 세전 만기 수령액(원금 + 이자)',
+            hard: '12~36개월 적금에 이자소득세 15.4%를 뗀 세후 만기 수령액'
+          },
+          conceptSummary: '매달 같은 금액을 넣는 정기적금은 먼저 넣은 돈일수록 이자가 붙는 기간이 깁니다. 단리 적금에서 n개월 동안 넣으면 이자가 붙는 개월 수의 합은 n + (n − 1) + … + 1 = n(n + 1)/2 입니다.',
+          formula: '이자(세전) = 월 납입액 × (연이율/12) × n(n + 1)/2,  만기 수령액 = 월 납입액 × n + 이자',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const M = rng.pick(Hd ? [100000, 200000, 300000, 400000, 500000, 1000000] : [100000, 150000, 200000, 300000, 500000]);
+            const r = rng.pick(E ? [2, 4, 6] : Hd ? [3, 4, 5, 6] : [3, 3.5, 4, 4.5, 5]);
+            const n = E ? 12 : rng.pick(Hd ? [12, 24, 36] : [12, 24]);
+            const r10 = Math.round(r * 10);
+            const tri = n * (n + 1) / 2;
+            // 이자가 원 단위 정수가 되고(상: 세금 15.4%도 정수) 아니면 다시 뽑기
+            if ((M * r10 * tri) % 12000 !== 0) return this.generate(rng, { tier });
+            const interest = M * r10 * tri / 12000;
+            if (Hd && (interest * 154) % 1000 !== 0) return this.generate(rng, { tier });
+            const tax = Hd ? interest * 154 / 1000 : 0;
+            const principalSum = M * n;
+            const wrongFull = Math.round(principalSum * r / 100 * n / 12); // 전액을 n개월 예치한 것으로 착각
+            const wrongYear = Math.round(principalSum * r / 100); // 기간 무시 연이율
+            const wrongLess = M * r10 * (n * (n - 1) / 2) / 12000; // 마지막 달 이자 누락
+            let ans, cands, ask;
+            if (E) { ans = interest; cands = [wrongFull, wrongYear, wrongLess, interest * 2, Math.round(interest / 2)]; ask = '만기까지 받는 이자(세전)는 얼마인가요?'; }
+            else if (!Hd) { ans = principalSum + interest; cands = [principalSum + wrongFull, principalSum + wrongYear, principalSum + wrongLess, interest, principalSum + interest * 2]; ask = '만기 수령액(원금 + 이자, 세전)은 얼마인가요?'; }
+            else { ans = principalSum + interest - tax; cands = [principalSum + interest, principalSum + wrongFull - Math.round(wrongFull * 0.154), Math.round((principalSum + interest) * 0.846), principalSum - tax]; ask = '이자에 대해서만 이자소득세 15.4%를 뗀다고 할 때, 세후 만기 수령액은 얼마인가요?'; }
+            const ds = cands.filter((x, i) => Number.isInteger(x) && x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${comma(x)}원`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${comma(ans)}원`, ds);
+            const steps = [
+              `첫 달에 넣은 돈은 ${n}개월, 둘째 달은 ${n - 1}개월, …, 마지막 달은 1개월 이자가 붙으므로 개월 수의 합은 ${n} × ${n + 1} ÷ 2 = ${tri}입니다.`,
+              `이자 = ${comma(M)} × (${r}/100 ÷ 12) × ${tri} = ${comma(interest)}원입니다.`
+            ];
+            if (!E) steps.push(`넣은 원금은 ${comma(M)} × ${n} = ${comma(principalSum)}원입니다.`);
+            if (Hd) steps.push(`이자소득세는 ${comma(interest)} × 0.154 = ${comma(tax)}원이므로 세후 수령액은 ${comma(principalSum)} + ${comma(interest)} − ${comma(tax)} = ${comma(ans)}원입니다.`);
+            else if (!E) steps.push(`만기 수령액은 ${comma(principalSum)} + ${comma(interest)} = ${comma(ans)}원입니다.`);
+            const variablesInfo = { 월납입액: `${comma(M)}원`, 연이율: `${r}%`, 기간: `${n}개월` };
+            if (Hd) variablesInfo.이자소득세율 = '15.4%';
+            return {
+              question: `매달 초 ${comma(M)}원씩 ${n}개월 동안 넣는 연이율 ${r}%(단리)의 정기적금에 가입했습니다. 이자는 넣은 돈마다 만기까지 남은 개월 수만큼 월 이율(연이율 ÷ 12)로 붙습니다. ${ask}`,
+              variablesInfo,
+              options,
+              answerIndex,
+              hint: '마지막 달에 넣은 돈은 1개월 치 이자만 받습니다. 넣은 전체 금액이 처음부터 예치된 것이 아니에요!',
+              steps
+            };
+          }
+        },
+        {
+          id: 'LIF-18',
+          dayIndex: 17,
+          unit: '경제 수학 · 연금의 현재 가치',
+          standardCode: '[12경수01-05]',
+          standardName: '연금의 뜻을 알고, 연금의 현재 가치를 구할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (연금 — 매년 말 받는 연금의 현재 가치)',
+          difficulty: '★★★ 실력',
+          tierGuide: {
+            easy: '연이율 10%, 2회 받는 연금의 현재 가치',
+            normal: '연이율 10%, 3회 받는 연금의 현재 가치',
+            hard: '연이율 10%, 4회 받는 연금의 현재 가치(네 항을 각각 할인)'
+          },
+          conceptSummary: '연금의 현재 가치는 앞으로 받을 각 금액을 지금 가치로 바꾸어(1 + r)^k로 나눈 뒤 모두 더한 값입니다. 늦게 받는 돈일수록 현재 가치가 작습니다.',
+          formula: '현재 가치 = A/(1 + r) + A/(1 + r)² + … + A/(1 + r)ⁿ',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const n = E ? 2 : Hd ? 4 : 3;
+            const k = rng.int(1, E ? 20 : Hd ? 25 : 30);
+            // A = 11ⁿ × 10^(6−n) × k 로 잡으면 A/1.1^j 가 모두 정수
+            const A = Math.pow(11, n) * Math.pow(10, 6 - n) * k;
+            const terms = [];
+            for (let j = 1; j <= n; j++) terms.push(Math.pow(11, n - j) * Math.pow(10, 6 - n + j) * k);
+            const pv = terms.reduce((s, x) => s + x, 0);
+            const cands = [A * n, 1000000 * k * n, terms[0] * n, pv * 11 / 10];
+            const ds = cands.filter((x, i) => x !== pv && cands.indexOf(x) === i).slice(0, 3).map(x => `${comma(x)}원`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${comma(pv)}원`, ds);
+            const pw = ['', '', '²', '³', '⁴'];
+            return {
+              question: `지금부터 매년 말에 ${comma(A)}원씩 ${n}번 받는 연금이 있습니다. 연이율 10%의 복리로 계산할 때, 이 연금의 현재 가치(지금 시점의 가치)는 얼마인가요?`,
+              variablesInfo: { 연금액: `${comma(A)}원`, 연이율: '10%', 지급횟수: `${n}회` },
+              options,
+              answerIndex,
+              hint: `k년 말에 받는 ${comma(A)}원의 현재 가치는 ${comma(A)} ÷ 1.1^k 입니다. 받는 횟수만큼 따로 할인해서 더하세요.`,
+              steps: [
+                ...terms.map((t, i) => `${i + 1}년 말에 받는 돈의 현재 가치: ${comma(A)} ÷ 1.1${pw[i + 1]} = ${comma(t)}원`),
+                `모두 더하면 현재 가치는 ${terms.map(t => comma(t)).join(' + ')} = ${comma(pv)}원입니다. (그냥 더한 ${comma(A * n)}원보다 작습니다.)`
+              ]
+            };
+          }
+        },
+        {
+          id: 'LIF-19',
+          dayIndex: 18,
+          unit: '생활 수학 · 레시피 인분 환산',
+          standardCode: '[12직수02-01]',
+          standardName: '비의 개념을 직무 상황에 연결하여 적용할 수 있다.',
+          sourceRef: '직무 수학 (비 — 조리 분량의 비례 환산)',
+          difficulty: '★☆☆ 기초',
+          tierGuide: {
+            easy: '2인분 레시피를 4·6·8인분으로(정수 배)',
+            normal: '2~4인분 레시피를 3~10인분으로(1인분 양을 거쳐 환산)',
+            hard: '재료가 모자랄 때 레시피 비율로 만들 수 있는 최대 인분(버림)'
+          },
+          conceptSummary: '레시피의 맛을 유지하려면 모든 재료를 같은 비율로 늘리거나 줄여야 합니다. 인분 수의 비와 재료 양의 비가 같습니다.',
+          formula: '필요한 양 = 레시피 양 × (만들 인분 ÷ 레시피 인분)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const [ing, u] = rng.pick([['밀가루', 'g'], ['설탕', 'g'], ['버터', 'g'], ['우유', 'mL']]);
+            const dish = rng.pick(['팬케이크', '쿠키', '머핀', '카스텔라']);
+            const base = E ? 2 : rng.pick(Hd ? [3, 4, 6] : [2, 3, 4]);
+            const per = rng.int(Hd ? 4 : 3, Hd ? 15 : 12) * 10; // 1인분 양
+            const amt = per * base;
+            if (Hd) {
+              const s = rng.int(5, 15);
+              const hold = per * s + rng.int(1, per - 1);
+              const ans = s;
+              const cands = [s + 1, Math.floor(hold / amt), Math.floor(hold / amt) * base + base, s - 1, s + 2];
+              const ds = cands.filter((x, i) => x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}인분`);
+              const { options, answerIndex } = buildChoiceSet(rng, `${ans}인분`, ds);
+              return {
+                question: `${base}인분 ${dish} 레시피에는 ${wj(ing, '이/가')} ${amt}${u} 들어갑니다. 집에 있는 ${ing}의 양은 ${hold}${u}뿐이고 다른 재료는 충분할 때, 레시피 비율대로 최대 몇 인분까지 만들 수 있나요? (1인분 단위로 만듭니다.)`,
+                variablesInfo: { 기준인분: `${base}인분`, 재료량: `${amt}${u}`, 보유량: `${hold}${u}` },
+                options,
+                answerIndex,
+                hint: `먼저 1인분에 필요한 ${ing}의 양(${amt} ÷ ${base})을 구한 뒤, 가진 양을 그것으로 나누어 보세요. 모자라면 그 인분은 만들 수 없으니 버림합니다.`,
+                steps: [
+                  `1인분에 필요한 ${ing}의 양은 ${amt} ÷ ${base} = ${per}${u}입니다.`,
+                  `${hold} ÷ ${per} = ${s}…${hold - per * s}이므로 ${s}인분을 만들 수 있고, 남는 양은 ${hold - per * s}${u}입니다.`,
+                  `${s + 1}인분을 만들려면 ${per * (s + 1)}${u} 필요해 모자라므로 최대 ${s}인분입니다.`
+                ]
+              };
+            }
+            const target = E ? rng.pick([4, 6, 8]) : rng.pick([3, 5, 6, 7, 9, 10].filter(t => t !== base));
+            const ans = per * target;
+            const cands = [amt + (target - base), amt * target, Math.round(amt * base / target), amt + per, ans + per];
+            const ds = cands.filter((x, i) => x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}${u}`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${ans}${u}`, ds);
+            return {
+              question: `${base}인분 ${dish} 레시피에는 ${wj(ing, '이/가')} ${amt}${u} 들어갑니다. 같은 맛을 유지하면서 ${target}인분을 만들려면 ${wj(ing, '은/는')} 몇 ${u} 필요한가요?`,
+              variablesInfo: { 기준인분: `${base}인분`, 재료량: `${amt}${u}`, 만들인분: `${target}인분` },
+              options,
+              answerIndex,
+              hint: `인분 수가 ${base} → ${target}${jo(target, '으로/로')} 바뀌면 재료도 같은 비율(${target}/${base}배)로 바뀝니다. 인분 차이만큼 더하는 것이 아니에요!`,
+              steps: [
+                `1인분에 필요한 ${ing}의 양은 ${amt} ÷ ${base} = ${per}${u}입니다.`,
+                `${target}인분을 만들려면 ${per} × ${target} = ${ans}${u} 필요합니다. (${amt} × ${target}/${base} = ${ans})`
+              ]
+            };
+          }
+        },
+        {
+          id: 'LIF-20',
+          dayIndex: 19,
+          unit: '생활 수학 · 이동 시간과 도착 시각',
+          standardCode: '[12직수01-03]',
+          standardName: '시간, 길이, 무게, 들이의 표준 단위를 알고, 단위를 환산할 수 있다.',
+          sourceRef: '직무 수학 (시간 단위 환산 — 거리·속력·시간과 일정 계획)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '거리 ÷ 속력으로 걸리는 시간을 시간·분으로',
+            normal: '출발 시각에 이동 시간을 더해 도착 시각 구하기',
+            hard: '속력이 다른 두 구간 + 휴게소 휴식까지 더한 도착 시각'
+          },
+          conceptSummary: '걸린 시간(시간) = 거리 ÷ 속력이고, 1시간 = 60분입니다. 1.5시간은 1시간 50분이 아니라 1시간 30분입니다.',
+          formula: '시간 = 거리 ÷ 속력,  분 = 시간 × 60',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const fmtDur = t => (t >= 60 ? (t % 60 ? `${Math.floor(t / 60)}시간 ${t % 60}분` : `${t / 60}시간`) : `${t}분`);
+            const fmtClock = t => (t % 60 ? `${Math.floor(t / 60)}시 ${t % 60}분` : `${t / 60}시`);
+            // 소수 시간을 '시간.분'으로 잘못 읽는 오개념: 1.5시간 → 1시간 50분
+            const misread = t => { const h = Math.floor(t / 60), f = (t % 60) * 100 / 60; return Number.isInteger(f) && f > 0 ? h * 60 + f : null; };
+            const leg = (lo, hi) => {
+              const s = rng.pick([40, 50, 60, 80, 90, 100]);
+              let t = rng.int(lo, hi);
+              while ((s * t) % 60 !== 0) t++;
+              return [s * t / 60, s, t];
+            };
+            if (E) {
+              const [d, s, t] = leg(30, 180);
+              const cands = [misread(t), t + 10, t - 10, Math.round(d / s * 100), t + 30];
+              const ds = cands.filter((x, i) => x && x > 0 && x !== t && cands.indexOf(x) === i).slice(0, 3).map(fmtDur);
+              const { options, answerIndex } = buildChoiceSet(rng, fmtDur(t), ds);
+              return {
+                question: `자동차가 시속 ${s}km로 ${d}km를 쉬지 않고 달릴 때 걸리는 시간은 얼마인가요?`,
+                variablesInfo: { 거리: `${d}km`, 속력: `시속 ${s}km` },
+                options,
+                answerIndex,
+                hint: `시간 = 거리 ÷ 속력 입니다. 소수로 나온 시간은 60을 곱해 분으로 바꾸세요.`,
+                steps: [
+                  `걸리는 시간은 ${d} ÷ ${s} = ${Math.round(d / s * 10000) / 10000}시간입니다.`,
+                  `${Math.round(d / s * 10000) / 10000}시간 × 60 = ${t}분 = ${fmtDur(t)}입니다.`
+                ]
+              };
+            }
+            const dep = rng.int(6, 11) * 60 + rng.pick([0, 10, 15, 20, 30, 40, 45, 50]);
+            let t, legs;
+            if (!Hd) { const [d, s, tt] = leg(40, 200); t = tt; legs = { d, s }; }
+            else {
+              const [d1, s1, t1] = leg(40, 120), [d2, s2, t2] = leg(30, 100);
+              const rest = rng.pick([10, 15, 20, 25, 30]);
+              t = t1 + rest + t2; legs = { d1, s1, t1, d2, s2, t2, rest };
+            }
+            const arr = dep + t;
+            const cands = Hd
+              ? [arr - legs.rest, dep + Math.round(60 * (legs.d1 + legs.d2) / ((legs.s1 + legs.s2) / 2)), misread(legs.t1) && dep + misread(legs.t1) + legs.rest + legs.t2, arr + 10, arr - 10]
+              : [misread(t) && dep + misread(t), arr + 60, arr - 10, arr + 10];
+            const ds = cands.filter((x, i) => x && x !== arr && x < 1440 && cands.indexOf(x) === i).slice(0, 3).map(fmtClock);
+            const { options, answerIndex } = buildChoiceSet(rng, fmtClock(arr), ds);
+            const question = Hd
+              ? `${fmtClock(dep)}에 출발해 고속도로 ${legs.d1}km를 시속 ${legs.s1}km로 달린 뒤 휴게소에서 ${legs.rest}분 쉬고, 다시 국도 ${legs.d2}km를 시속 ${legs.s2}km로 달려 도착했습니다. 도착 시각은? (24시간제)`
+              : `${fmtClock(dep)}에 출발해 ${legs.d}km 떨어진 거래처까지 시속 ${legs.s}km로 쉬지 않고 이동합니다. 도착 시각은? (24시간제)`;
+            const variablesInfo = Hd
+              ? { 출발시각: fmtClock(dep), '1구간': `${legs.d1}km, 시속 ${legs.s1}km`, 휴식: `${legs.rest}분`, '2구간': `${legs.d2}km, 시속 ${legs.s2}km` }
+              : { 출발시각: fmtClock(dep), 거리: `${legs.d}km`, 속력: `시속 ${legs.s}km` };
+            const steps = Hd
+              ? [
+                `고속도로 구간: ${legs.d1} ÷ ${legs.s1}시간 = ${legs.t1}분, 국도 구간: ${legs.d2} ÷ ${legs.s2}시간 = ${legs.t2}분입니다.`,
+                `휴식까지 더한 총 소요 시간은 ${legs.t1} + ${legs.rest} + ${legs.t2} = ${t}분 = ${fmtDur(t)}입니다.`,
+                `${fmtClock(dep)} + ${fmtDur(t)} = ${fmtClock(arr)}에 도착합니다. (두 속력의 평균으로 계산하면 틀립니다.)`
+              ]
+              : [
+                `걸리는 시간은 ${legs.d} ÷ ${legs.s} = ${Math.round(legs.d / legs.s * 10000) / 10000}시간 = ${t}분 = ${fmtDur(t)}입니다.`,
+                `${fmtClock(dep)} + ${fmtDur(t)} = ${fmtClock(arr)}에 도착합니다.`
+              ];
+            return { question, variablesInfo, options, answerIndex, hint: '각 구간의 시간을 분으로 바꾼 뒤 출발 시각에 더하세요. 60분이 넘으면 1시간으로 올립니다.', steps };
+          }
+        },
+        {
+          id: 'LIF-21',
+          dayIndex: 20,
+          unit: '실용 통계 · 평균과 중앙값',
+          standardCode: '[12실통02-04]',
+          standardName: '대푯값과 산포도의 종류를 알고 자료의 특성을 나타내는 값으로 요약할 수 있다.',
+          sourceRef: '실용 통계 (대푯값 — 극단값이 있을 때 평균과 중앙값)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '섞여 있는 자료 5개의 중앙값(크기순 정렬)',
+            normal: '극단값이 있는 자료 7개의 평균과 중앙값',
+            hard: '자료 6개(짝수 개)의 평균과 중앙값 — 가운데 두 값의 평균'
+          },
+          conceptSummary: '중앙값은 자료를 크기순으로 늘어놓았을 때 한가운데 값이고, 자료가 짝수 개이면 가운데 두 값의 평균입니다. 극단값이 있으면 평균이 크게 흔들리므로 중앙값이 대푯값으로 더 적절할 수 있습니다.',
+          formula: '평균 = 자료의 합 ÷ 개수,  중앙값 = 크기순 가운데 값 (짝수 개: 가운데 두 값의 평균)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const cnt = E ? 5 : Hd ? 6 : 7;
+            const ctx = E ? ['학생 5명의 한 달 용돈', '만 원', 3, 15] : Hd ? ['이웃 6가구의 한 달 전기 사용량', 'kWh', 180, 420] : ['어느 작은 회사 7명(대표 포함)의 월급', '만 원', 210, 390];
+            const [label, unitTxt, lo, hi] = ctx;
+            const data = [];
+            for (let i = 0; i < cnt - (E ? 0 : 1); i++) data.push(rng.int(lo, hi));
+            if (!E) {
+              // 극단값 하나: 합이 개수의 배수(상: 3의 배수 → 평균이 소수 첫째 자리까지)가 되도록 조정
+              let out = Hd ? rng.int(900, 1500) : rng.int(1200, 2000);
+              const s0 = data.reduce((s, x) => s + x, 0);
+              const m = Hd ? 3 : 7;
+              while ((s0 + out) % m !== 0) out++;
+              data.push(out);
+            }
+            const shown = rng.shuffle(data);
+            const sorted = data.slice().sort((x, y) => x - y);
+            const med = cnt % 2 ? sorted[(cnt - 1) / 2] : (sorted[cnt / 2 - 1] + sorted[cnt / 2]) / 2;
+            const total = data.reduce((s, x) => s + x, 0);
+            const mean = Math.round(total / cnt * 10) / 10;
+            const sp = '';
+            const fmtPair = (a, b) => `평균 ${a}${sp}${unitTxt}, 중앙값 ${b}${sp}${unitTxt}`;
+            let correct, ds;
+            if (E) {
+              const cands = [shown[2], mean, sorted[1], sorted[3], med + 1, med - 1];
+              ds = cands.filter((x, i) => x !== med && cands.indexOf(x) === i).map(x => `${x}${sp}${unitTxt}`);
+              correct = `${med}${sp}${unitTxt}`;
+            } else {
+              const noOut = Math.round((total - sorted[cnt - 1]) / (cnt - 1) * 10) / 10;
+              const pairs = [[med, mean], [mean, shown[Math.floor(cnt / 2)]], [noOut, med], [mean, sorted[Math.floor(cnt / 2)]], [mean, sorted[Math.floor(cnt / 2) - 1]], [mean, med + 10], [mean - 10, med]];
+              ds = pairs.filter(([a, b]) => !(a === mean && b === med)).map(([a, b]) => fmtPair(a, b));
+              correct = fmtPair(mean, med);
+            }
+            ds = ds.filter((x, i) => x !== correct && ds.indexOf(x) === i).slice(0, 3);
+            const { options, answerIndex } = buildChoiceSet(rng, correct, ds);
+            const cop = jo(String(shown[cnt - 1]), '이/가') === '이' ? '이었' : '였'; // 마지막 수 받침에 따라 '이었/였'
+            const steps = [`자료를 크기순으로 늘어놓으면 ${sorted.join(', ')}입니다.`];
+            if (E) steps.push(`자료가 5개이므로 3번째 값 ${med}${unitTxt}${jo(unitTxt, '이/가')} 중앙값입니다. (늘어놓기 전 가운데 값을 고르면 안 됩니다.)`);
+            else {
+              steps.push(cnt % 2
+                ? `자료가 ${cnt}개이므로 ${(cnt + 1) / 2}번째 값 ${med}${jo(String(med), '이/가')} 중앙값입니다.`
+                : `자료가 ${cnt}개(짝수)이므로 가운데 두 값 ${sorted[cnt / 2 - 1]}, ${sorted[cnt / 2]}의 평균 ${med}${jo(String(med), '이/가')} 중앙값입니다.`);
+              steps.push(`평균은 ${total} ÷ ${cnt} = ${mean}입니다. 극단값 ${sorted[cnt - 1]} 때문에 평균이 중앙값보다 크게 나오므로, 이 자료의 대표값으로는 중앙값이 더 적절합니다.`);
+            }
+            return {
+              question: E
+                ? `${label}(단위: ${unitTxt})을 조사했더니 ${shown.join(', ')}${cop}습니다. 이 자료의 중앙값은?`
+                : `${label}(단위: ${unitTxt})을 조사했더니 ${shown.join(', ')}${cop}습니다. 이 자료의 평균과 중앙값으로 옳은 것은? (평균은 소수 첫째 자리까지)`,
+              variablesInfo: { 자료: shown.join(', ') },
+              options,
+              answerIndex,
+              hint: '중앙값은 먼저 크기순으로 늘어놓은 뒤 한가운데를 찾습니다. 짝수 개면 가운데 두 값의 평균이에요.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'LIF-22',
+          dayIndex: 21,
+          unit: '직무 수학 · 경우의 수(세트 메뉴 구성)',
+          standardCode: '[12직수04-01]',
+          standardName: '직무 상황에서 경우의 수를 구할 수 있다.',
+          sourceRef: '직무 수학 (경우의 수 — 곱의 법칙과 조합으로 세트 구성)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '메인 × 음료 두 단계 곱의 법칙',
+            normal: '메인 × 사이드 × 음료 세 단계 곱의 법칙',
+            hard: '사이드에서 서로 다른 2가지를 순서 없이 고르는 조합까지'
+          },
+          conceptSummary: '여러 단계를 차례로 고를 때 전체 경우의 수는 각 단계 경우의 수의 곱입니다(곱의 법칙). 순서 없이 b개 중 서로 다른 2개를 고르는 경우의 수는 b(b − 1)/2입니다.',
+          formula: '곱의 법칙: m × n × …,   서로 다른 b개 중 2개 고르기 = b(b − 1) ÷ 2',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const shop = rng.pick(['분식집', '카페', '샌드위치 가게', '도시락 가게']);
+            const a = rng.int(2, 6), c = rng.int(2, 6);
+            const b = E ? 0 : rng.int(Hd ? 4 : 2, Hd ? 7 : 5);
+            const pick2 = b * (b - 1) / 2;
+            const ans = E ? a * c : Hd ? a * pick2 * c : a * b * c;
+            const cands = E
+              ? [a + c, a * c * 2, a * (c - 1), (a - 1) * c]
+              : Hd
+                ? [a * b * (b - 1) * c, a * b * c, a * b * b * c, a * pick2 + c]
+                : [a + b + c, a * b + c, (a + b) * c, a * b * c * 2];
+            const ds = cands.filter((x, i) => x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}가지`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${ans}가지`, ds);
+            const question = E
+              ? `${shop}의 세트 메뉴는 메인 메뉴 ${a}가지 중 1가지, 음료 ${c}가지 중 1가지를 골라 구성합니다. 만들 수 있는 세트는 모두 몇 가지인가요?`
+              : Hd
+                ? `${shop}의 세트 메뉴는 메인 메뉴 ${a}가지 중 1가지, 사이드 메뉴 ${b}가지 중 서로 다른 2가지, 음료 ${c}가지 중 1가지를 골라 구성합니다. 사이드 2가지는 고르는 순서와 관계없이 같은 세트로 볼 때, 만들 수 있는 세트는 모두 몇 가지인가요?`
+                : `${shop}의 세트 메뉴는 메인 메뉴 ${a}가지 중 1가지, 사이드 메뉴 ${b}가지 중 1가지, 음료 ${c}가지 중 1가지를 골라 구성합니다. 만들 수 있는 세트는 모두 몇 가지인가요?`;
+            const variablesInfo = { 메인: `${a}가지`, 음료: `${c}가지` };
+            if (!E) variablesInfo.사이드 = `${b}가지`;
+            const steps = E
+              ? [`메인 메뉴를 고르는 방법 ${a}가지 각각에 대해 음료를 고르는 방법이 ${c}가지씩 있습니다.`, `곱의 법칙으로 ${a} × ${c} = ${ans}가지입니다. (더하면 안 됩니다.)`]
+              : Hd
+                ? [`사이드 ${b}가지 중 서로 다른 2가지를 순서 없이 고르는 방법은 ${b} × ${b - 1} ÷ 2 = ${pick2}가지입니다. (순서를 따지면 ${b * (b - 1)}가지지만 같은 묶음이 2번씩 세어집니다.)`, `곱의 법칙으로 ${a} × ${pick2} × ${c} = ${ans}가지입니다.`]
+                : [`메인, 사이드, 음료를 차례로 고르는 세 단계이므로 곱의 법칙을 씁니다.`, `${a} × ${b} × ${c} = ${ans}가지입니다.`];
+            return { question, variablesInfo, options, answerIndex, hint: '단계를 이어서 고르면 곱하고, 둘 중 하나만 고르면 더합니다.', steps };
+          }
+        },
+        {
+          id: 'LIF-23',
+          dayIndex: 22,
+          unit: '직무 수학 · 경품 추첨 확률',
+          standardCode: '[12직수04-02]',
+          standardName: '어떤 현상이 나타날 가능성을 수치화하여 설명할 수 있다.',
+          sourceRef: '직무 수학 (가능성의 수치화 — 경품 추첨 확률)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '쿠폰 1장을 뽑을 때 당첨 확률',
+            normal: '되돌려 놓지 않고 연속으로 2장을 뽑을 때 모두 당첨될 확률',
+            hard: '연속으로 2장을 뽑을 때 적어도 1장 당첨될 확률(여사건)'
+          },
+          conceptSummary: '모든 쿠폰이 뽑힐 가능성이 같으면 확률 = (원하는 경우의 수) ÷ (전체 경우의 수)입니다. 뽑은 쿠폰을 되돌려 놓지 않으면 두 번째에는 전체 장수가 하나 줄어듭니다. "적어도 하나"는 1 − (하나도 아닐 확률)로 구하면 편합니다.',
+          formula: 'P = 당첨 수 ÷ 전체 수,  비복원 2회 모두 당첨 = w/n × (w − 1)/(n − 1),  적어도 1장 = 1 − l/n × (l − 1)/(n − 1)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const w = rng.int(E ? 1 : 2, E ? 6 : 5), l = rng.int(E ? 4 : 5, E ? 15 : 12), n = w + l;
+            const g = (x, y) => { x = Math.abs(x); y = Math.abs(y); while (y) { [x, y] = [y, x % y]; } return x; };
+            const fr = (p, q) => { const d = g(p, q); return [p / d, q / d]; };
+            let ans;
+            if (E) ans = fr(w, n);
+            else if (!Hd) ans = fr(w * (w - 1), n * (n - 1));
+            else ans = fr(n * (n - 1) - l * (l - 1), n * (n - 1));
+            const cands = E
+              ? [fr(w, l), fr(l, n), fr(1, n), fr(w, n + 1), fr(w + 1, n), fr(w, 2 * n)]
+              : Hd
+                ? [fr(n * n - l * l, n * n), fr(w * (w - 1), n * (n - 1)), fr(n - l, n), fr(2 * w * l, n * (n - 1)), fr(2 * w, n), fr(l * (l - 1), n * (n - 1))]
+                : [fr(w * w, n * n), fr(w * (w - 1), n * n), fr(w, n), fr(2 * w, n), fr(w - 1, n - 1), fr(1, n * (n - 1))];
+            const same = (x, y) => x[0] * y[1] === x[1] * y[0];
+            const ds = [];
+            for (const c of cands) if (c[0] > 0 && c[0] < c[1] && !same(c, ans) && !ds.some(d => same(d, c))) ds.push(c);
+            const fmt = x => `${x[0]}/${x[1]}`;
+            const { options, answerIndex } = buildChoiceSet(rng, fmt(ans), ds.slice(0, 3).map(fmt));
+            const intro = `경품 추첨함에 당첨 쿠폰 ${w}장과 꽝 쿠폰 ${l}장이 들어 있습니다.`;
+            const question = E
+              ? `${intro} 쿠폰 1장을 임의로 뽑을 때 당첨 쿠폰일 확률은? (기약분수로)`
+              : Hd
+                ? `${intro} 뽑은 쿠폰을 되돌려 놓지 않고 연속으로 2장을 뽑을 때, 적어도 1장은 당첨 쿠폰일 확률은? (기약분수로)`
+                : `${intro} 뽑은 쿠폰을 되돌려 놓지 않고 연속으로 2장을 뽑을 때, 2장 모두 당첨 쿠폰일 확률은? (기약분수로)`;
+            const steps = E
+              ? [`전체 쿠폰은 ${w} + ${l} = ${n}장이고 당첨 쿠폰은 ${w}장입니다.`, `확률은 ${w}/${n}${g(w, n) > 1 ? ` = ${fmt(ans)}` : ''}입니다. (당첨 : 꽝 = ${w} : ${l}의 비와 헷갈리지 마세요.)`]
+              : Hd
+                ? [`2장 모두 꽝일 확률은 ${l}/${n} × ${l - 1}/${n - 1} = ${fmt(fr(l * (l - 1), n * (n - 1)))}입니다.`, `적어도 1장 당첨 = 1 − ${fmt(fr(l * (l - 1), n * (n - 1)))} = ${fmt(ans)}입니다.`]
+                : [`첫 번째에 당첨일 확률은 ${w}/${n}, 쿠폰을 되돌려 놓지 않으므로 두 번째에도 당첨일 확률은 ${w - 1}/${n - 1}입니다.`, `${w}/${n} × ${w - 1}/${n - 1} = ${fmt(ans)}입니다.`];
+            return {
+              question,
+              variablesInfo: { 당첨: `${w}장`, 꽝: `${l}장` },
+              options,
+              answerIndex,
+              hint: Hd ? '"적어도 1장"은 전체(1)에서 "2장 모두 꽝"인 확률을 빼세요.' : '확률은 (원하는 경우) ÷ (전체 경우)입니다. 되돌려 놓지 않으면 두 번째 분모가 1 줄어요.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'LIF-24',
+          dayIndex: 23,
+          unit: '직무 수학 · 비율 그래프 해석',
+          standardCode: '[12직수04-04]',
+          standardName: '직무 상황의 다양한 표와 그래프를 해석할 수 있다.',
+          sourceRef: '직무 수학 (띠그래프·원그래프의 백분율 해석)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '띠그래프 한 항목의 비율로 금액 구하기',
+            normal: '두 항목의 금액 차이 구하기',
+            hard: '총액과 비율이 함께 바뀐 두 해의 금액 비교(비율이 줄어도 금액은 늘 수 있음)'
+          },
+          conceptSummary: '비율 그래프의 백분율은 전체에 대한 비율이므로, 항목의 실제 양 = 전체 양 × 백분율입니다. 전체가 달라지면 비율만 비교해서는 실제 양의 증감을 알 수 없습니다.',
+          formula: '항목의 양 = 전체 × (백분율 ÷ 100)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            if (Hd) {
+              const T1 = rng.int(12, 25) * 20, T2 = T1 + rng.int(2, 10) * 20;
+              const p1 = rng.pick([30, 35, 40, 45]);
+              const p2 = p1 - rng.pick([5, 10]);
+              const a1 = T1 * p1 / 100, a2 = T2 * p2 / 100, d = a2 - a1;
+              if (d === 0) return this.generate(rng, { tier });
+              const dir = x => (x > 0 ? '증가' : '감소');
+              const correct = `${Math.abs(d)}만 원 ${dir(d)}`;
+              const cands = [`${Math.abs(d)}만 원 ${dir(-d)}`, `${T1 * (p1 - p2) / 100}만 원 감소`, `${T2 * (p1 - p2) / 100}만 원 감소`, `${p1 - p2}만 원 감소`, `${Math.abs(d) + 10}만 원 ${dir(d)}`];
+              const ds = cands.filter((x, i) => x !== correct && cands.indexOf(x) === i).slice(0, 3);
+              const { options, answerIndex } = buildChoiceSet(rng, correct, ds);
+              return {
+                question: `어느 동아리의 지출을 띠그래프로 나타냈더니, 작년에는 총지출 ${T1}만 원 중 행사비가 ${p1}%였고 올해는 총지출 ${T2}만 원 중 행사비가 ${p2}%였습니다. 작년과 비교한 올해 행사비 금액의 변화로 옳은 것은?`,
+                variablesInfo: { 작년총액: `${T1}만 원`, 작년비율: `${p1}%`, 올해총액: `${T2}만 원`, 올해비율: `${p2}%` },
+                options,
+                answerIndex,
+                hint: '비율이 줄었다고 금액이 줄었다고 단정하면 안 됩니다. 두 해의 금액을 각각 구해서 비교하세요.',
+                steps: [
+                  `작년 행사비 = ${T1} × ${p1 / 100} = ${a1}만 원, 올해 행사비 = ${T2} × ${p2 / 100} = ${a2}만 원입니다.`,
+                  `${a2} − ${a1} = ${d}이므로 행사비는 ${Math.abs(d)}만 원 ${dir(d)}했습니다. (비율은 ${p1 - p2}%p 줄었지만 총지출이 늘었습니다.)`
+                ]
+              };
+            }
+            const T = rng.int(10, 30) * 20;
+            const pA = rng.pick([25, 30, 35, 40, 45]);
+            const pB = rng.pick([10, 15, 20].filter(x => x < pA));
+            const pC = rng.pick([10, 15]);
+            const pD = 100 - pA - pB - pC;
+            const legend = `식비 ${pA}%, 교통비 ${pB}%, 통신비 ${pC}%, 기타 ${pD}%`;
+            const ans = E ? T * pA / 100 : T * (pA - pB) / 100;
+            const cands = E
+              ? [pA, T * pA / 10, T - T * pA / 100, T * pB / 100]
+              : [pA - pB, T * pA / 100, T * (pA + pB) / 100, T * (pA - pB) / 10];
+            const ds = cands.filter((x, i) => x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}만 원`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${ans}만 원`, ds);
+            const variablesInfo = { 총액: `${T}만 원`, 항목A: `식비 ${pA}%` };
+            if (!E) variablesInfo.항목B = `교통비 ${pB}%`;
+            return {
+              question: `한 가구의 한 달 생활비 ${T}만 원을 띠그래프로 나타냈더니 ${legend}였습니다. ${E ? '식비는 얼마인가요?' : '식비는 교통비보다 얼마나 더 많은가요?'}`,
+              variablesInfo,
+              options,
+              answerIndex,
+              hint: '백분율은 전체에 대한 비율입니다. 전체 금액에 (백분율 ÷ 100)을 곱하세요.',
+              steps: E
+                ? [`식비의 비율은 ${pA}%이므로 ${T} × ${pA / 100}${jo(pA / 100, '을/를')} 계산합니다.`, `${T} × ${pA / 100} = ${ans}만 원입니다.`]
+                : [`식비 = ${T} × ${pA / 100} = ${T * pA / 100}만 원, 교통비 = ${T} × ${pB / 100} = ${T * pB / 100}만 원입니다.`, `차이는 ${T * pA / 100} − ${T * pB / 100} = ${ans}만 원입니다. (= ${T} × ${pA - pB}%)`]
+            };
+          }
+        },
+        {
+          id: 'LIF-25',
+          dayIndex: 24,
+          unit: '경제 수학 · 수요와 공급의 균형 가격',
+          standardCode: '[12경수02-04]',
+          standardName: '수요와 공급의 상호 작용에 의해 균형 가격이 결정되는 경제 현상을 설명할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (일차함수로 나타낸 수요·공급과 균형 가격)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '기울기가 1인 수요·공급 함수에서 균형 가격',
+            normal: '일반적인 일차 수요·공급 함수에서 균형 가격과 균형 거래량',
+            hard: '수요가 모든 가격에서 일정량 늘어난 뒤의 새 균형 가격과 거래량'
+          },
+          conceptSummary: '가격이 오르면 수요량은 줄고 공급량은 늘어납니다. 수요량과 공급량이 같아지는 가격이 균형 가격이고, 그때의 양이 균형 거래량입니다.',
+          formula: '수요 Qd = a − bP, 공급 Qs = dP − c 에서 a − bP = dP − c → P = (a + c) ÷ (b + d)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const b = E ? 1 : rng.pick([1, 2, 3, 4]), d = E ? 1 : rng.pick([1, 2, 3, 4]);
+            const P0 = rng.int(10, 30) * 100, Q0 = rng.int(4, 30) * 50;
+            const a = Q0 + b * P0, c = d * P0 - Q0;
+            if (c <= 0) return this.generate(rng, { tier });
+            const item = rng.pick(['빵', '음료', '김밥', '쿠키']);
+            const k = Hd ? (b + d) * rng.pick([100, 200, 300]) : 0;
+            const dP = k / (b + d);
+            const P1 = P0 + dP, Q1 = Q0 + d * dP;
+            const co = x => (x === 1 ? '' : x);
+            const fD = `Qd = ${comma(a)} − ${co(b)}P`, fS = `Qs = ${co(d)}P − ${comma(c)}`;
+            const pair = (p, q) => `균형 가격 ${comma(p)}원, 균형 거래량 ${comma(q)}개`;
+            let correct, cands;
+            if (E) {
+              correct = `${comma(P0)}원`;
+              cands = [a / b, c / d, P0 + 100, P0 - 100, (a - c) / (b + d)].filter(x => Number.isInteger(x) && x > 0).map(x => `${comma(x)}원`);
+            } else if (!Hd) {
+              correct = pair(P0, Q0);
+              cands = [[P0, a], [Q0, P0], [P0 + 100, Q0 - 100 * b], [P0, Q0 * 2], [P0 - 100, Q0 - 100 * d]].filter(([p, q]) => p > 0 && q > 0).map(([p, q]) => pair(p, q));
+            } else {
+              correct = pair(P1, Q1);
+              cands = [[P0, Q0], [P0, Q0 + k], [P1, Q0], [P1, Q0 + k], [P0 + k, Q1]].map(([p, q]) => pair(p, q));
+            }
+            const ds = cands.filter((x, i) => x !== correct && cands.indexOf(x) === i).slice(0, 3);
+            const { options, answerIndex } = buildChoiceSet(rng, correct, ds);
+            const intro = `${item} 1개의 가격을 P원이라 할 때, 어느 시장의 하루 수요량은 ${fD}, 공급량은 ${fS}(단위: 개)입니다.`;
+            const question = E
+              ? `${intro} 수요량과 공급량이 같아지는 균형 가격은?`
+              : Hd
+                ? `${intro} 축제 기간에 모든 가격에서 하루 수요량이 ${comma(k)}개씩 늘어난다면, 새로운 균형 가격과 균형 거래량은?`
+                : `${intro} 균형 가격과 균형 거래량은?`;
+            const variablesInfo = { 수요: fD, 공급: fS };
+            if (Hd) variablesInfo.수요증가 = `${comma(k)}개`;
+            const aa = a + k;
+            const steps = [
+              `균형에서는 수요량 = 공급량이므로 ${comma(aa)} − ${co(b)}P = ${co(d)}P − ${comma(c)} 입니다.${Hd ? ` (늘어난 수요: Qd = ${comma(aa)} − ${co(b)}P)` : ''}`,
+              `${b + d}P = ${comma(aa)} + ${comma(c)} = ${comma(aa + c)} 이므로 P = ${comma(Hd ? P1 : P0)}원입니다.`
+            ];
+            if (!E) steps.push(`균형 거래량은 ${co(d)}P − ${comma(c)}에 대입해 ${comma(Hd ? Q1 : Q0)}개입니다.${Hd ? ` (수요 증가로 가격은 ${comma(dP)}원 오르고 거래량은 ${comma(Q1 - Q0)}개 늘었습니다.)` : ''}`);
+            return { question, variablesInfo, options, answerIndex, hint: '수요 함수와 공급 함수를 같다고 놓고 P에 대한 일차방정식을 푸세요.', steps };
+          }
+        },
+        {
+          id: 'LIF-26',
+          dayIndex: 25,
+          unit: '경제 수학 · 세금과 균형 가격',
+          standardCode: '[12경수02-05]',
+          standardName: '세금과 소득의 변화가 균형 가격에 미치는 영향을 탐구하고 이해한다.',
+          sourceRef: '고등학교 경제 수학 (물품세 부과에 따른 공급 함수 이동과 균형 가격 변화)',
+          difficulty: '★★★ 실력',
+          tierGuide: {
+            easy: '기울기 1인 함수에서 세금 부과 후 새 균형 가격',
+            normal: '새 균형 가격과 1개당 소비자 부담(가격 상승분)',
+            hard: '새 균형 가격·거래량과 정부의 세수(세금 × 거래량)'
+          },
+          conceptSummary: '판매자에게 1개당 t원의 세금을 매기면 판매자가 실제로 받는 돈은 (P − t)원이 되어 공급 함수가 Qs = d(P − t) − c로 바뀝니다. 균형 가격은 오르지만 보통 세금 전부만큼 오르지는 않아, 세금은 소비자와 판매자가 나누어 부담합니다.',
+          formula: 'a − bP = d(P − t) − c → P₁ = (a + c + dt) ÷ (b + d),  세수 = t × 새 거래량',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const b = E ? 1 : rng.pick([1, 2, 3]), d = E ? 1 : rng.pick([1, 2, 3]);
+            const P0 = rng.int(10, 30) * 100, Q0 = rng.int(8, 30) * 50;
+            const a = Q0 + b * P0, c = d * P0 - Q0;
+            const t = rng.pick([100, 200, 300, 400, 500, 600]);
+            if (c <= 0 || (d * t) % (b + d) !== 0) return this.generate(rng, { tier });
+            const dP = d * t / (b + d);
+            const P1 = P0 + dP, Q1 = Q0 - b * dP;
+            if (Q1 <= 0) return this.generate(rng, { tier });
+            const item = rng.pick(['음료', '과자', '생수', '아이스크림']);
+            const co = x => (x === 1 ? '' : x);
+            const fD = `Qd = ${comma(a)} − ${co(b)}P`, fS = `Qs = ${co(d)}P − ${comma(c)}`;
+            let correct, cands;
+            if (E) {
+              correct = `${comma(P1)}원`;
+              cands = [P0 + t, P0, P1 - t, P0 + t * 2].map(x => `${comma(x)}원`);
+            } else if (!Hd) {
+              const f = (p, s) => `균형 가격 ${comma(p)}원, 소비자 부담 ${comma(s)}원`;
+              correct = f(P1, dP);
+              cands = [f(P0 + t, t), f(P1, t - dP), f(P0, 0), f(P1 - t, dP), f(P1, t)];
+            } else {
+              const f = (p, q, g) => `균형 가격 ${comma(p)}원, 거래량 ${comma(q)}개, 세수 ${comma(g)}원`;
+              correct = f(P1, Q1, t * Q1);
+              const qn = Q0 - b * t;
+              cands = [f(P1, Q1, t * Q0), f(P1, Q0, t * Q0), f(P1, Q1, dP * Q1), ...(qn > 0 ? [f(P0 + t, qn, t * qn)] : [])];
+            }
+            const ds = cands.filter((x, i) => x !== correct && cands.indexOf(x) === i).slice(0, 3);
+            const { options, answerIndex } = buildChoiceSet(rng, correct, ds);
+            const intro = `${item} 1개의 가격을 P원이라 할 때, 어느 시장의 수요량은 ${fD}, 공급량은 ${fS}(단위: 개)입니다. 정부가 판매자에게 1개당 ${comma(t)}원의 세금을 부과하면 판매자가 실제로 받는 돈은 (P − ${comma(t)})원이 됩니다.`;
+            const question = E
+              ? `${intro} 세금 부과 후의 새로운 균형 가격은?`
+              : Hd
+                ? `${intro} 세금 부과 후의 새로운 균형 가격, 균형 거래량과 정부가 걷는 세수(세금 × 거래량)는?`
+                : `${intro} 세금 부과 후의 새로운 균형 가격과, 세금 중 소비자가 1개당 부담하는 금액(가격 상승분)은?`;
+            return {
+              question,
+              variablesInfo: { 수요: fD, 공급: fS, 세금: `${comma(t)}원` },
+              options,
+              answerIndex,
+              hint: `공급 함수의 P 자리에 (P − ${comma(t)})을 넣은 새 공급 함수와 수요 함수를 같다고 놓으세요.`,
+              steps: [
+                `세금 부과 전 균형: ${comma(a)} − ${co(b)}P = ${co(d)}P − ${comma(c)} 에서 P = ${comma(P0)}원, 거래량 ${comma(Q0)}개입니다.`,
+                `세금 부과 후 공급: Qs = ${co(d)}(P − ${comma(t)}) − ${comma(c)}. 수요와 같다고 놓으면 ${b + d}P = ${comma(a + c + d * t)} 이므로 P = ${comma(P1)}원입니다.`,
+                Hd
+                  ? `새 거래량은 ${comma(a)} − ${b === 1 ? '' : `${b} × `}${comma(P1)} = ${comma(Q1)}개, 세수는 ${comma(t)} × ${comma(Q1)} = ${comma(t * Q1)}원입니다. (세금 전의 거래량 ${comma(Q0)}개를 쓰면 틀립니다.)`
+                  : `가격은 ${comma(P1)} − ${comma(P0)} = ${comma(dP)}원 올랐습니다. 세금 ${comma(t)}원 중 소비자가 ${comma(dP)}원, 판매자가 ${comma(t - dP)}원을 부담하는 셈입니다.`
+              ]
+            };
+          }
+        },
+        {
+          id: 'LIF-27',
+          dayIndex: 26,
+          unit: '직무 수학 · 큰 수의 어림',
+          standardCode: '[12직수01-02]',
+          standardName: '큰 수를 어림하여 문제를 해결하고, 어림값을 이용하여 수의 크기를 비교할 수 있다.',
+          sourceRef: '직무 수학 (큰 수의 반올림과 어림 계산)',
+          difficulty: '★☆☆ 기초',
+          tierGuide: {
+            easy: '일곱 자리 수를 반올림하여 만의 자리까지',
+            normal: '1인당 금액 × 인원을 계산한 뒤 십만의 자리까지 반올림',
+            hard: '세 품목 금액의 합을 계산한 뒤 백만의 자리까지 반올림'
+          },
+          conceptSummary: '반올림하여 ○의 자리까지 나타낼 때는 그 바로 아래 자리의 숫자가 5 이상이면 올리고, 4 이하이면 버립니다. 큰 금액은 먼저 정확히 계산한 뒤 어림해야 오차가 작습니다.',
+          formula: '반올림하여 만의 자리까지 → 천의 자리 숫자를 보고 올림/버림',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            let x, U, unitName, question, variablesInfo, calc, suffix;
+            if (E) {
+              x = rng.int(1000000, 9999999); U = 10000; unitName = '만'; suffix = '명';
+              question = `어느 도시의 인구가 ${comma(x)}명입니다. 이 인구를 반올림하여 만의 자리까지 나타낸 어림값은?`;
+              variablesInfo = { 수: `${comma(x)}명`, 어림: '만의 자리' };
+              calc = `인구는 ${comma(x)}명입니다.`;
+            } else if (!Hd) {
+              const a = rng.int(120, 399) * 100, n = rng.int(120, 480);
+              x = a * n; U = 100000; unitName = '십만'; suffix = '원';
+              question = `회사 워크숍 참가자 ${n}명에게 1인당 ${comma(a)}원짜리 도시락을 준비하려고 합니다. 총비용을 반올림하여 십만의 자리까지 나타낸 어림값은?`;
+              variablesInfo = { '1인당': `${comma(a)}원`, 인원: `${n}명`, 어림: '십만의 자리' };
+              calc = `총비용은 ${comma(a)} × ${n} = ${comma(x)}원입니다.`;
+            } else {
+              const items = [0, 1, 2].map(() => [rng.int(80, 990) * 10, rng.int(1200, 6000)]);
+              x = items.reduce((s, [p, q]) => s + p * q, 0); U = 1000000; unitName = '백만'; suffix = '원';
+              const names = ['기념품', '음료', '간식'];
+              question = `행사 준비물로 ${items.map(([p, q], i) => `${names[i]} ${comma(p)}원짜리 ${comma(q)}개`).join(', ')}를 주문했습니다. 총 주문 금액을 반올림하여 백만의 자리까지 나타낸 어림값은?`;
+              variablesInfo = { 품목: items.map(([p, q]) => `${comma(p)}원×${q}개`).join(', '), 어림: '백만의 자리' };
+              calc = `총 주문 금액은 ${items.map(([p, q]) => `${comma(p)} × ${comma(q)}`).join(' + ')} = ${items.map(([p, q]) => comma(p * q)).join(' + ')} = ${comma(x)}원입니다.`;
+            }
+            const r = Math.round(x / U) * U;
+            if (x % U === 0 || Math.round(x / (U * 10)) * U * 10 === r) return this.generate(rng, { tier });
+            const other = r > x ? Math.floor(x / U) * U : Math.ceil(x / U) * U;
+            const cands = [other, Math.round(x / (U / 10)) * (U / 10), Math.round(x / (U * 10)) * U * 10, r * 10, r / 10];
+            const ds = cands.filter((v, i) => v > 0 && v !== r && cands.indexOf(v) === i).slice(0, 3).map(v => `약 ${comma(v)}${suffix}`);
+            const { options, answerIndex } = buildChoiceSet(rng, `약 ${comma(r)}${suffix}`, ds);
+            const lowerDigit = Math.floor((x % U) / (U / 10));
+            return {
+              question,
+              variablesInfo,
+              options,
+              answerIndex,
+              hint: `${unitName}의 자리까지 나타내려면 그 바로 아래 자리 숫자를 보고 반올림합니다.`,
+              steps: [
+                calc,
+                `${unitName}의 자리 바로 아래 자리 숫자는 ${lowerDigit}이므로 ${lowerDigit >= 5 ? '올립니다' : '버립니다'}.`,
+                `따라서 어림값은 약 ${comma(r)}${suffix}입니다.`
+              ]
+            };
+          }
+        },
+        {
+          id: 'LIF-28',
+          dayIndex: 27,
+          unit: '직무 수학 · 함께 일하는 시간(일차방정식)',
+          standardCode: '[12직수02-05]',
+          standardName: '일차방정식 또는 일차부등식을 활용하여 직무 상황의 문제를 해결할 수 있다.',
+          sourceRef: '직무 수학 (일차방정식 활용 — 작업량과 작업 시간)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '함께 일한 시간이 정수 시간으로 떨어지는 경우',
+            normal: '함께 일한 시간이 2.4시간처럼 소수 → 시간·분 환산',
+            hard: 'A가 먼저 혼자 일한 뒤 남은 일을 함께 끝내는 시간'
+          },
+          conceptSummary: '전체 일의 양을 1로 두면, 혼자 a시간 걸리는 사람은 1시간에 1/a만큼 일합니다. 함께 일하면 1시간에 (1/a + 1/b)만큼 하므로 x시간 동안 하는 일의 양으로 방정식을 세웁니다.',
+          formula: '(1/a + 1/b) × x = 1 → x = ab ÷ (a + b)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const fmtDur = t => (t >= 60 ? (t % 60 ? `${Math.floor(t / 60)}시간 ${t % 60}분` : `${t / 60}시간`) : `${t}분`);
+            const misread = t => { const h = Math.floor(t / 60), f = (t % 60) * 100 / 60; return Number.isInteger(f) && f > 0 ? h * 60 + f : null; };
+            let a, b, t1 = 0;
+            if (E) {
+              [a, b] = rng.pick([[3, 6], [4, 12], [5, 20], [6, 12], [6, 30], [8, 24], [9, 18], [10, 15], [12, 24], [20, 30], [15, 30]]);
+              if (rng.next() < 0.5) [a, b] = [b, a];
+            } else {
+              a = rng.int(Hd ? 3 : 2, 12); b = rng.int(2, 12);
+              if (Hd) t1 = rng.int(1, a - 1);
+              if (a === b) return this.generate(rng, { tier });
+            }
+            const num = 60 * (a - t1) * b, den = a + b;
+            if (num % den !== 0) return this.generate(rng, { tier });
+            const ans = num / den;
+            if (!E && !Hd && (a * b) % (a + b) === 0) return this.generate(rng, { tier });
+            const together = 60 * a * b / (a + b);
+            const cands = E
+              ? [30 * (a + b), 60 * (a + b), 60 * Math.abs(a - b), 30 * Math.min(a, b), ans + 60]
+              : Hd
+                ? [Number.isInteger(together) ? together : Math.round(together), ans + 60 * t1, 60 * (a - t1) / a * b, misread(ans), ans + 30]
+                : [misread(ans), 30 * (a + b), 30 * Math.min(a, b), ans + 30, ans - 30];
+            const ds = cands.filter((x, i) => x && x > 0 && Number.isInteger(x) && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(fmtDur);
+            const { options, answerIndex } = buildChoiceSet(rng, fmtDur(ans), ds);
+            const job = rng.pick(['창고 재고 정리', '고객 설문 자료 입력', '매장 진열대 정리', '택배 상자 분류']);
+            const intro = `${job} 작업을 직원 A가 혼자 하면 ${a}시간, 직원 B가 혼자 하면 ${b}시간이 걸립니다. (두 사람의 작업 속도는 각각 일정합니다.)`;
+            const variablesInfo = { A단독: `${a}시간`, B단독: `${b}시간` };
+            if (Hd) variablesInfo.A먼저 = `${t1}시간`;
+            // 분수는 기약분수로 보여 준다
+            const fr = (x, y) => { const g = gcd(x, y); return y / g === 1 ? `${x / g}` : `${x / g}/${y / g}`; };
+            const rate = fr(a + b, a * b), left = fr(a - t1, a);
+            const durTxt = ans >= 60 ? `${ans}분 = ${fmtDur(ans)}` : `${ans}분`;
+            const mr = misread(ans);
+            const steps = [`전체 일의 양을 1이라 하면 A는 1시간에 1/${a}, B는 1/${b}만큼 일하므로 함께 하면 1시간에 1/${a} + 1/${b} = ${rate}만큼 합니다.`];
+            if (Hd) steps.push(`A가 먼저 ${t1}시간 동안 ${fr(t1, a)}만큼 했으므로 남은 일은 1 − ${fr(t1, a)} = ${left}입니다.`, `함께 일한 시간을 x시간이라 하면 ${rate} × x = ${left} 에서 x = ${fr((a - t1) * b, a + b)}시간 = ${durTxt}입니다.`);
+            else steps.push(`함께 일한 시간을 x시간이라 하면 ${rate} × x = 1 에서 x = ${fr(a * b, a + b)}시간입니다.`, `${fr(a * b, a + b)}시간 × 60 = ${durTxt}입니다.${!E && mr ? ` (${ans / 60}시간을 ${fmtDur(mr)}${jo(fmtDur(mr), '으로/로')} 읽으면 안 됩니다. 소수 시간은 60을 곱해 분으로 바꿉니다.)` : ''}`);
+            return {
+              question: Hd
+                ? `${intro} A가 먼저 혼자 ${t1}시간 일한 뒤, 남은 일을 A와 B가 함께 하여 끝냈습니다. A와 B가 함께 일한 시간은?`
+                : `${intro} 두 사람이 처음부터 함께 일하면 작업을 끝내는 데 걸리는 시간은?`,
+              variablesInfo,
+              options,
+              answerIndex,
+              hint: '두 사람의 걸린 시간을 평균 내는 것이 아니라, 1시간 동안 하는 일의 양(1/a, 1/b)을 더해야 합니다.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'LIF-29',
+          dayIndex: 28,
+          unit: '직무 수학 · 칠할 넓이와 페인트 수량',
+          standardCode: '[12직수03-04]',
+          standardName: '직무 상황에서 나타나는 평면도형의 둘레와 넓이를 구할 수 있다.',
+          sourceRef: '직무 수학 (직사각형 넓이와 자재 수량 산정)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '직사각형 바닥 넓이 ÷ 1통 면적이 나누어떨어짐',
+            normal: '소수 길이 바닥을 2번 칠할 때 필요한 통 수(올림)',
+            hard: '네 벽면 넓이에서 문·창문을 빼고 2번 칠할 때 통 수(올림)'
+          },
+          conceptSummary: '칠할 넓이 × 칠하는 횟수를 1통으로 칠할 수 있는 넓이로 나눈 뒤, 모자라면 안 되므로 소수점 아래가 있으면 올림합니다. 방의 네 벽 넓이는 (바닥 둘레) × (높이)입니다.',
+          formula: '필요한 통 수 = ⌈(칠할 넓이 × 횟수) ÷ 1통 면적⌉,  네 벽 넓이 = 2(가로 + 세로) × 높이',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const ceilDiv = (p, q) => Math.floor((p + q - 1) / q);
+            if (E) {
+              const L = rng.int(3, 9), W = rng.int(3, 8), C = rng.pick([2, 3, 4, 5, 6]);
+              if ((L * W) % C !== 0) return this.generate(rng, { tier });
+              const ans = L * W / C;
+              const cands = [L * W, ceilDiv(2 * (L + W), C), ans + 1, ans * 2];
+              const ds = cands.filter((x, i) => x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}통`);
+              const { options, answerIndex } = buildChoiceSet(rng, `${ans}통`, ds);
+              return {
+                question: `가로 ${L}m, 세로 ${W}m인 직사각형 바닥에 방수 페인트를 한 번 칠하려고 합니다. 페인트 1통으로 ${C}m²를 칠할 수 있을 때, 필요한 페인트는 몇 통인가요?`,
+                variablesInfo: { 가로: `${L}m`, 세로: `${W}m`, 한통면적: `${C}m²` },
+                options,
+                answerIndex,
+                hint: '바닥 넓이(가로 × 세로)를 1통으로 칠할 수 있는 넓이로 나누세요. 둘레가 아니라 넓이입니다.',
+                steps: [`바닥 넓이는 ${L} × ${W} = ${L * W}m²입니다.`, `${L * W} ÷ ${C} = ${ans}이므로 ${ans}통이 필요합니다.`]
+              };
+            }
+            const L10 = rng.int(30, Hd ? 60 : 80), W10 = rng.int(25, Hd ? 50 : 60);
+            const H10 = Hd ? rng.int(23, 27) : 0;
+            const O10 = Hd ? rng.int(30, 60) : 0; // 문·창문 넓이 × 10
+            const C = rng.pick(Hd ? [10, 12, 15] : [5, 6, 8, 10]);
+            const floor100 = L10 * W10;
+            const wall100 = 2 * (L10 + W10) * H10;
+            const area100 = Hd ? wall100 - O10 * 10 : floor100;
+            const need = area100 * 2;
+            if (need % (C * 100) === 0) return this.generate(rng, { tier });
+            const ans = ceilDiv(need, C * 100);
+            const f = v => v / 100; // 0.01m² 단위 → m²
+            const cands = Hd
+              ? [ceilDiv(wall100 * 2, C * 100), ceilDiv(area100, C * 100), Math.floor(need / (C * 100)), ans + 1, ceilDiv(floor100 * 2, C * 100)]
+              : [Math.floor(need / (C * 100)), ceilDiv(area100, C * 100), ans + 1, ceilDiv(2 * (L10 + W10) * 10 * 2, C * 100)];
+            const ds = cands.filter((x, i) => x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}통`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${ans}통`, ds);
+            const L = L10 / 10, W = W10 / 10, Hh = H10 / 10, O = O10 / 10;
+            const variablesInfo = { 가로: `${L}m`, 세로: `${W}m`, 한통면적: `${C}m²`, 칠횟수: '2회' };
+            if (Hd) { variablesInfo.높이 = `${Hh}m`; variablesInfo.제외넓이 = `${O}m²`; }
+            return {
+              question: Hd
+                ? `가로 ${L}m, 세로 ${W}m, 높이 ${Hh}m인 방의 네 벽면에 페인트를 2번 칠하려고 합니다. 문과 창문 넓이의 합 ${O}m²는 칠하지 않고, 페인트 1통으로 ${C}m²를 칠할 수 있습니다. 필요한 페인트는 최소 몇 통인가요?`
+                : `가로 ${L}m, 세로 ${W}m인 직사각형 바닥에 방수 페인트를 2번 칠하려고 합니다. 페인트 1통으로 ${C}m²를 칠할 수 있을 때, 필요한 페인트는 최소 몇 통인가요?`,
+              variablesInfo,
+              options,
+              answerIndex,
+              hint: '칠할 넓이 × 2(두 번 칠함)를 1통 면적으로 나누고, 나머지가 있으면 1통을 더 사야 합니다(올림).',
+              steps: Hd
+                ? [
+                  `네 벽의 넓이는 2 × (${L} + ${W}) × ${Hh} = ${f(wall100)}m²이고, 문·창문을 빼면 ${f(wall100)} − ${O} = ${f(area100)}m²입니다.`,
+                  `2번 칠하므로 ${f(area100)} × 2 = ${f(need)}m²를 칠해야 합니다.`,
+                  `${f(need)} ÷ ${C} = ${Math.floor(need / (C * 100))}…이므로 올림하여 ${ans}통이 필요합니다.`
+                ]
+                : [
+                  `바닥 넓이는 ${L} × ${W} = ${f(area100)}m²이고, 2번 칠하므로 ${f(need)}m²입니다.`,
+                  `${f(need)} ÷ ${C} = ${Math.floor(need / (C * 100))}…이므로 올림하여 ${ans}통이 필요합니다. (버림하면 페인트가 모자랍니다.)`
+                ]
+            };
+          }
+        },
+        {
+          id: 'LIF-30',
+          dayIndex: 29,
+          unit: '직무 수학 · 수조의 부피와 물 채우는 시간',
+          standardCode: '[12직수03-05]',
+          standardName: '직무 상황에서 나타나는 입체도형의 겉넓이와 부피를 구할 수 있다.',
+          sourceRef: '직무 수학 (직육면체의 부피와 들이 단위 환산 1L = 1,000cm³)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '직육면체 수조의 부피(cm³)를 들이(L)로 환산',
+            normal: '빈 수조를 분당 일정량으로 가득 채우는 시간',
+            hard: '물이 일부 차 있는 수조를 목표 높이까지 채우는 시간'
+          },
+          conceptSummary: '직육면체의 부피는 가로 × 세로 × 높이이고, 1L = 1,000cm³입니다. 물을 채우는 시간 = 채울 물의 양(L) ÷ 1분에 나오는 양(L)입니다.',
+          formula: '부피 = 가로 × 세로 × 높이,  1L = 1,000cm³,  시간(분) = 물의 양(L) ÷ 분당 급수량(L)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const L = rng.pick(Hd ? [60, 80, 100, 120] : [30, 40, 50, 60, 80, 100]);
+            const W = rng.pick(Hd ? [30, 40, 50] : [20, 30, 40, 50]);
+            const H = rng.pick(Hd ? [40, 50, 60] : [20, 30, 40, 50, 60]);
+            const V = L * W * H / 1000;
+            const tank = `가로 ${L}cm, 세로 ${W}cm, 높이 ${H}cm`;
+            if (E) {
+              const cands = [V * 10, V * 100, L * W * H / 10000, L + W + H];
+              const ds = cands.filter((x, i) => Number.isInteger(x) && x > 0 && x !== V && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}L`);
+              const { options, answerIndex } = buildChoiceSet(rng, `${V}L`, ds);
+              return {
+                question: `${tank}인 직육면체 모양 수조에 물을 가득 채우면 물은 몇 L인가요? (1L = 1,000cm³)`,
+                variablesInfo: { 수조: tank },
+                options,
+                answerIndex,
+                hint: '부피(cm³)를 먼저 구한 뒤 1,000으로 나누어 L로 바꾸세요.',
+                steps: [`부피는 ${L} × ${W} × ${H} = ${comma(L * W * H)}cm³입니다.`, `1L = 1,000cm³이므로 ${comma(L * W * H)} ÷ 1,000 = ${V}L입니다.`]
+              };
+            }
+            const r = rng.pick([2, 3, 4, 5, 6, 8, 10, 12]);
+            const h0 = Hd ? rng.pick([5, 10, 15]) : 0;
+            const h1 = Hd ? rng.pick([20, 25, 30, 35].filter(x => x < H)) : H;
+            const fillV = L * W * (h1 - h0) / 1000;
+            if (!Number.isInteger(fillV) || fillV % r !== 0) return this.generate(rng, { tier });
+            const ans = fillV / r;
+            const cands = Hd
+              ? [Math.round(L * W * h1 / 1000 / r), Math.round(V / r), ans * 10, Math.round(L * W * h0 / 1000 / r), ans * 2]
+              : [ans * 10, ans * 60, V, ans * 2];
+            const ds = cands.filter((x, i) => Number.isInteger(x) && x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${comma(x)}분`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${comma(ans)}분`, ds);
+            const variablesInfo = { 수조: tank, 급수량: `${r}L` };
+            if (Hd) { variablesInfo.현재수위 = `${h0}cm`; variablesInfo.목표수위 = `${h1}cm`; }
+            return {
+              question: Hd
+                ? `${tank}인 직육면체 모양 수조에 물이 ${h0}cm 높이까지 차 있습니다. 1분에 ${r}L씩 물이 나오는 수도로 물을 더 넣어 물의 높이를 ${h1}cm로 만들려면 몇 분이 걸리나요? (1L = 1,000cm³)`
+                : `${tank}인 직육면체 모양의 빈 수조에 1분에 ${r}L씩 물이 나오는 수도로 물을 가득 채우려고 합니다. 몇 분이 걸리나요? (1L = 1,000cm³)`,
+              variablesInfo,
+              options,
+              answerIndex,
+              hint: Hd ? '더 채워야 하는 높이(목표 높이 − 현재 높이)만큼의 부피만 구하면 됩니다.' : '수조의 들이(L)를 1분에 나오는 물의 양으로 나누세요.',
+              steps: Hd
+                ? [`더 채울 높이는 ${h1} − ${h0} = ${h1 - h0}cm이므로 부피는 ${L} × ${W} × ${h1 - h0} = ${comma(L * W * (h1 - h0))}cm³ = ${fillV}L입니다.`, `${fillV} ÷ ${r} = ${ans}분이 걸립니다.`]
+                : [`수조의 부피는 ${L} × ${W} × ${H} = ${comma(L * W * H)}cm³ = ${V}L입니다.`, `${V} ÷ ${r} = ${ans}분이 걸립니다.`]
+            };
+          }
+        },
+        {
+          id: 'LIF-31',
+          dayIndex: 30,
+          unit: '직무 수학 · 요금표에서 규칙 찾기',
+          standardCode: '[12직수02-03]',
+          standardName: '두 양 사이의 대응 관계를 나타낸 표에서 규칙을 찾아 설명할 수 있다.',
+          sourceRef: '직무 수학 (대응 관계 표 — 이용 시간과 요금의 일차 규칙)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '정비례 요금표에서 표 밖의 시간 요금 구하기',
+            normal: '기본요금이 있는 요금표에서 규칙을 찾아 표 밖의 요금 구하기',
+            hard: '규칙을 거꾸로 써서 주어진 요금이 되는 이용 시간 구하기'
+          },
+          conceptSummary: '표에서 한 양이 일정하게 늘 때 다른 양이 얼마씩 느는지 찾으면 규칙(대응 관계)을 식으로 나타낼 수 있습니다. 첫 칸의 값이 늘어나는 양과 다르면 기본요금이 있는 것입니다.',
+          formula: '요금 = 기본요금 + (단위 시간당 요금) × (단위 시간의 개수)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const [place, tName] = rng.pick([['주차장', '주차 시간'], ['전동 킥보드', '이용 시간'], ['스터디 카페', '이용 시간'], ['보트 대여소', '대여 시간']]);
+            const step = rng.pick([10, 15, 30]);
+            const f = rng.pick(step === 10 ? [200, 300, 500] : [500, 1000, 1500]);
+            const base0 = E ? 0 : rng.pick([500, 1000, 1500, 2000, 3000]);
+            const xs = [1, 2, 3, 4].map(i => step * i);
+            const ys = [1, 2, 3, 4].map(i => base0 + f * i);
+            const k = rng.int(Hd ? 7 : 6, Hd ? 15 : 12);
+            const table = `${tName}(분): ${xs.join(', ')} / 요금(원): ${ys.map(comma).join(', ')}`;
+            const variablesInfo = { 시간: xs.join(', '), 요금: ys.map(comma).join(', ') };
+            let ans, cands, unitS, question;
+            if (Hd) {
+              const Y = base0 + f * k;
+              ans = step * k; unitS = '분';
+              cands = [step * (k - 1), Number.isInteger(Y / f) ? (Y / f) * step : null, Number.isInteger(Y / ys[0]) ? (Y / ys[0]) * step : null, step * (k + 1)];
+              variablesInfo.목표요금 = `${comma(Y)}원`;
+              question = `${place}의 ${tName}에 따른 요금이 다음 표와 같이 일정한 규칙으로 늘어납니다. [${table}] 요금이 ${comma(Y)}원이 되는 ${tName}은 몇 분인가요?`;
+            } else {
+              ans = base0 + f * k; unitS = '원';
+              cands = E ? [f * k + f, f * (k - 1), f * k * 2, ys[3] + f] : [ys[0] * k, f * k, ys[3] + f, base0 + f * (k - 1)];
+              variablesInfo.구할시간 = `${step * k}분`;
+              question = `${place}의 ${tName}에 따른 요금이 다음 표와 같이 일정한 규칙으로 늘어납니다. [${table}] 같은 규칙으로 ${step * k}분 동안 이용하면 요금은 얼마인가요?`;
+            }
+            const ds = cands.filter((x, i) => x && x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${comma(x)}${unitS}`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${comma(ans)}${unitS}`, ds);
+            const rule = base0 ? `요금 = ${comma(base0)} + ${comma(f)} × (${step}분 단위의 개수)` : `요금 = ${comma(f)} × (${step}분 단위의 개수)`;
+            const steps = [
+              `${tName}이 ${step}분 늘 때마다 요금은 ${comma(f)}원씩 늘어납니다.${base0 ? ` ${step}분일 때 ${comma(ys[0])}원이므로 기본요금은 ${comma(ys[0])} − ${comma(f)} = ${comma(base0)}원입니다.` : ' 0분일 때 0원인 정비례 관계입니다.'}`,
+              `규칙: ${rule}`,
+              Hd
+                ? `${comma(base0)} + ${comma(f)} × n = ${comma(base0 + f * k)} 에서 n = ${k}이므로 ${tName}은 ${step} × ${k} = ${ans}분입니다.`
+                : `${step * k}분은 ${step}분 단위 ${k}개이므로 요금은 ${base0 ? `${comma(base0)} + ` : ''}${comma(f)} × ${k} = ${comma(ans)}원입니다.`
+            ];
+            return { question, variablesInfo, options, answerIndex, hint: '표에서 이웃한 두 칸의 차이(늘어나는 양)와 첫 칸의 값을 비교해 기본요금이 있는지 확인하세요.', steps };
+          }
+        },
+        {
+          id: 'LIF-32',
+          dayIndex: 31,
+          unit: '경제 수학 · 비용 함수와 평균 비용',
+          standardCode: '[12경수02-01]',
+          standardName: '여러 가지 경제 현상을 함수로 나타낼 수 있다.',
+          sourceRef: '고등학교 경제 수학 (총비용 함수와 평균 비용)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '총비용 함수 C(x) = 고정비 + 변동비 × x 에 대입',
+            normal: '생산량이 x일 때 1개당 평균 비용 C(x) ÷ x',
+            hard: '평균 비용이 목표 이하가 되는 최소 생산량(부등식, 올림)'
+          },
+          conceptSummary: '생산량과 관계없이 드는 고정비와 1개마다 드는 변동비로 총비용을 일차함수 C(x) = F + vx로 나타냅니다. 1개당 평균 비용 C(x)/x = F/x + v는 많이 만들수록 줄어듭니다.',
+          formula: 'C(x) = F + vx,   평균 비용 = C(x) ÷ x = F/x + v',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const F = rng.int(10, 60) * 100000, v = rng.int(5, 40) * 100;
+            const shop = rng.pick(['수제 비누 공방', '도자기 공방', '빵 공장', '티셔츠 인쇄소']);
+            const intro = `${shop}의 한 달 고정비(임대료 등)는 ${comma(F)}원이고, 제품을 하나 만들 때마다 재료비 등 ${comma(v)}원이 추가로 듭니다. 한 달 생산량이 x개일 때 총비용(원)을 C(x) = ${comma(F)} + ${comma(v)}x 라 합니다.`;
+            const variablesInfo = { 고정비: `${comma(F)}원`, 단위변동비: `${comma(v)}원` };
+            let ans, cands, unitS, question, steps;
+            if (Hd) {
+              const g = rng.int(5, 40) * 100 + rng.pick([30, 70]);
+              const T = v + g;
+              ans = Math.ceil(F / g);
+              cands = [Math.floor(F / g), Math.ceil(F / T), ans + 1, Math.ceil(F / g / 10)];
+              unitS = '개';
+              variablesInfo.목표평균비용 = `${comma(T)}원`;
+              question = `${intro} 제품 1개당 평균 비용이 ${comma(T)}원 이하가 되려면 한 달에 최소 몇 개를 만들어야 하나요?`;
+              steps = [
+                `평균 비용은 C(x) ÷ x = ${comma(F)}/x + ${comma(v)} 입니다.`,
+                `${comma(F)}/x + ${comma(v)} ≤ ${comma(T)} 에서 ${comma(F)}/x ≤ ${comma(g)}, 즉 x ≥ ${comma(F)} ÷ ${comma(g)} = ${Math.floor(F / g)}.…`,
+                `x는 자연수이므로 최소 ${comma(ans)}개를 만들어야 합니다. (${comma(ans - 1)}개면 평균 비용이 ${comma(T)}원을 넘습니다.)`
+              ];
+            } else if (E) {
+              const x = rng.int(100, 900);
+              ans = F + v * x; unitS = '원';
+              cands = [v * x, F + v, (F + v) * x, F - v * x];
+              variablesInfo.생산량 = `${x}개`;
+              question = `${intro} ${x}개를 만들 때 총비용은 얼마인가요?`;
+              steps = [`C(${x}) = ${comma(F)} + ${comma(v)} × ${x} 입니다.`, `= ${comma(F)} + ${comma(v * x)} = ${comma(ans)}원입니다.`];
+            } else {
+              const x = rng.pick([100, 200, 250, 400, 500, 1000]);
+              ans = F / x + v; unitS = '원';
+              cands = [F / x, F + v * x, v, Math.round((F + v) / x), F / x + v * 2];
+              variablesInfo.생산량 = `${x}개`;
+              question = `${intro} ${x}개를 만들 때 제품 1개당 평균 비용은 얼마인가요?`;
+              steps = [`총비용은 C(${x}) = ${comma(F)} + ${comma(v)} × ${x} = ${comma(F + v * x)}원입니다.`, `1개당 평균 비용은 ${comma(F + v * x)} ÷ ${x} = ${comma(ans)}원입니다. (= ${comma(F)}/${x} + ${comma(v)})`];
+            }
+            const ds = cands.filter((x, i) => Number.isInteger(x) && x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${comma(x)}${unitS}`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${comma(ans)}${unitS}`, ds);
+            return { question, variablesInfo, options, answerIndex, hint: Hd ? '평균 비용 F/x + v ≤ 목표를 x에 대한 부등식으로 풀고, 자연수이므로 올림하세요.' : '고정비는 생산량과 관계없이 한 번, 변동비는 생산량만큼 곱해서 더합니다.', steps };
+          }
+        },
+        {
+          id: 'LIF-33',
+          dayIndex: 32,
+          unit: '경제 수학 · 행렬로 나타낸 판매와 매출',
+          standardCode: '[12경수03-01]',
+          standardName: '여러 가지 경제 현상을 행렬로 나타내고, 연산할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (판매량 행렬과 가격 행렬의 곱)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: '판매량 행렬의 1행과 가격의 곱으로 한 매장 매출',
+            normal: '행렬의 곱으로 두 매장의 매출을 한꺼번에',
+            hard: '두 달 판매량 행렬을 더한 뒤 가격을 곱해 두 매장의 매출'
+          },
+          conceptSummary: '판매량을 행렬(행: 매장, 열: 상품)로, 가격을 열 행렬로 나타내면 두 행렬의 곱의 각 성분이 매장별 매출입니다. 행렬의 곱은 (행) × (열)로 대응하는 성분끼리 곱해 더합니다.',
+          formula: '(a b / c d) × (p / q) = (ap + bq / cp + dq)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const [n1, n2] = rng.pick([['빵', '우유'], ['아메리카노', '케이크'], ['김밥', '라면'], ['샌드위치', '주스']]);
+            const prices = [1500, 2000, 2500, 3000, 3500, 4000, 4500];
+            const p = rng.pick(prices), q = rng.pick(prices.filter(x => x !== p));
+            const m = [0, 1, 2, 3].map(() => rng.int(10, 60));
+            const m2 = Hd ? [0, 1, 2, 3].map(() => rng.int(10, 60)) : [0, 0, 0, 0];
+            const s = m.map((x, i) => x + m2[i]);
+            const rev = M => [M[0] * p + M[1] * q, M[2] * p + M[3] * q];
+            const [r1, r2] = rev(s);
+            const mat = M => `(${M[0]}, ${M[1]} / ${M[2]}, ${M[3]})`;
+            const pair = (x, y) => `갑 매장 ${comma(x)}원, 을 매장 ${comma(y)}원`;
+            let correct, cands;
+            if (E) {
+              correct = `${comma(r1)}원`;
+              cands = [s[0] * q + s[1] * p, s[0] * p + s[2] * q, (s[0] + s[1]) * p, (s[0] + s[1]) * q].filter(x => x !== r1).map(x => `${comma(x)}원`);
+            } else {
+              cands = [pair(s[0] * p + s[2] * q, s[1] * p + s[3] * q), pair(s[0] * q + s[1] * p, s[2] * q + s[3] * p), pair(r2, r1), pair((s[0] + s[1]) * p, (s[2] + s[3]) * q)];
+              if (Hd) cands.unshift(pair(...rev(m)), pair(...rev(m2)));
+              correct = pair(r1, r2);
+            }
+            const ds = cands.filter((x, i) => x !== correct && cands.indexOf(x) === i).slice(0, 3);
+            const { options, answerIndex } = buildChoiceSet(rng, correct, ds);
+            const legend = `(1행은 갑 매장, 2행은 을 매장 / 1열은 ${n1}, 2열은 ${n2}의 판매량)`;
+            const priceTxt = `${n1} 1개는 ${comma(p)}원, ${n2} 1개는 ${comma(q)}원`;
+            const question = Hd
+              ? `갑, 을 두 매장의 1월 판매량을 행렬 A = ${mat(m)}, 2월 판매량을 행렬 B = ${mat(m2)}로 나타냈습니다. ${legend} ${priceTxt}일 때, (A + B) × (가격)으로 구한 두 매장의 2개월 매출은?`
+              : E
+                ? `갑, 을 매장의 하루 판매량을 행렬 A = ${mat(m)}로 나타냈습니다. ${legend} ${priceTxt}일 때, 행렬의 곱으로 구한 갑 매장의 하루 매출은?`
+                : `갑, 을 매장의 하루 판매량을 행렬 A = ${mat(m)}로 나타냈습니다. ${legend} ${priceTxt}일 때, 행렬의 곱 A × (가격)으로 구한 두 매장의 하루 매출은?`;
+            const variablesInfo = { 판매량: mat(m), 가격: `(${comma(p)}원, ${comma(q)}원)` };
+            if (Hd) variablesInfo.판매량2 = mat(m2);
+            const steps = [];
+            if (Hd) steps.push(`두 달 판매량의 합은 A + B = ${mat(s)}입니다. (같은 위치의 성분끼리 더합니다.)`);
+            steps.push(`갑 매장(1행): ${s[0]} × ${comma(p)} + ${s[1]} × ${comma(q)} = ${comma(r1)}원`);
+            steps.push(E ? `행렬의 곱은 (행) × (열)이므로 1행의 각 판매량에 해당 상품 가격을 곱해 더합니다. 갑 매장의 매출은 ${comma(r1)}원입니다.` : `을 매장(2행): ${s[2]} × ${comma(p)} + ${s[3]} × ${comma(q)} = ${comma(r2)}원`);
+            return { question, variablesInfo, options, answerIndex, hint: '행렬의 곱은 왼쪽 행렬의 행과 오른쪽(가격)의 열을 짝지어 곱한 뒤 더합니다.', steps };
+          }
+        },
+        {
+          id: 'LIF-34',
+          dayIndex: 33,
+          unit: '경제 수학 · 미분과 수익 최대화',
+          standardCode: '[12경수04-04]',
+          standardName: '미분을 활용하여 경제 현상의 최적화 문제를 해결할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (판매 수익·이윤 함수의 미분과 최댓값)',
+          difficulty: '★★★ 실력',
+          tierGuide: {
+            easy: '수익 R(P) = P(a − bP)가 최대인 가격(R′ = 0)',
+            normal: '수익이 최대인 가격과 그때의 최대 수익',
+            hard: '원가를 뺀 이윤 (P − c)(a − bP)가 최대인 가격과 최대 이윤'
+          },
+          conceptSummary: '판매량이 Q = a − bP일 때 수익은 R(P) = P(a − bP) = aP − bP²입니다. R′(P) = a − 2bP = 0인 가격에서 수익이 최대입니다. 원가 c가 있으면 이윤 (P − c)(a − bP)를 미분합니다.',
+          formula: 'R(P) = aP − bP²,  R′(P) = a − 2bP = 0 → P = a ÷ 2b,  이윤 최대: P = (a + bc) ÷ 2b',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const b = rng.pick([1, 2, 4, 5]);
+            const P0 = rng.int(10, 40) * 100;
+            const c = Hd ? rng.int(3, 15) * 100 : 0;
+            if (c >= P0 - 100) return this.generate(rng, { tier });
+            const a = b * (2 * P0 - c);
+            const Q0 = a - b * P0;
+            const best = (P0 - c) * Q0;
+            const co = x => (x === 1 ? '' : x);
+            const fD = `Q = ${comma(a)} − ${co(b)}P`;
+            const val = P => (P - c) * (a - b * P);
+            const item = rng.pick(['수제 쿠키', '텀블러', '휴대폰 케이스', '화분']);
+            const lbl = Hd ? '최대 이윤' : '최대 수익';
+            const pair = (x, y) => `가격 ${comma(x)}원, ${lbl} ${comma(y)}원`;
+            let correct, cands;
+            if (E) {
+              correct = `${comma(P0)}원`;
+              cands = [2 * P0, P0 / 2, b !== 1 ? a / 2 : P0 + 500, P0 + 200].map(x => `${comma(x)}원`);
+            } else if (!Hd) {
+              correct = pair(P0, best);
+              cands = [pair(P0, a * P0), pair(P0 / 2, val(P0 / 2)), pair(P0, best * 2), pair(P0 + 100, val(P0 + 100))];
+            } else {
+              const Pr = a / (2 * b);
+              correct = pair(P0, best);
+              cands = [pair(Pr, val(Pr)), pair(P0, P0 * Q0), pair(Pr, Pr * (a - b * Pr)), pair(P0, best * 2)];
+            }
+            const ds = cands.filter((x, i) => x !== correct && cands.indexOf(x) === i).slice(0, 3);
+            const { options, answerIndex } = buildChoiceSet(rng, correct, ds);
+            const intro = `${item} 1개의 가격을 P원으로 정하면 하루 판매량이 ${fD}(개)입니다.`;
+            const question = E
+              ? `${intro} 하루 판매 수익 R(P) = P × Q가 최대가 되는 가격 P는? (미분을 이용)`
+              : Hd
+                ? `${intro} ${item} 1개의 원가가 ${comma(c)}원일 때, 하루 이윤 (P − ${comma(c)}) × Q가 최대가 되는 가격과 그때의 최대 이윤은? (미분을 이용)`
+                : `${intro} 하루 판매 수익 R(P) = P × Q가 최대가 되는 가격과 그때의 최대 수익은? (미분을 이용)`;
+            const variablesInfo = { 수요: fD };
+            if (Hd) variablesInfo.단위원가 = `${comma(c)}원`;
+            const steps = Hd
+              ? [
+                `이윤 f(P) = (P − ${comma(c)})(${comma(a)} − ${co(b)}P) = −${co(b)}P² + ${comma(a + b * c)}P − ${comma(a * c)} 입니다.`,
+                `f′(P) = −${2 * b}P + ${comma(a + b * c)} = 0 에서 P = ${comma(P0)}원이고, 이 앞뒤로 f′의 부호가 양에서 음으로 바뀌므로 최대입니다.`,
+                `최대 이윤 = (${comma(P0)} − ${comma(c)}) × ${comma(Q0)} = ${comma(best)}원입니다. (원가를 무시하면 가격을 ${comma(a / (2 * b))}원으로 잘못 정하게 됩니다.)`
+              ]
+              : [
+                `R(P) = P(${comma(a)} − ${co(b)}P) = ${comma(a)}P − ${co(b)}P² 입니다.`,
+                `R′(P) = ${comma(a)} − ${2 * b}P = 0 에서 P = ${comma(P0)}원이고, 이 앞뒤로 R′의 부호가 양에서 음으로 바뀌므로 최대입니다.`,
+                ...(E ? [] : [`그때 판매량은 ${comma(Q0)}개이므로 최대 수익은 ${comma(P0)} × ${comma(Q0)} = ${comma(best)}원입니다.`])
+              ];
+            return { question, variablesInfo, options, answerIndex, hint: '수익(이윤) 함수를 P에 대한 이차함수로 전개한 뒤 미분해서 0이 되는 P를 찾으세요.', steps };
+          }
+        },
+        {
+          id: 'LIF-35',
+          dayIndex: 34,
+          unit: '경제 수학 · 예산 제약과 부등식의 영역',
+          standardCode: '[12경수02-06]',
+          standardName: '부등식의 영역의 개념을 이해하고, 이를 활용하여 경제 현상의 문제를 해결할 수 있다.',
+          sourceRef: '고등학교 경제 수학 (예산 제약 px + qy ≤ M 과 부등식의 영역)',
+          difficulty: '★★☆ 표준',
+          tierGuide: {
+            easy: 'A를 정한 개수만큼 사고 남은 예산으로 B를 최대 몇 개(버림)',
+            normal: '예산 부등식 영역 안의 자연수 순서쌍 (x, y)의 개수',
+            hard: '예산 안에서 만족도 합이 최대가 되는 구매 조합 찾기'
+          },
+          conceptSummary: 'A를 x개, B를 y개 살 때 예산 제약은 px + qy ≤ M입니다. 이 부등식의 영역 안에 있는 점 (x, y) 중 개수가 자연수(또는 0 이상 정수)인 점이 실제로 살 수 있는 조합입니다.',
+          formula: '예산 제약: px + qy ≤ M (x, y는 0 이상의 정수)',
+          generate(rng, { tier } = {}) {
+            const E = tier === 'easy', Hd = tier === 'hard';
+            const [A, B] = rng.pick([['공책', '볼펜'], ['과자', '음료수'], ['붕어빵', '어묵'], ['사과', '귤']]);
+            let M, p, q, ans, cands, unitS, question, bestXY = [0, 0];
+            const variablesInfo = {};
+            if (E) {
+              M = rng.pick([10000, 15000, 20000, 25000, 30000]);
+              p = rng.pick([1200, 1500, 2000, 2500]); q = rng.pick([700, 800, 900, 1300]);
+              const x = rng.int(1, Math.floor(M / p) - 1);
+              const rem = M - p * x;
+              ans = Math.floor(rem / q);
+              if (ans < 1 || rem % q === 0) return this.generate(rng, { tier });
+              cands = [ans + 1, Math.floor(M / q), Math.floor(M / (p + q)), ans - 1];
+              unitS = '개';
+              variablesInfo.A구매 = `${x}개`;
+              question = `예산 ${comma(M)}원으로 ${A}(1개 ${comma(p)}원)${jo(A, '을/를')} ${x}개 사고, 남은 돈으로 ${B}(1개 ${comma(q)}원)${jo(B, '을/를')} 최대한 많이 사려고 합니다. ${wj(B, '은/는')} 최대 몇 개 살 수 있나요?`;
+            } else if (!Hd) {
+              M = rng.pick([6000, 7000, 8000, 9000, 10000, 11000, 12000]);
+              p = rng.pick([1000, 1500, 2000, 2500, 3000]); q = rng.pick([500, 1000, 1500].filter(x => x !== p));
+              let cnt = 0, cnt0 = 0, exact = 0;
+              for (let x = 0; p * x <= M; x++) for (let y = 0; p * x + q * y <= M; y++) {
+                if (x >= 1 && y >= 1) cnt++;
+                if (x + y > 0) cnt0++;
+                if (x >= 1 && y >= 1 && p * x + q * y === M) exact++;
+              }
+              ans = cnt;
+              if (ans < 2) return this.generate(rng, { tier });
+              cands = [cnt0, exact, ans + 1, ans - 1];
+              unitS = '가지';
+              question = `예산 ${comma(M)}원으로 ${A}(1개 ${comma(p)}원)${jo(A, '과/와')} ${B}(1개 ${comma(q)}원)${jo(B, '을/를')} 각각 1개 이상 사려고 합니다. 예산을 넘지 않게 살 수 있는 (${A}의 개수, ${B}의 개수)의 경우는 모두 몇 가지인가요? (예산을 다 쓰지 않아도 됩니다.)`;
+            } else {
+              M = rng.pick([10000, 12000, 15000, 18000, 20000]);
+              p = rng.pick([1500, 2000, 2500, 3000]); q = rng.pick([800, 1000, 1200, 1500].filter(x => x !== p));
+              const ua = rng.pick([4, 5, 6, 7, 8]), ub = rng.pick([2, 3, 4, 5]);
+              let best = 0, best11 = 0;
+              for (let x = 0; p * x <= M; x++) for (let y = 0; p * x + q * y <= M; y++) {
+                if (ua * x + ub * y > best) { best = ua * x + ub * y; bestXY = [x, y]; }
+                if (x >= 1 && y >= 1) best11 = Math.max(best11, ua * x + ub * y);
+              }
+              ans = best;
+              cands = [ua * Math.floor(M / p), ub * Math.floor(M / q), best11, ans - 1, ans + ua];
+              unitS = '점';
+              variablesInfo.만족도 = `A ${ua}점, B ${ub}점`;
+              question = `예산 ${comma(M)}원으로 A(${A}, 1개 ${comma(p)}원, 1개당 만족도 ${ua}점)와 B(${B}, 1개 ${comma(q)}원, 1개당 만족도 ${ub}점)를 사려고 합니다. 한쪽만 사도 될 때, 예산 안에서 만족도의 합이 최대가 되도록 사면 최대 만족도는 몇 점인가요?`;
+            }
+            Object.assign(variablesInfo, { 예산: `${comma(M)}원`, A가격: `${comma(p)}원`, B가격: `${comma(q)}원` });
+            const ds = cands.filter((x, i) => x > 0 && x !== ans && cands.indexOf(x) === i).slice(0, 3).map(x => `${x}${unitS}`);
+            const { options, answerIndex } = buildChoiceSet(rng, `${ans}${unitS}`, ds);
+            const steps = [`${A}를 x개, ${B}를 y개 산다고 하면 예산 제약은 ${comma(p)}x + ${comma(q)}y ≤ ${comma(M)} 입니다.`.replace(`${A}를`, wj(A, '을/를')).replace(`${B}를`, wj(B, '을/를'))];
+            if (E) {
+              const x = Number(variablesInfo.A구매.replace(/\D/g, ''));
+              steps.push(`x = ${x}이면 ${comma(q)}y ≤ ${comma(M)} − ${comma(p * x)} = ${comma(M - p * x)}, y ≤ ${Math.floor((M - p * x) / q)}.…`, `y는 자연수이므로 버림하여 최대 ${ans}개입니다.`);
+            } else if (!Hd) {
+              const rows = [];
+              for (let x = 1; p * x + q <= M; x++) rows.push(`x = ${x}일 때 y는 1~${Math.floor((M - p * x) / q)} (${Math.floor((M - p * x) / q)}가지)`);
+              steps.push(`x를 1부터 늘려 가며 가능한 y를 세면: ${rows.join(', ')}`, `모두 더하면 ${ans}가지입니다.`);
+            } else {
+              steps.push(`x를 0부터 ${Math.floor(M / p)}까지 바꾸며, 각 x에서 남은 예산으로 y를 최대로 살 때의 만족도를 비교합니다(영역의 경계 근처 점만 보면 됩니다).`, `x = ${bestXY[0]}, y = ${bestXY[1]}일 때 비용 ${comma(p * bestXY[0] + q * bestXY[1])}원으로 만족도 합이 최대 ${ans}점입니다. (A만 사면 ${cands[0]}점, B만 사면 ${cands[1]}점)`);
+            }
+            return { question, variablesInfo, options, answerIndex, hint: '예산 제약 px + qy ≤ M을 세운 뒤, x를 하나씩 정하고 가능한 y를 따져 보세요.', steps };
           }
         }
       ]
