@@ -111,7 +111,7 @@ const SEED = () => {
   await page.click('#check-btn');
   await page.waitForSelector('#feedback.show');
   await page.waitForTimeout(2600); // 토스트 사라질 때까지
-  await scrollTo('#question-text', 120);
+  await scrollTo('#question-card', 12);
   await shot('iphone-02-variation.png');
 
   // 3. 그림 문제 — 교육과정 탭에서 MID-06(피타고라스) 불러오기
