@@ -51,3 +51,14 @@ Test Case '-[AppUITests.UpdateUITests testUpdatePopupOpensAppStoreAndLaterSuppre
 ** TEST SUCCEEDED **
 ```
 테스트 후 정상 Debug 빌드(1.0.1)로 재설치.
+
+## 난이도 하·중·상 E2E (XCUITest, 2026-11-06, iPhone 16, 1.0.2 Debug)
+명령: `xcodebuild test -scheme AppUITests -only-testing:AppUITests/TierUITests`
+```
+TIER-E2E 중 지문: 다음 자료의 분산은? [ 12, 12, 6, 14, 6 ]
+TIER-E2E 상 지문: 다음 자료의 평균이 14일 때, 분산은? [ 17, 18, x, 10, 11 ]
+TIER-E2E 재실행 후 상 유지
+TIER-E2E 중 복귀 → 원래 지문
+Test Case '-[AppUITests.TierUITests testTierSwitch]' passed (24.350 seconds).
+** TEST SUCCEEDED **
+```

@@ -56,3 +56,7 @@
 
 - 2026-11-06 · 업데이트 팝업 실기기 E2E · XCUITest(MARKETING_VERSION=0.9.0) 팝업→App Store 열림, 나중에→같은 날 재표시 없음 TEST SUCCEEDED
 - 2026-11-06 · 1.0.1 심사 · ASC 상태 READY_FOR_SALE (승인·출시 완료), 폰은 1.0.1 Debug로 복구
+
+- 2026-11-06 · 1.0.2 난이도·140유형 · verify-tiers 140×3×100 = 42000 PASS / 0 FAIL / 0 AMBIG / lint 0, 동결 검증기 5600 PASS(해시 불변), test-bank 140×50 통과, 웹 스모크 30/30
+- 2026-11-06 · 1.0.2 보기 깨짐 수정 · HIG-04(중) 약 24%·BAS-11·LIF-33 예비 오답 추가, 깨지던 경우만 바뀜(스냅샷 갱신)
+- 2026-11-06 · 1.0.2 실기기 · TierUITests TEST SUCCEEDED (상 전환·재실행 유지·중 복귀)
