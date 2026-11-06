@@ -45,6 +45,25 @@ for (const lv of levels) {
     assert(tpl.standardCode && tpl.standardCode.startsWith('['), `성취기준 코드 형식 오류: ${tpl.id}`);
     assert(tpl.sourceRef, `참고 교육자료 출처 누락: ${tpl.id}`);
 
+    // 난이도 3단계: 각 단계 설명(tierGuide)과 단계별 문항 형식
+    assert(tpl.tierGuide && tpl.tierGuide.easy && tpl.tierGuide.normal && tpl.tierGuide.hard, `난이도 설명 tierGuide{easy,normal,hard} 누락: ${tpl.id}`);
+    for (const tier of ['easy', 'hard']) {
+      const tq = new Set();
+      for (let v = 0; v < VARIANTS; v++) {
+        const dateKey = `2026-${String((v % 12) + 1).padStart(2, '0')}-${String((v % 28) + 1).padStart(2, '0')}`;
+        const p = generateProblem({ level: lv, templateId: tpl.id, dateKey, variant: v, tier });
+        assert.strictEqual(p.tier, tier, `tier 반영 안 됨 (${tpl.id})`);
+        assert(Array.isArray(p.options) && p.options.length === 4 && new Set(p.options).size === 4, `${tier} 보기 오류 (${tpl.id}): ${JSON.stringify(p.options)}`);
+        assert(Number.isInteger(p.answerIndex) && p.answerIndex >= 0 && p.answerIndex < 4, `${tier} 정답 인덱스 오류 (${tpl.id})`);
+        assert(Array.isArray(p.steps) && p.steps.length >= 2, `${tier} 풀이 2단계 미만 (${tpl.id})`);
+        const again = generateProblem({ level: lv, templateId: tpl.id, dateKey, variant: v, tier });
+        assert.strictEqual(again.question, p.question, `${tier} 시드 결정론 실패 (${tpl.id})`);
+        tq.add(p.question);
+      }
+      const tfloor = Math.min(UNIQUE_FLOOR[tpl.id] || MIN_UNIQUE, 12);
+      assert(tq.size >= tfloor, `${tier} 변형 다양성 부족 (${tpl.id}): ${tq.size}종 < ${tfloor}`);
+    }
+
     const uniqueQuestions = new Set();
     for (let v = 0; v < VARIANTS; v++) {
       const dateKey = `2026-${String((v % 12) + 1).padStart(2, '0')}-${String((v % 28) + 1).padStart(2, '0')}`;
@@ -77,5 +96,7 @@ for (const lv of levels) {
   console.log('');
 }
 
-assert.strictEqual(totalTemplates, 56, `템플릿 수 56이어야 함 (현재 ${totalTemplates})`);
+// 수준마다 35개(5주 × 7요일 순환) — 1.0.2부터 140개
+const EXPECT = Number(process.env.EXPECT_TEMPLATES || 140);
+assert.strictEqual(totalTemplates, EXPECT, `템플릿 수 ${EXPECT}이어야 함 (현재 ${totalTemplates})`);
 console.log(`=== 검증 완료: ${totalTemplates}개 유형 × ${VARIANTS}변형 = ${totalInstances}문항 통과 ===`);

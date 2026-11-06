@@ -5,6 +5,7 @@
   "scripts": {
     "start": "pnpm dlx serve www -l 8080",
     "test": "node test-bank.js && node verify/verify-answers.js --rounds 50 --bank www/problem-bank.js && node verify/figure-leak-check.js",
+    "verify:tiers": "node verify/verify-tiers.js --rounds 50",
     "verify:100": "node verify/verify-answers.js --rounds 100 --bank www/problem-bank.js"
   },
   "keywords": [

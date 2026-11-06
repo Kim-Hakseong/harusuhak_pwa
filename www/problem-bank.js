@@ -2657,7 +2657,14 @@
    * 특정 수준(level), 요일/템플릿 인덱스(dayIdx), 날짜 키(dateKey), 변형 번호(variant), 주차 오프셋 등을 받아
    * 동적으로 생성된 문제를 반환합니다.
    */
-  function generateProblem({ level = 'middle', dayIdx = 0, dateKey = '2026-10-30', variant = 0, templateId = null }) {
+  // 난이도 단계: easy(하) · normal(중, 기본) · hard(상)
+  // 템플릿은 generate(rng, { tier })로 받아 수의 범위·풀이 단계 수를 조절한다.
+  // normal 은 기존 시드를 그대로 써서 '오늘의 문제'와 검증 결과가 바뀌지 않는다.
+  const TIERS = ['easy', 'normal', 'hard'];
+  const TIER_LABEL = { easy: '★☆☆ 하', normal: '★★☆ 중', hard: '★★★ 상' };
+
+  function generateProblem({ level = 'middle', dayIdx = 0, dateKey = '2026-10-30', variant = 0, templateId = null, tier = 'normal' }) {
+    if (!TIERS.includes(tier)) tier = 'normal';
     const pack = CURRICULUM_PACKS[level] || CURRICULUM_PACKS.middle;
     let template = null;
 
@@ -2688,9 +2695,9 @@
       template = pack.templates[rawIdx] || pack.templates[dayIdx % pack.templates.length];
     }
 
-    const seedString = `${template.id}::${dateKey}::v${variant}`;
+    const seedString = `${template.id}::${dateKey}::v${variant}` + (tier === 'normal' ? '' : `::${tier}`);
     const rng = new SeededRNG(seedString);
-    const generated = template.generate(rng);
+    const generated = template.generate(rng, { tier });
 
     return {
       templateId: template.id,
@@ -2702,7 +2709,8 @@
       standardCode: template.standardCode,
       standardName: template.standardName,
       sourceRef: template.sourceRef,
-      difficulty: template.difficulty,
+      difficulty: TIER_LABEL[tier],
+      tier,
       conceptSummary: template.conceptSummary,
       formula: template.formula,
       seedString,
@@ -2738,6 +2746,8 @@
     CURRICULUM_PACKS,
     SeededRNG,
     generateProblem,
-    getAllTemplates
+    getAllTemplates,
+    TIERS,
+    TIER_LABEL
   };
 })(typeof window !== 'undefined' ? window : globalThis);
