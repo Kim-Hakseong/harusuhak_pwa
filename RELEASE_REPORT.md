@@ -1,3 +1,12 @@
+# 🤖 Android 1.0.2 — Google Play 검토 제출 2026-11-06 (대한민국, 무료, 교육)
+- 앱: 하루수학 `kr.harusuhak.app`, Play Console 앱 ID 4975822591521938202 (TECHSENSE 조직 계정)
+- AAB: versionCode 1 / versionName 1.0.2, targetSdk 36·minSdk 24, 업로드 키 SHA-256 `C7:88:C2:2B:…:80:90`, Play 앱 서명
+- 트랙: 내부 테스트 1 (1.0.2) 게시 12:09(테스터 목록 "TECHSENSE 내부 테스터"), 프로덕션 1 (1.0.2) 전체 출시 → 검토를 위해 변경사항 12개 제출, 빠른 검사 통과 → "변경사항을 검토 중입니다"(관리형 게시 꺼짐: 승인 시 자동 게시)
+- 정책: 개인정보처리방침 URL, 광고 없음, 로그인 없음, IARC(교육용), 타겟 13세 이상(D-019), 데이터 수집·공유 없음, 광고 ID 없음, 정부·금융·건강 해당 없음, 판매자 상태(계정 설정 상속)
+- 등록정보: ko-KR(기본)·en-US — 간단한 설명, 자세한 설명, 아이콘 512, 그래픽 1024×500, 휴대전화 스크린샷 6장
+- 근거: `bundleRelease` BUILD SUCCESSFUL(logs/android-release-1.log), pnpm test 통과, 웹 스모크 30/30
+- **미완료(사람):** 4단계 실기기 확인(adb) — 원격 작업 중 USB 기기 없음. 업데이트 팝업은 versionCode 2 이상을 내부 테스트에 올려 확인
+
 # ✅ 1.0.2 심사 제출 — 2026-11-06 11:01 KST (WAITING_FOR_REVIEW)
 - 1.0.2 (4): 문제 유형 56 → 140(수준당 35), 모든 유형 난이도 하·중·상 버튼, 고등에 확률과 통계 추가, HIG-04 등 보기 깨짐 수정, 배지 줄바꿈 수정, 스크린샷 재생성
 - 검증: verify-tiers 140×3×100 = 42000 PASS / 0 FAIL / 0 AMBIG / lint 0 · 동결 검증기 5600 PASS(해시 불변) · test-bank 140×50 · 웹 스모크 30/30 · 실기기 TierUITests TEST SUCCEEDED

@@ -61,3 +61,10 @@
 - 2026-11-06 · 1.0.2 보기 깨짐 수정 · HIG-04(중) 약 24%·BAS-11·LIF-33 예비 오답 추가, 깨지던 경우만 바뀜(스냅샷 갱신)
 - 2026-11-06 · 1.0.2 실기기 · TierUITests TEST SUCCEEDED (상 전환·재실행 유지·중 복귀)
 - 2026-11-06 · 1.0.2 (4) 업로드·제출 · SUBMITTED WAITING_FOR_REVIEW 2026-11-06T02:01:37Z
+
+- 2026-11-06 · Android 2·3·5단계 · cap add android(8.6.0), applicationId kr.harusuhak.app 1.0.2 (versionCode 1), 세로 고정, 정확 알람 권한 제거(isExactNotification:false), 아이콘·스플래시(다크 제외), scripts/android.mjs, 업로드 키(~/.haku) 생성
+- 2026-11-06 · bundleRelease BUILD SUCCESSFUL → build/HaruSuhak-release.aab 3693123 B, 업로드 키 서명 확인(jarsigner), targetSdk 36
+- 2026-11-06 · pnpm test 통과 · 웹 스모크 30/30 · 4단계 실기기 확인은 사람이 귀가 후(원격 작업 중 기기 없음)
+- 2026-11-06 · Android 7단계 자산 · Phone 1080×1920 ko/en 6장씩, Feature Graphic 1024×500, 아이콘 512 RGBA, play-listing.{ko,en}.md(간단 설명 48/74자)
+- 2026-11-06 · Android 6·8단계 · Play Console 앱 생성(4975822591521938202), 내부 테스트 1 (1.0.2) 게시, 정책 선언 11개·스토어 설정·등록정보 ko/en, 프로덕션 1 (1.0.2) 대한민국 → 검토 제출
+- 2026-11-06 · Play 빠른 검사 통과 → 검토 중(관리형 게시 꺼짐)

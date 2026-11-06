@@ -145,5 +145,21 @@ scripts/archive.sh app-store                # Release archive → build/HaruSuha
 - 스토어 산출물: `store/metadata.{ko,en}.md`, `store/screenshots/output/{ko,en}/`(6.9"), 개인정보 처리방침 `docs/privacy.html`(GitHub Pages).
 - 웹 회귀 확인: `www/`를 정적 서버로 띄운 뒤 `node scripts/web-smoke.js http://localhost:<port>` (Playwright 필요).
 
+## 🤖 Android 빌드·배포 (Google Play, TECHSENSE)
+
+Android 프로젝트는 Capacitor 8 `android/`(applicationId `kr.harusuhak.app`)입니다. Windows·macOS 공통 Node 스크립트로 빌드합니다.
+
+```bash
+node scripts/android.mjs debug      # config.js 생성 → cap sync → assembleDebug → adb install -r → 실행
+node scripts/android.mjs release    # 업로드 키 서명 bundleRelease → build/HaruSuhak-release.aab
+HARU_PLATFORM=android NODE_PATH=<playwright·sharp>/node_modules node scripts/capture-raw.js http://localhost:8081 store/screenshots/raw
+HARU_PLATFORM=android NODE_PATH=<playwright·sharp>/node_modules node scripts/export-shots.js   # Phone 1080×1920 + Feature Graphic
+```
+
+- 서명값은 `~/.haku-env`의 `ANDROID_KEYSTORE_PATH`·`ANDROID_KEYSTORE_PASSWORD`·`ANDROID_KEY_ALIAS`·`ANDROID_KEY_PASSWORD`를 Gradle 환경 변수로만 넘깁니다(키스토어는 리포 밖 `~/.haku/`).
+- `versionName`은 iOS `MARKETING_VERSION`과 같게, `versionCode`는 업로드마다 +1 (`android/app/build.gradle`).
+- 매일 알림은 부정확 알람(정확한 알람 권한 미요청). 스토어 문안 `store/play-listing.{ko,en}.md`, 이미지 `store/screenshots/output-android/`.
+- 작업 순서·사람 단계는 `docs/android/ANDROID_RELEASE.md`.
+
 ---
 원작: [jaesang-jeong/harusuhak_pwa](https://github.com/jaesang-jeong/harusuhak_pwa) · iOS 출시: TECHSENSE (MIT License)

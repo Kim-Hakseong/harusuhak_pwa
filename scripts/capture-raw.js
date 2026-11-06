@@ -3,6 +3,7 @@
  * 실행: NODE_PATH=<playwright>/node_modules node scripts/capture-raw.js http://localhost:8081 store/screenshots/raw
  * - iPhone 6.9" 해상도: 440×956 CSS px × 3 = 1320×2868
  * - iOS 앱과 같은 화면이 되도록 Capacitor 를 네이티브로 흉내(스텁) → PWA 카드 제거, 매일 알림 카드 표시
+ * - Android: HARU_PLATFORM=android → getPlatform 'android', 412×892 CSS px × 3 = 1236×2676(9:19.5), 파일명 android-0N-*.png
  * - 시계 고정(2026-11-04 수 09:00) + 샘플 학습 기록 주입(9일 연속, 오답 2개). ?dev=1 사용 안 함
  */
 'use strict';
@@ -14,11 +15,15 @@ const BASE = process.argv[2] || 'http://localhost:8081';
 const OUT = path.resolve(process.argv[3] || 'store/screenshots/raw');
 fs.mkdirSync(OUT, { recursive: true });
 
-const NATIVE_STUB = () => {
+const PLATFORM = process.env.HARU_PLATFORM === 'android' ? 'android' : 'ios';
+const PREFIX = PLATFORM === 'android' ? 'android' : 'iphone';
+const VIEWPORT = PLATFORM === 'android' ? { width: 412, height: 892 } : { width: 440, height: 956 };
+
+const NATIVE_STUB = plat => {
   const ok = v => Promise.resolve(v);
   window.Capacitor = {
     isNativePlatform: () => true,
-    getPlatform: () => 'ios',
+    getPlatform: () => plat,
     Plugins: {
       App: { getInfo: () => ok({ version: '1.0.0', build: '1' }), addListener: () => ok({ remove() {} }) },
       Haptics: { notification: () => ok() },
@@ -72,10 +77,10 @@ const SEED = () => {
 (async () => {
   const browser = await chromium.launch({ channel: process.env.PW_CHANNEL || 'chrome' });
   const ctx = await browser.newContext({
-    viewport: { width: 440, height: 956 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true,
+    viewport: VIEWPORT, deviceScaleFactor: 3, isMobile: true, hasTouch: true,
     locale: 'ko-KR', serviceWorkers: 'block'
   });
-  await ctx.addInitScript(NATIVE_STUB);
+  await ctx.addInitScript(NATIVE_STUB, PLATFORM);
   const page = await ctx.newPage();
   await page.clock.setFixedTime(new Date('2026-11-04T09:00:00+09:00'));
   const errors = [];
@@ -87,8 +92,9 @@ const SEED = () => {
 
   const shot = async name => {
     await page.waitForTimeout(250);
-    await page.screenshot({ path: path.join(OUT, name), type: 'png' });
-    console.log('saved', name);
+    const file = name.replace(/^iphone-/, `${PREFIX}-`);
+    await page.screenshot({ path: path.join(OUT, file), type: 'png' });
+    console.log('saved', file);
   };
   const scrollTo = async (sel, offset = 16) => {
     await page.evaluate(([s, o]) => { const el = document.querySelector(s); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - o); }, [sel, offset]);
