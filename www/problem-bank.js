@@ -2991,9 +2991,42 @@
           standardName: '일차방정식을 풀 수 있고, 이를 활용하여 문제를 해결할 수 있다.',
           sourceRef: '중학교 수학 1 교과서 (문자와 식 - 괄호가 있는 일차방정식)',
           difficulty: '★☆☆ 기초',
+          tierGuide: { easy: '양수 해, 우변의 x 계수 1', normal: '교과서 표준 괄호 일차방정식', hard: '음수 계수·큰 수, 우변의 x 계수도 음수' },
           conceptSummary: '괄호가 있는 일차방정식은 분배법칙으로 괄호를 먼저 전개한 뒤, 일차항은 좌변으로, 상수항은 우변으로 이항하여 풉니다.',
           formula: 'a(x + b) = cx + d  →  (a − c)x = d − ab',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: 양수 해·작은 계수·우변 x 계수 1 / 상: 음수 계수·큰 수·우변 x 계수 음수 가능
+              const easy = tier === 'easy';
+              const S = n => (n < 0 ? `−${-n}` : `${n}`);
+              const x = easy ? rng.int(1, 6) : rng.int(3, 12) * (rng.next() < 0.5 ? -1 : 1);
+              const a = easy ? rng.int(2, 4) : rng.pick([-5, -4, -3, -2, 5, 6, 7]);
+              let c = easy ? 1 : rng.pick([-3, -2, -1, 2, 3, 4]);
+              if (c === a) c = 1;
+              const b = easy ? rng.int(1, 5) : rng.int(2, 9) * (rng.next() < 0.5 ? -1 : 1);
+              const d = a * (x + b) - c * x;
+              const k = a - c;
+              const bStr = b > 0 ? `+ ${b}` : `− ${Math.abs(b)}`;
+              const cStr = c === 1 ? 'x' : c === -1 ? '−x' : `${S(c)}x`;
+              const dStr = d === 0 ? '' : (d > 0 ? ` + ${d}` : ` − ${Math.abs(d)}`);
+              const correct = `x = ${S(x)}`;
+              // 오개념: 부호 반대 / 분배 부호 실수 / 괄호 둘째 항에 곱하지 않음
+              const distractors = [-x, (d + a * b) / k, (d - b) / k, x + 1, x - 1, x + 2]
+                .filter(v => Number.isInteger(v) && v !== x).map(v => `x = ${S(v)}`);
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              return {
+                question: `일차방정식 ${S(a)}(x ${bStr}) = ${cStr}${dStr} 의 해를 구하면?`,
+                variablesInfo: { 계수a: a, 상수b: b, 우변일차항계수: c, 해x: x },
+                options,
+                answerIndex,
+                hint: `좌변에 분배법칙을 적용할 때 ${wj(S(a), '을/를')} x와 ${S(b)} 모두에 곱해야 합니다!`,
+                steps: [
+                  `분배법칙으로 좌변의 괄호를 풀면 ${S(a)}x ${a * b >= 0 ? '+ ' + (a * b) : '− ' + Math.abs(a * b)} = ${cStr}${dStr} 입니다.`,
+                  `x항을 좌변으로, 상수항을 우변으로 이항하여 정리하면 ${S(k)}x = ${S(d - a * b)} 입니다.`,
+                  `양변을 ${wj(S(k), '으로/로')} 나누면 x = ${S(x)} 입니다.`
+                ]
+              };
+            }
             const x = rng.int(2, 11) * (rng.next() > 0.25 ? 1 : -1);
             const a = rng.int(3, 6);
             const c = rng.int(1, a - 1);
@@ -3036,9 +3069,37 @@
           standardName: '소인수분해의 뜻을 알고, 자연수를 소인수분해할 수 있다.',
           sourceRef: '중학교 수학 1 교과서 (소인수분해와 약수의 개수)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '서로 다른 두 소인수, 작은 지수', normal: '두 소인수 p^a × q^b', hard: '세 소인수 2^a × 3^b × q^c' },
           conceptSummary: '자연수 N이 N = a^m × b^n (a, b는 서로 다른 소수)으로 소인수분해될 때, N의 약수의 개수는 (m + 1) × (n + 1)개입니다.',
           formula: 'N = p^a × q^b 의 약수의 개수 = (a + 1)(b + 1)',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: 두 소인수·작은 지수 / 상: 세 소인수
+              const fs = tier === 'easy'
+                ? [[rng.pick([2, 3, 5]), rng.int(1, 3)], [rng.pick([7, 11, 13]), 1]]
+                : [[2, rng.int(1, 3)], [3, rng.int(1, 2)], [rng.pick([5, 7]), rng.int(1, 2)]];
+              const num = fs.reduce((acc, [p, e]) => acc * Math.pow(p, e), 1);
+              const es = fs.map(f => f[1]);
+              const divCount = es.reduce((acc, e) => acc * (e + 1), 1);
+              const fStr = fs.map(([p, e]) => `${p}^${e}`).join(' × ');
+              const sum = es.reduce((x, y) => x + y, 0);
+              const correct = `${divCount}개`;
+              const distractors = [es.reduce((x, y) => x * y, 1), sum, sum + es.length, (es[0] + 1) * (es[1] + 1), divCount + 1, divCount * 2]
+                .filter(v => v !== divCount).map(v => `${v}개`);
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              return {
+                question: `자연수 ${wj(comma(num), '을/를')} 소인수분해하여 구한 양의 약수의 총개수는?`,
+                variablesInfo: { 자연수: num, 소인수분해: fStr, 약수개수: divCount },
+                options,
+                answerIndex,
+                hint: `${wj(comma(num), '을/를')} 소인수분해한 뒤 각 소인수의 지수에 1을 더하여 서로 곱해 보세요.`,
+                steps: [
+                  `${wj(comma(num), '을/를')} 소인수분해하면 ${comma(num)} = ${fStr} 입니다.`,
+                  `각 소인수의 지수는 ${es.join(', ')}입니다.`,
+                  `약수의 개수는 ${es.map(e => `(${e} + 1)`).join(' × ')} = ${divCount}개입니다.`
+                ]
+              };
+            }
             const p = rng.pick([2, 3]);
             const q = rng.pick([5, 7]);
             const a = rng.int(2, 4);
@@ -3076,9 +3137,34 @@
           standardName: '일차방정식을 풀 수 있고, 이를 활용하여 문제를 해결할 수 있다.',
           sourceRef: '중학교 수학 1 교과서 (거리·속력·시간 방정식 활용 대표 유형)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '작은 속력, 정수 시간', normal: '교과서 표준 왕복 문제', hard: '총 시간이 0.5시간 단위 소수' },
           conceptSummary: '왕복하거나 속력이 바뀔 때 전체 걸린 시간은 (갈 때 걸린 시간) + (올 때 걸린 시간) = (거리/갈 때 속력) + (거리/올 때 속력)으로 식을 세웁니다.',
           formula: '시간 = 거리 ÷ 속력',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: 작은 속력·정수 시간 / 상: 총 시간이 0.5시간 단위
+              const easy = tier === 'easy';
+              const [v1, v2] = rng.pick(easy ? [[2, 3], [2, 4], [3, 6], [2, 6], [4, 12], [3, 9], [5, 10], [6, 12], [4, 8]] : [[4, 6], [6, 9], [6, 10], [4, 12], [10, 15], [8, 12]]);
+              const L = lcm(v1, v2);
+              const dist = easy ? L * rng.int(1, 2) : L * rng.pick([1, 3, 5]) / 2;
+              const totalTime = dist / v1 + dist / v2;
+              const correct = `${dist} km`;
+              const distractors = [dist / 2, (v1 + v2) * totalTime, dist + L / 2, dist * 2, (v1 + v2) / 2 * totalTime]
+                .filter(v => v !== dist && Math.abs(v * 100 - Math.round(v * 100)) < 1e-9).map(v => `${v} km`);
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              return {
+                question: `집에서 공원까지 왕복하는데 갈 때는 시속 ${v1}km로 걷고, 올 때는 같은 길을 시속 ${v2}km로 뛰어서 총 ${totalTime}시간이 걸렸습니다. 집에서 공원까지의 거리는 몇 km인가요?`,
+                variablesInfo: { 갈때속력: `${v1}km/h`, 올때속력: `${v2}km/h`, 총시간: `${totalTime}시간` },
+                options,
+                answerIndex,
+                hint: `집에서 공원까지의 거리를 x km라고 두면, 갈 때 걸린 시간은 x/${v1}, 올 때 걸린 시간은 x/${v2}입니다.`,
+                steps: [
+                  `집에서 공원까지의 거리를 x km라 하면 x/${v1} + x/${v2} = ${totalTime} 입니다.`,
+                  `양변에 분모의 최소공배수 ${wj(L, '을/를')} 곱하면 ${L / v1}x + ${L / v2}x = ${totalTime * L} 입니다.`,
+                  `${L / v1 + L / v2}x = ${totalTime * L} 이므로 x = ${dist}(km)입니다.`
+                ]
+              };
+            }
             const pairs = [[3, 6], [4, 6], [4, 12], [6, 12], [5, 10], [6, 9]];
             const [v1, v2] = rng.pick(pairs);
             const L = lcm(v1, v2);
@@ -3116,9 +3202,35 @@
           standardName: '일차함수의 그래프의 성질을 이해하고, 이를 활용하여 문제를 해결할 수 있다.',
           sourceRef: '중학교 수학 2 교과서 (일차함수의 기울기와 절편)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '기울기 ±1·±2, 작은 절편', normal: '교과서 표준', hard: '기울기 ±4~±6, 큰 절편' },
           conceptSummary: '일차함수 y = ax + b에서 기울기 a는 (y 증가량)/(x 증가량)이고, x절편은 y=0일 때 x값(−b/a), y절편은 b입니다.',
           formula: 'y = ax + b 의 x절편: −b/a,  y절편: b',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: 기울기 ±1·±2, 작은 절편 / 상: 기울기 ±4~±6, 큰 절편
+              const S = n => (n < 0 ? `−${-n}` : `${n}`);
+              const a = rng.pick(tier === 'easy' ? [-2, -1, 1, 2] : [-6, -5, -4, 4, 5, 6]);
+              const xInt = rng.pick(tier === 'easy' ? [-4, -3, -2, -1, 1, 2, 3, 4] : [-8, -7, -6, -5, -4, -3, 3, 4, 5, 6, 7, 8]);
+              const b = -a * xInt;
+              const sum = xInt + b;
+              const aStr = a === 1 ? '' : a === -1 ? '−' : S(a);
+              const bStr = b >= 0 ? `+ ${b}` : `− ${Math.abs(b)}`;
+              const distractors = [-xInt + b, a + b, xInt - b, b, xInt, sum + 1, sum - 1, sum + 2].filter(v => v !== sum).map(S);
+              const { options, answerIndex } = buildChoiceSet(rng, S(sum), distractors);
+              return {
+                question: `일차함수 y = ${aStr}x ${bStr} 의 그래프의 x절편을 p, y절편을 q라 할 때, p + q의 값은?`,
+                variablesInfo: { 기울기: a, x절편p: xInt, y절편q: b },
+                figure: { type: 'line-graph', slope: a, intercept: b, xLabel: 'p', yLabel: 'q' },
+                options,
+                answerIndex,
+                hint: `y절편 q는 x = 0일 때의 y값이고, x절편 p는 y = 0일 때의 방정식 ${aStr}x ${bStr} = 0의 해입니다.`,
+                steps: [
+                  `x = 0을 대입하면 y = ${S(b)}이므로 y절편 q = ${S(b)}입니다.`,
+                  `y = 0을 대입하면 ${aStr}x ${bStr} = 0 → ${aStr}x = ${S(-b)} 이므로 x절편 p = ${S(xInt)}입니다.`,
+                  `따라서 p + q = (${S(xInt)}) + (${S(b)}) = ${S(sum)}입니다.`
+                ]
+              };
+            }
             const a = rng.pick([-4, -3, -2, 2, 3, 4]);
             const xInt = rng.pick([-5, -4, -3, -2, 2, 3, 4, 5]);
             const b = -a * xInt;
@@ -3157,9 +3269,50 @@
           standardName: '미지수가 2개인 연립일차방정식을 풀 수 있고, 이를 활용하여 문제를 해결할 수 있다.',
           sourceRef: '중학교 수학 2 교과서 (가감법과 대입법을 이용한 연립방정식)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: 'y의 계수 1, 두 식을 더하면 바로 소거', normal: 'y의 계수가 같고 부호가 반대(가감법)', hard: '계수를 맞추려 양변에 수를 곱하는 가감법, 음수 해' },
           conceptSummary: '두 일차방정식을 더하거나 빼서 한 미지수를 소거(가감법)하면 연립방정식의 해 (x, y)를 구할 수 있습니다.',
           formula: '{ ax + by = p,  cx − by = q } ⇒ (a + c)x = p + q',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: y 계수 1, 더하면 바로 소거 / 상: 양변에 수를 곱해 계수를 맞추는 가감법, 음수 해
+              const S = n => (n < 0 ? `−${-n}` : `${n}`);
+              const easy = tier === 'easy';
+              const nz = (lo, hi) => rng.int(lo, hi) * (rng.next() < 0.5 ? -1 : 1);
+              const x = easy ? rng.int(1, 4) : nz(1, 6);
+              const y = easy ? rng.int(1, 4) : nz(1, 6);
+              const a = easy ? rng.int(1, 2) : rng.int(2, 5);
+              const c = easy ? 1 : rng.int(2, 5);
+              const b = easy ? 1 : rng.int(2, 4);
+              let d = easy ? 1 : rng.int(2, 4);
+              if (!easy && d === b) d = b === 4 ? 2 : b + 1;
+              const p = a * x + b * y, q = c * x - d * y;
+              const t = (k, v) => (k === 1 ? v : `${k}${v}`);
+              const e1 = `${t(a, 'x')} + ${t(b, 'y')} = ${S(p)}`;
+              const e2 = `${t(c, 'x')} − ${t(d, 'y')} = ${S(q)}`;
+              const fmt = (u, w) => `x = ${S(u)}, y = ${S(w)} (합: ${S(u + w)})`;
+              const correct = fmt(x, y);
+              const distractors = [fmt(y, x), fmt(x, -y), fmt(x + 1, y + 1), fmt(x - 1, y), fmt(-x, y)].filter(o => o !== correct);
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              const steps = easy
+                ? [
+                  `두 방정식을 변끼리 더하면 y항이 소거되어 (${a} + 1)x = ${S(p)} + (${S(q)}) 가 됩니다.`,
+                  `${a + 1}x = ${S(p + q)} 이므로 x = ${x}입니다.`,
+                  `x = ${wj(x, '을/를')} 둘째 식에 대입하면 ${x} − y = ${S(q)}, 따라서 y = ${y}입니다.`
+                ]
+                : [
+                  `y의 계수를 맞추기 위해 첫째 식에 ${wj(d, '을/를')}, 둘째 식에 ${wj(b, '을/를')} 곱하면 ${a * d}x + ${b * d}y = ${S(p * d)}, ${b * c}x − ${b * d}y = ${S(q * b)} 입니다.`,
+                  `두 식을 더하면 ${a * d + b * c}x = ${S(p * d + q * b)} 이므로 x = ${S(x)} 입니다.`,
+                  `x = ${S(x)}을 첫째 식에 대입하면 ${t(b, 'y')} = ${S(p - a * x)}, 따라서 y = ${S(y)} 입니다.`
+                ];
+              return {
+                question: `연립방정식 [ ${e1},  ${e2} ] 를 만족시키는 x, y의 값은?`,
+                variablesInfo: { 식1: e1, 식2: e2 },
+                options,
+                answerIndex,
+                hint: easy ? 'y의 계수가 1과 −1이므로 두 식을 변끼리 더해 보세요!' : `y의 계수의 절댓값이 ${wj(b, '과/와')} ${d}로 다르므로, 최소공배수가 되도록 각 식에 수를 곱한 뒤 더하세요.`,
+                steps
+              };
+            }
             const x = rng.int(1, 6);
             const y = rng.int(1, 6);
             const a = rng.int(2, 4);
@@ -3203,13 +3356,19 @@
           standardName: '피타고라스 정리를 이해하고 정당화할 수 있다.',
           sourceRef: '중학교 수학 2 교과서 (도형의 성질 - 피타고라스 정리)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '작은 피타고라스 수(3·4·5 계열)', normal: '교과서 표준 피타고라스 수', hard: '큰 피타고라스 수(9·40·41, 20·21·29 등)' },
           conceptSummary: '직각삼각형에서 직각을 낀 두 변의 길이를 각각 a, b라 하고 빗변의 길이를 c라 하면 a² + b² = c²이 성립합니다.',
           formula: 'a² + b² = c²  (c는 빗변의 길이)',
-          generate(rng) {
-            const triples = [
-              [3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17],
-              [9, 12, 15], [7, 24, 25], [12, 16, 20]
-            ];
+          generate(rng, { tier } = {}) {
+            // 하: 작은 피타고라스 수 / 상: 큰 피타고라스 수 / 중: 기존 목록 그대로
+            const triples = tier === 'easy'
+              ? [[3, 4, 5], [4, 3, 5], [6, 8, 10], [8, 6, 10], [5, 12, 13], [12, 5, 13], [9, 12, 15], [12, 9, 15]]
+              : tier === 'hard'
+                ? [[9, 40, 41], [12, 35, 37], [20, 21, 29], [11, 60, 61], [16, 30, 34], [10, 24, 26], [15, 36, 39], [18, 24, 30]]
+                : [
+                  [3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17],
+                  [9, 12, 15], [7, 24, 25], [12, 16, 20]
+                ];
             const [a, b, c] = rng.pick(triples);
             const askHypotenuse = rng.next() > 0.4;
 
@@ -3264,12 +3423,14 @@
           standardName: '이차함수의 그래프를 그릴 수 있고, 그 성질을 설명할 수 있다.',
           sourceRef: '중학교 수학 3 교과서 (이차함수 y = a(x-p)² + q의 그래프)',
           difficulty: '★★★ 실력',
+          tierGuide: { easy: '이차항 계수 ±1·2, 작은 꼭짓점', normal: '교과서 표준', hard: '꼭짓점 좌표가 크고 부호가 섞임' },
           conceptSummary: '이차함수 y = a(x − p)² + q의 그래프의 꼭짓점의 좌표는 (p, q)이고, 대칭축의 방정식은 x = p입니다.',
           formula: 'y = a(x − p)² + q  ⇒  꼭짓점: (p, q), 축: x = p',
-          generate(rng) {
-            const a = rng.pick([-2, -1, 1, 2, 3]);
-            const p = rng.pick([-5, -4, -3, -2, 2, 3, 4, 5]);
-            const q = rng.pick([-6, -4, -2, 1, 3, 5, 7]);
+          generate(rng, { tier } = {}) {
+            // 하: 작은 꼭짓점 / 상: 큰 꼭짓점·부호 혼합 / 중: 기존 목록 그대로
+            const a = rng.pick(tier === 'easy' ? [1, -1, 2] : tier === 'hard' ? [-3, -2, 2, 3, 4] : [-2, -1, 1, 2, 3]);
+            const p = rng.pick(tier === 'easy' ? [-4, -3, -2, -1, 1, 2, 3, 4] : tier === 'hard' ? [-9, -8, -7, -6, 6, 7, 8, 9] : [-5, -4, -3, -2, 2, 3, 4, 5]);
+            const q = rng.pick(tier === 'easy' ? [1, 2, 3, 4, 5] : tier === 'hard' ? [-12, -10, -9, -8, 8, 9, 11, 13] : [-6, -4, -2, 1, 3, 5, 7]);
             const aStr = a === 1 ? '' : (a === -1 ? '−' : String(a));
             const pInside = p > 0 ? `x − ${p}` : `x + ${Math.abs(p)}`;
             const qStr = q >= 0 ? `+ ${q}` : `− ${Math.abs(q)}`;
@@ -3305,9 +3466,60 @@
           standardName: '정수와 유리수의 사칙 계산의 원리를 이해하고, 그 계산을 할 수 있다.',
           sourceRef: '중학교 수학 1 교과서 (거듭제곱과 사칙 혼합계산)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '거듭제곱 1개 + 곱셈 1개', normal: '거듭제곱·곱셈·나눗셈 혼합', hard: '괄호 안 거듭제곱 → 음수 곱 → 나눗셈의 3단계' },
           conceptSummary: '거듭제곱을 가장 먼저 계산하고, (−a)² = a²이지만 −a² = −(a²)임을 명확히 구분해야 합니다.',
           formula: '(−a)² = a²,  −a² = −(a²)',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy') {
+              // 하: 거듭제곱 1개 + 곱셈 1개
+              const a = rng.int(2, 4), b = rng.int(1, 5), c = rng.int(2, 3);
+              const ans = a * a - b * c;
+              const S = n => (n < 0 ? `−${-n}` : `${n}`);
+              const distractors = [-a * a - b * c, a * a + b * c, 2 * a - b * c, ans + 2].filter(v => v !== ans).map(S);
+              const { options, answerIndex } = buildChoiceSet(rng, S(ans), distractors);
+              return {
+                question: `다음 식을 계산한 결과는?  [ (−${a})² + (−${b}) × ${c} ]`,
+                variablesInfo: { 항1: `(−${a})²`, 항2: `(−${b}) × ${c}` },
+                options,
+                answerIndex,
+                hint: `(−${a})²은 (−${a}) × (−${a})이므로 양수 ${wj(a * a, '이/가')} 됩니다.`,
+                steps: [
+                  `거듭제곱을 먼저 계산하면 (−${a})² = ${a * a} 입니다.`,
+                  `곱셈을 계산하면 (−${b}) × ${c} = ${S(-b * c)} 입니다.`,
+                  `따라서 ${a * a} + (${S(-b * c)}) = ${S(ans)} 입니다.`
+                ]
+              };
+            }
+            if (tier === 'hard') {
+              // 상: 괄호 안 거듭제곱 → 음수 곱 → 나눗셈의 3단계
+              const S = n => (n < 0 ? `−${-n}` : `${n}`);
+              const a = rng.int(3, 5);
+              let b = rng.int(2, 8);
+              if (b === a * a) b += 1;
+              const c = rng.int(2, 4), e = rng.pick([2, 3, 4]), m = rng.int(2, 6);
+              const d = e * m;
+              const inner = a * a - b;
+              const ans = inner * (-c) + m;
+              const distractors = [
+                (-a * a - b) * (-c) + m, // (−a)²을 −a²로 계산
+                inner * (-c) - m, // −(−d)의 부호 실수
+                inner * c + m, // 음수 곱의 부호 실수
+                a * a + b * c + m // 괄호를 무시하고 곱셈부터 계산
+              ].filter(v => v !== ans).map(S);
+              const { options, answerIndex } = buildChoiceSet(rng, S(ans), distractors.concat([S(ans + 4)]));
+              return {
+                question: `다음 식을 계산한 결과는?  [ ((−${a})² − ${b}) × (−${c}) − (−${d}) ÷ ${e} ]`,
+                variablesInfo: { 항1: `((−${a})² − ${b}) × (−${c})`, 항2: `(−${d}) ÷ ${e}` },
+                options,
+                answerIndex,
+                hint: '괄호 안 → 거듭제곱 → 곱셈·나눗셈 → 덧셈·뺄셈 순서로 계산하세요. 음수를 빼는 것은 양수를 더하는 것과 같습니다.',
+                steps: [
+                  `괄호 안을 먼저 계산하면 (−${a})² − ${b} = ${a * a} − ${b} = ${S(inner)} 입니다.`,
+                  `곱셈과 나눗셈을 계산하면 ${inner < 0 ? `(${S(inner)})` : inner} × (−${c}) = ${S(inner * -c)}, (−${d}) ÷ ${e} = −${m} 입니다.`,
+                  `따라서 ${S(inner * -c)} − (−${m}) = ${S(inner * -c)} + ${m} = ${S(ans)} 입니다.`
+                ]
+              };
+            }
             const a = rng.pick([2, 3]);
             const b = rng.pick([3, 4, 5]);
             const c = rng.pick([2, 3]);
@@ -3350,9 +3562,41 @@
           standardName: '일차부등식을 풀 수 있고, 이를 활용하여 문제를 해결할 수 있다.',
           sourceRef: '중학교 수학 2 교과서 (음수로 나눌 때의 부등호 방향 전환)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '부등호 방향이 바뀌지 않는 경우', normal: '음수로 나누어 부등호 방향이 바뀜', hard: '≤·≥, 큰 수, 방향 바뀜' },
           conceptSummary: '부등식의 양변에 같은 음수를 곱하거나 양변을 같은 음수로 나누면 부등호의 방향이 반대로 바뀝니다.',
           formula: '−kx < c  (k > 0)  ⇒  x > −c/k',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: x의 계수가 양수 → 방향 그대로 / 상: ≤·≥, 큰 수, 음수로 나눠 방향 바뀜
+              const S = n => (n < 0 ? `−${-n}` : `${n}`);
+              const easy = tier === 'easy';
+              const flip = { '<': '>', '>': '<', '≤': '≥', '≥': '≤' };
+              const k = easy ? rng.int(2, 3) : rng.int(3, 6);
+              let a, c;
+              if (easy) { c = rng.int(1, 2); a = c + k; } else { a = rng.int(2, 7); c = a + k; }
+              const bound = easy ? rng.pick([-3, -2, -1, 1, 2, 3, 4, 5]) : rng.int(1, 9) * (rng.next() < 0.5 ? -1 : 1);
+              const b = easy ? rng.int(1, 6) : rng.int(-12, 12);
+              const op = easy ? '<' : rng.pick(['≤', '≥']);
+              const d = easy ? b + k * bound : b - k * bound;
+              const op2 = easy ? op : flip[op];
+              const cStr = c === 1 ? 'x' : `${c}x`;
+              const correct = `x ${op2} ${S(bound)}`;
+              const distractors = [`x ${flip[op2]} ${S(bound)}`, `x ${op2} ${S(-bound)}`, `x ${flip[op2]} ${S(-bound)}`];
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              const coef = a - c;
+              return {
+                question: `일차부등식 ${a}x${signedTerm(b, '')} ${op} ${cStr}${signedTerm(d, '')} 의 해를 구하면?`,
+                variablesInfo: { 좌변계수: a, 우변계수: c, x경계값: bound },
+                options,
+                answerIndex,
+                hint: easy ? 'x항을 좌변으로 모으면 x의 계수가 양수입니다. 양수로 나눌 때는 부등호 방향이 그대로입니다.' : `x항을 좌변으로 모으면 x의 계수가 음수(${S(coef)})가 됩니다. 양변을 음수로 나눌 때 부등호 방향을 꼭 바꾸세요!`,
+                steps: [
+                  `x를 포함하는 항을 좌변으로, 상수항을 우변으로 이항하면 (${a} − ${c})x ${op} ${S(d)} − (${S(b)}) 입니다.`,
+                  `정리하면 ${S(coef)}x ${op} ${S(d - b)} 입니다.`,
+                  easy ? `양변을 양수 ${wj(coef, '으로/로')} 나누면 부등호 방향은 그대로이므로 ${correct} 입니다.` : `양변을 음수 ${wj(S(coef), '으로/로')} 나누면 부등호 방향이 바뀌어 ${correct} 입니다.`
+                ]
+              };
+            }
             const k = rng.pick([2, 3, 4]);
             const a = rng.int(2, 5);
             const c = a + k; // a - c = -k (음수 계수 유도)
@@ -3395,9 +3639,43 @@
           standardName: '지수법칙을 이해하고, 이를 이용하여 식을 간단히 할 수 있다.',
           sourceRef: '중학교 수학 2 교과서 (지수법칙 종합)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '제곱 한 번, 작은 지수', normal: '교과서 표준', hard: '세제곱, 계수 3까지, 큰 지수' },
           conceptSummary: '(a^m)^n = a^(mn) 이고, a^m × a^n = a^(m+n), a^m ÷ a^n = a^(m−n) 입니다.',
           formula: '(a^m)^n = a^(mn),  (ab)^n = a^n b^n',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: 제곱 한 번·작은 지수 / 상: 세제곱·큰 지수
+              const easy = tier === 'easy';
+              const base = rng.pick([2, 3]);
+              const p = easy ? 2 : 3;
+              const m = rng.int(2, 4);
+              const n = easy ? 1 : rng.int(2, 3);
+              const k = easy ? rng.int(1, 3) : rng.int(2, 4);
+              const coef = Math.pow(base, p);
+              const xExp = m * p + k, yExp = n * p + 1, sumExp = xExp + yExp;
+              const fmt = (co, ex, ey) => `${co}x^${ex} y^${ey} (지수의 합: ${ex + ey})`;
+              const correct = fmt(coef, xExp, yExp);
+              const distractors = [
+                fmt(base * p, xExp, yExp), // 거듭제곱 대신 곱하기
+                fmt(coef, m + p + k, n + p + 1), // 지수를 더함
+                fmt(base, xExp, yExp), // 계수에 거듭제곱을 안 함
+                fmt(coef, xExp, yExp - 1), // 뒤 y의 지수 1을 빠뜨림
+                fmt(coef, m * p, n * p)
+              ].filter(o => o !== correct);
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              return {
+                question: `다음 식을 간단히 정리한 결과와 x, y의 지수의 합은?  [ (${base}x^${m} y^${n})^${p} × (x^${k} y) ]`,
+                variablesInfo: { 거듭제곱: p, 계수: coef, x지수: xExp, y지수: yExp },
+                options,
+                answerIndex,
+                hint: `괄호 밖의 거듭제곱 ${wj(p, '을/를')} 계수 ${base}와 x^${m}, y^${n}에 각각 적용하세요. ${base}^${p} = ${coef}입니다.`,
+                steps: [
+                  `(${base}x^${m} y^${n})^${p} = ${base}^${p} × (x^${m})^${p} × (y^${n})^${p} = ${coef}x^${m * p} y^${n * p} 입니다.`,
+                  `여기에 (x^${k} y)를 곱하면 x의 지수는 ${m * p} + ${k} = ${xExp}, y의 지수는 ${n * p} + 1 = ${wj(yExp, '이/가')} 됩니다.`,
+                  `따라서 식은 ${coef}x^${xExp} y^${yExp} 이며, 지수의 합은 ${xExp} + ${yExp} = ${sumExp} 입니다.`
+                ]
+              };
+            }
             const p = rng.int(2, 3);
             const m = rng.int(2, 3);
             const n = rng.int(1, 2);
@@ -3439,9 +3717,40 @@
           standardName: '다항식의 곱셈과 인수분해를 할 수 있다.',
           sourceRef: '중학교 수학 3 교과서 (이차식의 인수분해)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '두 양수의 합·곱', normal: '부호가 섞인 두 정수', hard: '부호가 다른 큰 두 정수' },
           conceptSummary: 'x² + (a+b)x + ab = (x + a)(x + b) 공식을 이용해 합과 곱이 맞는 두 정수를 찾습니다.',
           formula: 'x² + (a + b)x + ab = (x + a)(x + b)',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: 두 양수 / 상: 부호가 다른 큰 두 정수
+              let a, b;
+              if (tier === 'easy') {
+                a = rng.int(1, 6); b = rng.int(1, 6);
+                if (b === a) b = a === 6 ? 1 : a + 1;
+              } else {
+                const sg = rng.next() < 0.5 ? 1 : -1;
+                a = rng.int(4, 12) * sg; b = rng.int(2, 9) * -sg;
+                if (Math.abs(a) === Math.abs(b) || a + b === 0) a += sg;
+              }
+              const sum = a + b, prod = a * b;
+              const poly = `x²${signedTerm(sum, 'x')}${signedTerm(prod, '')}`;
+              const lin = k => (k >= 0 ? `x + ${k}` : `x − ${Math.abs(k)}`);
+              const correct = `(${lin(a)})(${lin(b)})`;
+              const distractors = [`(${lin(-a)})(${lin(-b)})`, `(${lin(a)})(${lin(-b)})`, `(${lin(-a)})(${lin(b)})`, `(${lin(sum)})(${lin(prod)})`];
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              return {
+                question: `이차식 ${wj(poly, '을/를')} 바르게 인수분해한 것은?`,
+                variablesInfo: { 일차항계수: sum, 상수항: prod, 두정수: `${a}, ${b}` },
+                options,
+                answerIndex,
+                hint: `곱해서 ${wj(prod, '이/가')} 되고 더해서 ${wj(sum, '이/가')} 되는 두 정수를 찾아보세요.`,
+                steps: [
+                  `상수항이 ${prod}이므로 두 정수의 곱은 ${prod}입니다.`,
+                  `일차항의 계수가 ${sum}이므로 두 정수의 합은 ${sum}이어야 합니다.`,
+                  `두 조건을 만족하는 두 정수는 ${wj(a, '과/와')} ${b}이므로 인수분해하면 ${wj(correct, '이/가')} 됩니다.`
+                ]
+              };
+            }
             const a = rng.pick([-6, -5, -4, -3, -2, 2, 3, 4, 5, 6]);
             let b = rng.pick([-5, -4, -3, -2, 2, 3, 4, 5]);
             if (Math.abs(a) === Math.abs(b)) b = b > 0 ? b + 1 : b - 1;
@@ -3484,10 +3793,11 @@
           standardName: '실수의 대소 관계를 판단하고 설명할 수 있다.',
           sourceRef: '중학교 수학 3 교과서 (무리수의 정수 부분과 소수 부분)',
           difficulty: '★★★ 실력',
+          tierGuide: { easy: '√2 ~ √24 범위', normal: '교과서 표준(√5 ~ √35)', hard: '√37 ~ √143 범위' },
           conceptSummary: 'n² < N < (n+1)² 이면 n < √N < n+1 이므로, √N의 정수 부분 a = n, 소수 부분 b = √N − n 입니다.',
           formula: '소수 부분 = 원래 수 − 정수 부분',
-          generate(rng) {
-            const n = rng.int(2, 5);
+          generate(rng, { tier } = {}) {
+            const n = tier === 'easy' ? rng.int(1, 4) : tier === 'hard' ? rng.int(6, 11) : rng.int(2, 5);
             const extra = rng.int(1, 2 * n);
             const N = n * n + extra; // n^2 < N < (n+1)^2
             // 정수 부분: n, 소수 부분: sqrt(N) - n
@@ -3522,10 +3832,11 @@
           standardName: '삼각비의 뜻을 알고, 간단한 삼각비의 값을 구할 수 있다.',
           sourceRef: '중학교 수학 3 교과서 (특수각 30°, 45°, 60°의 삼각비)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '작은 빗변', normal: '교과서 표준', hard: '홀수 빗변(답이 0.5 단위 소수)' },
           conceptSummary: '직각삼각형에서 sin = 높이/빗변, cos = 밑변/빗변, tan = 높이/밑변이며 특수각(30°, 45°, 60°)의 값을 암기하여 활용합니다.',
           formula: 'sin 30° = 1/2,  cos 60° = 1/2,  tan 45° = 1',
-          generate(rng) {
-            const hypotenuse = rng.pick([6, 8, 10, 12, 16]);
+          generate(rng, { tier } = {}) {
+            const hypotenuse = rng.pick(tier === 'easy' ? [4, 6, 8, 10, 14] : tier === 'hard' ? [9, 11, 13, 15, 17, 21, 25] : [6, 8, 10, 12, 16]);
             const angle = 30; // 30°일 때 마주 보는 대변 = hypotenuse / 2
             const opp = hypotenuse / 2;
 
@@ -3535,6 +3846,7 @@
               `${opp + 2} cm`,
               `${Math.round(hypotenuse * 0.8)} cm`
             ];
+            if (tier === 'easy' || tier === 'hard') distractors.push(`${hypotenuse * 2} cm`, `${opp + 1} cm`); // 하·상만 후보 보강
             const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
 
             return {
@@ -3560,9 +3872,41 @@
           standardName: '확률의 개념과 그 기본 성질을 이해하고, 확률을 구할 수 있다.',
           sourceRef: '중학교 수학 2 교과서 (경우의 수와 확률)',
           difficulty: '★★☆ 표준',
+          tierGuide: { easy: '합 2·3·4·10·11·12 (경우가 적음)', normal: '합 5 ~ 9', hard: '순서 무시·여사건 오개념 보기가 섞인 합' },
           conceptSummary: '서로 다른 두 개의 주사위를 던질 때 일어날 수 있는 모든 경우의 수는 6 × 6 = 36가지입니다.',
           formula: '확률 = (사건이 일어나는 경우의 수) ÷ (모든 경우의 수)',
-          generate(rng) {
+          generate(rng, { tier } = {}) {
+            if (tier === 'easy' || tier === 'hard') {
+              // 하: 경우가 적은 합 / 상: 순서 무시·여사건 오개념 보기
+              const targetSum = rng.pick(tier === 'easy' ? [2, 3, 4, 10, 11, 12] : [4, 5, 6, 8, 9, 10]);
+              let count = 0, unordered = 0;
+              const pairsList = [];
+              for (let i = 1; i <= 6; i++) {
+                for (let j = 1; j <= 6; j++) {
+                  if (i + j === targetSum) { count++; pairsList.push(`(${i},${j})`); if (i <= j) unordered++; }
+                }
+              }
+              const g = gcd(count, 36);
+              const fracStr = `${count / g}/${36 / g}`;
+              const correct = `${fracStr} (${count}가지)`;
+              const gc = gcd(36 - count, 36);
+              const distractors = tier === 'easy'
+                ? [`${count}/12 (${count}가지)`, `${count / g + 1}/${36 / g} (${count + 1}가지)`, '1/6 (6가지)']
+                : [`${unordered}/21 (${unordered}가지)`, `${(36 - count) / gc}/${36 / gc} (${36 - count}가지)`, `${count}/18 (${count}가지)`, '1/6 (6가지)'];
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              return {
+                question: `서로 다른 주사위 2개를 동시에 던질 때, 나오는 두 눈의 수의 합이 ${wj(targetSum, '이/가')} 될 확률은?`,
+                variablesInfo: { 목표합: targetSum, 경우의수: count, 확률: fracStr },
+                options,
+                answerIndex,
+                hint: tier === 'hard' ? '두 주사위는 서로 다르므로 (1, 3)과 (3, 1)은 다른 경우입니다. 모든 경우는 21가지가 아니라 36가지입니다.' : `주사위 2개를 던질 때 모든 경우의 수는 6 × 6 = 36입니다. 합이 ${wj(targetSum, '이/가')} 되는 순서쌍을 직접 세어 보세요.`,
+                steps: [
+                  '모든 경우의 수는 6 × 6 = 36가지입니다.',
+                  `두 눈의 합이 ${wj(targetSum, '이/가')} 되는 순서쌍은 ${wj(pairsList.join(', '), '으로/로')} 총 ${count}가지입니다.`,
+                  `따라서 구하는 확률은 ${count}/36 이며, 기약분수로 나타내면 ${fracStr}입니다.`
+                ]
+              };
+            }
             const targetSum = rng.pick([5, 6, 7, 8, 9]);
             // 합이 targetSum이 되는 순서쌍 개수 계산
             let count = 0;
@@ -3599,6 +3943,1247 @@
                 `두 눈의 합이 ${wj(targetSum, '이/가')} 되는 순서쌍은 ${wj(pairsList.join(', '), '으로/로')} 총 ${count}가지입니다.`,
                 `따라서 구하는 확률은 ${count}/36 이며, 기약분수로 나타내면 ${fracStr}입니다.`
               ]
+            };
+          }
+        },
+        // ---------------------------------------------------------------
+        // 1.0.2 확장 유형 (MID-15 ~ MID-35) — 2022 개정 성취기준, 그림 없음, 하·중·상 3단계
+        // ---------------------------------------------------------------
+        {
+          id: 'MID-15',
+          dayIndex: 14,
+          unit: '중1 · 최대공약수와 최소공배수',
+          standardCode: '[9수01-02]',
+          standardName: '소인수분해를 이용하여 최대공약수와 최소공배수를 구할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (소인수분해를 이용한 최대공약수·최소공배수)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '두 자리 수 두 개를 직접 소인수분해', normal: '소인수분해 꼴로 주어진 두 수', hard: '소인수분해 꼴로 주어진 세 수' },
+          conceptSummary: '각 수를 소인수분해한 뒤, 공통인 소인수에서 지수가 작은 것을 곱하면 최대공약수, 모든 소인수에서 지수가 큰 것을 곱하면 최소공배수입니다.',
+          formula: '최대공약수 = 공통 소인수의 (작은 지수) 거듭제곱의 곱,  최소공배수 = 모든 소인수의 (큰 지수) 거듭제곱의 곱',
+          generate(rng, { tier } = {}) {
+            const PR = [2, 3, 5, 7];
+            const SUP = ['', '', '²', '³'];
+            const cnt = tier === 'hard' ? 3 : 2;
+            const maxE = tier === 'easy' ? [2, 2, 1, 1] : [3, 2, 2, 1];
+            const val = e => e.reduce((acc, k, i) => acc * Math.pow(PR[i], k), 1);
+            const fact = e => e.map((k, i) => (k ? `${PR[i]}${SUP[k]}` : '')).filter(Boolean).join(' × ') || '1';
+            const minE = es => PR.map((_, i) => Math.min(...es.map(e => e[i])));
+            const maxEs = es => PR.map((_, i) => Math.max(...es.map(e => e[i])));
+            let es = null;
+            // 조건: 최대공약수 ≥ 2, 서로 다른 수, 어느 수도 최대공약수·최소공배수와 같지 않음(나누어떨어지는 쌍 제외)
+            for (let t = 0; t < 300 && !es; t++) {
+              const cand = Array.from({ length: cnt }, () => PR.map((_, i) => rng.int(0, maxE[i])));
+              const vs = cand.map(val);
+              const G = val(minE(cand)), L = val(maxEs(cand));
+              const okEasy = tier !== 'easy' || vs.every(x => x >= 10 && x <= 99);
+              const okFact = tier === 'easy' || cand.every(e => e.filter(Boolean).length >= 2);
+              if (G >= 2 && new Set(vs).size === cnt && vs.every(x => x !== G && x !== L) && okEasy && okFact) es = cand;
+            }
+            if (!es) es = cnt === 3 ? [[2, 1, 0, 0], [1, 2, 1, 0], [3, 1, 1, 0]] : [[2, 1, 0, 0], [1, 2, 0, 0]];
+            const vs = es.map(val);
+            const g = minE(es), l = maxEs(es);
+            const G = val(g), L = val(l);
+            const names = ['A', 'B', 'C'];
+            const opt = (x, y) => `최대공약수 ${comma(x)}, 최소공배수 ${comma(y)}`;
+            // 오개념: 최대·최소 뒤바꿈 / 수를 모두 곱해 최소공배수로 착각 / 공통 소인수의 큰 지수를 택함
+            const common = PR.map((_, i) => (es.every(e => e[i] > 0) ? Math.max(...es.map(e => e[i])) : 0));
+            const prod = vs.reduce((a, b) => a * b, 1);
+            const correct = opt(G, L);
+            const distractors = [opt(L, G), opt(G, prod), opt(val(common), L), opt(G, L * 2), opt(G * 2, L)];
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            const shown = tier === 'easy'
+              ? `두 수 ${vs.join(', ')}의`
+              : `${cnt === 3 ? '세' : '두'} 수 ${es.map((e, i) => `${names[i]} = ${fact(e)}`).join(', ')}의`;
+            return {
+              question: `${shown} 최대공약수와 최소공배수를 바르게 구한 것은?`,
+              variablesInfo: { 수: vs.join(', '), 소인수분해: es.map(fact).join(' / ') },
+              options,
+              answerIndex,
+              hint: '최대공약수는 공통인 소인수만 골라 지수가 작은 쪽을, 최소공배수는 모든 소인수를 골라 지수가 큰 쪽을 곱하세요.',
+              steps: [
+                `각 수를 소인수분해하면 ${vs.map((x, i) => `${comma(x)} = ${fact(es[i])}`).join(', ')} 입니다.`,
+                `최대공약수는 공통인 소인수에서 지수가 작은 것을 곱한 ${fact(g)} = ${comma(G)} 입니다.`,
+                `최소공배수는 모든 소인수에서 지수가 큰 것을 곱한 ${fact(l)} = ${comma(L)} 입니다.`
+              ]
+            };
+          }
+        },
+        {
+          id: 'MID-16',
+          dayIndex: 15,
+          unit: '중1 · 일차식의 덧셈과 뺄셈',
+          standardCode: '[9수02-02]',
+          standardName: '일차식의 덧셈과 뺄셈의 원리를 이해하고, 그 계산을 할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (동류항 정리와 괄호 풀기)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '괄호 앞이 +인 두 일차식의 덧셈', normal: '괄호 앞이 −인 일차식의 뺄셈(부호 바뀜)', hard: '수가 곱해진 두 괄호의 뺄셈 k(ax + b) − m(cx + d)' },
+          conceptSummary: '괄호 앞의 수를 괄호 안의 모든 항에 곱하고(분배법칙), 괄호 앞이 −이면 괄호 안 모든 항의 부호를 바꾼 뒤 동류항끼리 모아 계산합니다.',
+          formula: 'k(ax + b) − m(cx + d) = (ka − mc)x + (kb − md)',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const lin = (p, c) => (p === 0 ? S(c) : `${signedTerm(p, 'x', true)}${signedTerm(c, '')}`);
+            const nz = (lo, hi) => rng.int(lo, hi) * (rng.next() < 0.5 ? -1 : 1);
+            let k1 = 1, k2 = 1, a, b, c, d;
+            const op = tier === 'easy' ? '+' : '−';
+            if (tier === 'easy') { a = rng.int(1, 6); b = rng.int(1, 9); c = rng.int(1, 6); d = rng.int(1, 9); }
+            else if (tier === 'hard') { k1 = rng.int(2, 4); k2 = rng.int(2, 4); a = nz(1, 5); b = nz(1, 9); c = nz(1, 5); d = nz(1, 9); }
+            else { a = rng.int(2, 9); b = nz(1, 9); c = rng.int(1, 8); d = nz(1, 9); }
+            const sg = op === '+' ? 1 : -1;
+            // x의 계수·상수항이 0이 되지 않게 조정
+            while (a === 0 || k1 * a + sg * k2 * c === 0) a += 1;
+            while (b === 0 || k1 * b + sg * k2 * d === 0) b += 1;
+            const X = k1 * a + sg * k2 * c;
+            const C = k1 * b + sg * k2 * d;
+            const kStr = k => (k === 1 ? '' : `${k}`);
+            const expr = `${kStr(k1)}(${lin(a, b)}) ${op} ${kStr(k2)}(${lin(c, d)})`;
+            const correct = lin(X, C);
+            const distractors = op === '+'
+              ? [lin(X + C, 0), lin(a * c, C), lin(X, b * d), lin(X + 1, C), lin(X, C + 1)]
+              : [
+                lin(X, k1 * b + k2 * d), // 뒤 괄호의 상수항 부호를 안 바꿈
+                lin(k1 * a + k2 * c, k1 * b + k2 * d), // 뒤 괄호의 부호를 전혀 안 바꿈
+                lin(k1 * a - c, k1 * b - d), // 괄호 앞의 수를 첫 항에만 곱함
+                lin(X, -C),
+                lin(-X, C),
+                lin(X + 1, C)
+              ];
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            const expanded = [[k1 * a, 'x'], [k1 * b, ''], [sg * k2 * c, 'x'], [sg * k2 * d, '']]
+              .map(([co, v], i) => signedTerm(co, v, i === 0)).join('');
+            return {
+              question: `다음 식을 간단히 하면?  [ ${expr} ]`,
+              variablesInfo: { 식1: lin(a, b), 식2: lin(c, d), 앞수1: k1, 앞수2: k2, 연산: op },
+              options,
+              answerIndex,
+              hint: op === '+' ? 'x항은 x항끼리, 상수항은 상수항끼리 더하세요. 문자가 다른 항은 더할 수 없습니다.' : '괄호 앞이 −이면 괄호 안의 모든 항의 부호가 바뀝니다. 상수항의 부호까지 꼭 바꾸세요!',
+              steps: [
+                `분배법칙으로 괄호를 풀면 ${expanded} 입니다.`,
+                `동류항끼리 모으면 x의 계수는 ${S(X)}, 상수항은 ${S(C)} 입니다.`,
+                `따라서 간단히 하면 ${correct} 입니다.`
+              ]
+            };
+          }
+        },
+        {
+          id: 'MID-17',
+          dayIndex: 16,
+          unit: '중1 · 다각형의 성질',
+          standardCode: '[9수03-05]',
+          standardName: '다각형의 성질을 이해하고 설명할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (다각형의 대각선의 개수, 내각과 외각)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '정n각형의 한 내각의 크기', normal: '대각선의 개수 ↔ 내각의 크기의 합', hard: '한 외각(내각)의 크기로 정다각형을 찾은 뒤 대각선의 개수' },
+          conceptSummary: 'n각형의 내각의 크기의 합은 180° × (n − 2), 외각의 크기의 합은 360°, 대각선의 개수는 n(n − 3)/2입니다. 정n각형의 한 외각의 크기는 360°/n입니다.',
+          formula: '내각의 합 = 180°(n − 2),  대각선 = n(n − 3)/2,  정n각형 한 외각 = 360°/n',
+          generate(rng, { tier } = {}) {
+            const R = [4, 5, 6, 8, 9, 10, 12, 15, 18, 20, 24, 30, 36, 40, 45];
+            const dg = x => `${comma(x)}°`;
+            const ge = x => `${comma(x)}개`;
+            const diag = n => n * (n - 3) / 2;
+            let question, correct, distractors, hint, steps, vars;
+            if (tier === 'easy') {
+              const n = rng.pick(R);
+              const ans = 180 * (n - 2) / n;
+              question = `정${n}각형의 한 내각의 크기는?`;
+              correct = dg(ans);
+              distractors = [dg(360 / n), dg(180 * (n - 2)), dg(ans + 10), dg(ans - 10)];
+              hint = `정${n}각형의 내각의 크기의 합을 먼저 구한 뒤 꼭짓점의 개수 ${wj(n, '으로/로')} 나누세요.`;
+              steps = [
+                `${n}각형의 내각의 크기의 합은 180° × (${n} − 2) = ${dg(180 * (n - 2))} 입니다.`,
+                `정다각형은 내각의 크기가 모두 같으므로 한 내각은 ${dg(180 * (n - 2))} ÷ ${n} = ${dg(ans)} 입니다.`
+              ];
+              vars = { 변의수: n };
+            } else if (tier === 'hard') {
+              const n = rng.pick(R.slice(1));
+              const ext = 360 / n;
+              const useInner = rng.next() < 0.5;
+              question = useInner
+                ? `한 내각의 크기가 ${180 - ext}°인 정다각형의 대각선의 개수는?`
+                : `한 외각의 크기가 ${ext}°인 정다각형의 대각선의 개수는?`;
+              correct = ge(diag(n));
+              distractors = [ge(n * (n - 3)), ge(n * (n - 1) / 2), ge(n - 3), ge(diag(n + 1))];
+              hint = '정다각형의 외각의 크기의 합은 360°이므로 (360° ÷ 한 외각)이 꼭짓점의 개수입니다.';
+              steps = [
+                useInner ? `한 외각의 크기는 180° − ${180 - ext}° = ${ext}° 입니다.` : `한 외각의 크기가 ${ext}°입니다.`,
+                `외각의 크기의 합은 360°이므로 360° ÷ ${ext}° = ${n}, 즉 정${n}각형입니다.`,
+                `대각선의 개수는 ${n} × (${n} − 3) ÷ 2 = ${diag(n)}개입니다.`
+              ];
+              vars = { 정다각형: useInner ? `한 내각 ${180 - ext}°` : `한 외각 ${ext}°` };
+            } else {
+              const n = rng.int(5, 20);
+              if (rng.next() < 0.5) {
+                question = `대각선의 개수가 ${diag(n)}개인 다각형의 내각의 크기의 합은?`;
+                correct = dg(180 * (n - 2));
+                distractors = [dg(180 * n), dg(180 * (n - 1)), dg(180 * (n - 3)), dg(360)];
+                hint = 'n(n − 3)/2 = (대각선의 개수)를 만족하는 n을 먼저 찾으세요.';
+                steps = [
+                  `n각형의 대각선의 개수는 n(n − 3)/2이므로 n(n − 3) = ${2 * diag(n)} 입니다.`,
+                  `${n} × ${n - 3} = ${2 * diag(n)} 이므로 n = ${n}, 즉 ${n}각형입니다.`,
+                  `내각의 크기의 합은 180° × (${n} − 2) = ${dg(180 * (n - 2))} 입니다.`
+                ];
+              } else {
+                question = `내각의 크기의 합이 ${dg(180 * (n - 2))}인 다각형의 대각선의 개수는?`;
+                correct = ge(diag(n));
+                distractors = [ge(n * (n - 3)), ge(n * (n - 1) / 2), ge(n - 3), ge(diag(n + 1))];
+                hint = '180° × (n − 2) = (내각의 크기의 합)으로 n을 먼저 구하세요.';
+                steps = [
+                  `180° × (n − 2) = ${dg(180 * (n - 2))} 이므로 n − 2 = ${n - 2}, n = ${n} 입니다.`,
+                  `${n}각형의 대각선의 개수는 ${n} × (${n} − 3) ÷ 2 = ${diag(n)}개입니다.`
+                ];
+              }
+              vars = { 꼭짓점수: '지문 조건으로 구함' };
+            }
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            return { question, variablesInfo: vars, options, answerIndex, hint, steps };
+          }
+        },
+        {
+          id: 'MID-18',
+          dayIndex: 17,
+          unit: '중1 · 대푯값 (중앙값과 최빈값)',
+          standardCode: '[9수04-01]',
+          standardName: '중앙값, 최빈값의 뜻을 알고, 자료의 특성에 따라 적절한 대푯값을 선택하여 구할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (자료의 정리와 해석 - 대푯값)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '자료 개수가 홀수인 중앙값', normal: '자료 개수가 짝수인 중앙값(가운데 두 값의 평균)', hard: '짝수 개 자료의 중앙값 + 최빈값' },
+          conceptSummary: '중앙값은 자료를 크기순으로 나열했을 때 한가운데 있는 값(짝수 개면 가운데 두 값의 평균)이고, 최빈값은 가장 많이 나타나는 값입니다.',
+          formula: 'n이 홀수: (n+1)/2번째 값,  n이 짝수: n/2번째와 (n/2+1)번째 값의 평균',
+          generate(rng, { tier } = {}) {
+            const n = tier === 'easy' ? rng.pick([5, 7]) : tier === 'hard' ? rng.pick([8, 10]) : rng.pick([6, 8]);
+            const pool = rng.shuffle(Array.from({ length: 31 }, (_, i) => 10 + i));
+            let data;
+            let mode = null;
+            if (tier === 'hard') {
+              const base = pool.slice(0, n - 1);
+              mode = base[rng.int(0, n - 2)];
+              data = rng.shuffle(base.concat([mode]));
+            } else data = pool.slice(0, n);
+            const sorted = data.slice().sort((x, y) => x - y);
+            const mid = arr => (n % 2 ? arr[(n - 1) / 2] : (arr[n / 2 - 1] + arr[n / 2]) / 2);
+            const med = mid(sorted);
+            const raw = mid(data); // 정렬하지 않고 가운데를 고르는 오개념
+            const mean = data.reduce((x, y) => x + y, 0) / n;
+            const ans = tier === 'hard' ? med + mode : med;
+            const cands = tier === 'hard'
+              ? [med, raw + mode, sorted[n / 2] + mode, mean + mode, sorted[n / 2 - 1] + mode, ans + 1]
+              : n % 2
+                ? [raw, mean, sorted[(n - 1) / 2 - 1], sorted[(n - 1) / 2 + 1], ans + 1]
+                : [raw, sorted[n / 2 - 1], sorted[n / 2], mean, ans + 1];
+            const unit = tier === 'hard' ? '' : '회';
+            const distractors = cands.filter(x => Number.isInteger(x * 2) && x !== ans).map(x => `${x}${unit}`);
+            const correct = `${ans}${unit}`;
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            const ask = tier === 'hard' ? '이 자료의 중앙값을 a회, 최빈값을 b회라 할 때, a + b의 값은?' : '이 자료의 중앙값은?';
+            const medStep = n % 2
+              ? `자료가 ${n}개(홀수)이므로 ${(n + 1) / 2}번째 값 ${med}회가 중앙값입니다.`
+              : `자료가 ${n}개(짝수)이므로 ${n / 2}번째 값 ${sorted[n / 2 - 1]}회와 ${n / 2 + 1}번째 값 ${sorted[n / 2]}회의 평균 ${med}회가 중앙값입니다.`;
+            const steps = [`작은 값부터 크기순으로 나열하면 ${sorted.join(', ')} 입니다.`, medStep];
+            if (tier === 'hard') steps.push(`가장 많이 나타난 값은 ${mode}회(2번)이므로 최빈값은 ${mode}회이고, a + b = ${med} + ${mode} = ${ans} 입니다.`);
+            return {
+              question: `다음은 학생 ${n}명의 1분 동안 윗몸일으키기 기록(회)이다. ${ask}  [ ${data.join(', ')} ]`,
+              variablesInfo: { 자료: data.join(', '), 자료수: n },
+              options,
+              answerIndex,
+              hint: '중앙값은 반드시 자료를 크기순으로 나열한 다음에 찾아야 합니다.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-19',
+          dayIndex: 18,
+          unit: '중2 · 유리수와 순환소수',
+          standardCode: '[9수01-06]',
+          standardName: '순환소수의 뜻을 알고, 유리수와 순환소수의 관계를 설명할 수 있다.',
+          sourceRef: '중학교 수학 2 교과서 (순환소수를 분수로 나타내기)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '순환마디가 한 자리(정수 부분 포함 가능)', normal: '순환마디 두 자리 또는 소수점 아래 첫째 자리부터 순환하지 않음', hard: '순환하지 않는 부분 + 두 자리 순환마디, 정수 부분, 세 자리 순환마디' },
+          conceptSummary: '순환소수는 분모에 순환마디의 숫자 개수만큼 9를, 그 뒤에 소수점 아래 순환하지 않는 숫자 개수만큼 0을 쓰고, 분자에는 (전체의 수) − (순환하지 않는 부분의 수)를 써서 분수로 나타냅니다.',
+          formula: '0.aḃċ = (abc − a) / 990',
+          generate(rng, { tier } = {}) {
+            const DOT = '̇';
+            // 순환마디 B가 더 짧은 마디의 반복이 아니고, A의 끝자리 ≠ B의 끝자리(마디를 앞당길 수 있는 표기 제외)
+            const minimal = (A, B) => {
+              for (let p = 1; p < B.length; p++) if (B.length % p === 0 && B.slice(0, p).repeat(B.length / p) === B) return false;
+              if (A && A.slice(-1) === B.slice(-1)) return false;
+              return !/^9+$/.test(B) && !/^0+$/.test(B);
+            };
+            const digits = k => Array.from({ length: k }, () => String(rng.int(0, 9))).join('');
+            let I = 0, A = '', B = '';
+            for (let t = 0; t < 100; t++) {
+              if (tier === 'easy') { I = rng.int(0, 2); A = ''; B = String(rng.int(1, 8)); }
+              else if (tier === 'hard') {
+                const form = rng.int(0, 2);
+                if (form === 0) { I = 0; A = digits(1); B = digits(2); }
+                else if (form === 1) { I = rng.int(1, 3); A = ''; B = digits(2); }
+                else { I = 0; A = ''; B = digits(3); }
+              } else if (rng.next() < 0.5) { I = 0; A = ''; B = digits(2); }
+              else { I = 0; A = digits(1); B = String(rng.int(1, 8)); }
+              if (minimal(A, B)) break;
+              I = 0; A = '1'; B = '6';
+            }
+            const disp = `${I}.${A}${B.length === 1 ? B + DOT : B[0] + DOT + B.slice(1, -1) + B.slice(-1) + DOT}`;
+            const den = Number('9'.repeat(B.length) + '0'.repeat(A.length));
+            const whole = Number(`${I}${A}${B}`);
+            const nonRep = Number(`${I}${A}`);
+            const fr = (nu, de) => { const g = gcd(nu, de); return de / g === 1 ? `${nu / g}` : `${nu / g}/${de / g}`; };
+            const correct = fr(whole - nonRep, den);
+            const distractors = [
+              fr(whole, den), // 분자에서 순환하지 않는 부분을 빼지 않음
+              fr(whole, Math.pow(10, A.length + B.length)), // 유한소수처럼 10의 거듭제곱으로 나눔
+              fr(whole - nonRep, Number('9'.repeat(A.length + B.length))), // 분모를 모두 9로 씀
+              fr(Number(B), Number('9'.repeat(B.length))), // 정수 부분·순환하지 않는 부분을 무시
+              fr(whole - nonRep, den * 10),
+              fr(whole - nonRep + 1, den),
+              fr(whole - nonRep - 1, den),
+              fr(whole - nonRep, den + 1)
+            ].filter(x => x.includes('/')); // 정수로 약분되는 보기는 제외
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            const two = `${I}.${A}${B}${B}…`;
+            return {
+              question: `순환소수 ${wj(disp, '을/를')} 기약분수로 나타내면?`,
+              variablesInfo: { 정수부분: I, 순환하지않는부분: A || '없음', 순환마디: B },
+              options,
+              answerIndex,
+              hint: `분모에는 순환마디 숫자 개수(${B.length}개)만큼 9${A ? `, 순환하지 않는 숫자 개수(${A.length}개)만큼 0` : ''}을 씁니다.`,
+              steps: [
+                `${disp} = ${two} 이고, 순환마디는 ${B}입니다.`,
+                `분자는 (전체의 수) − (순환하지 않는 부분의 수) = ${whole} − ${nonRep} = ${whole - nonRep}, 분모는 ${den}입니다.`,
+                `${whole - nonRep}/${den}을 약분하면 ${correct} 입니다.`
+              ]
+            };
+          }
+        },
+        {
+          id: 'MID-20',
+          dayIndex: 19,
+          unit: '중2 · 함수와 함숫값',
+          standardCode: '[9수02-14]',
+          standardName: '함수의 개념을 이해하고, 함숫값을 구할 수 있다.',
+          sourceRef: '중학교 수학 2 교과서 (함수 f(x)의 함숫값)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '양수 하나를 대입한 함숫값', normal: '음수를 포함한 두 함숫값의 합·차', hard: '함숫값 조건으로 미정계수를 구한 뒤 다른 함숫값' },
+          conceptSummary: '함수 y = f(x)에서 x = p일 때의 함숫값 f(p)는 식의 x 자리에 p를 대입한 값입니다. 음수를 대입할 때는 괄호를 씌워 계산합니다.',
+          formula: 'f(x) = ax + b  ⇒  f(p) = ap + b',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const lin = (p, c) => `${signedTerm(p, 'x', true)}${signedTerm(c, '')}`;
+            const nz = (lo, hi) => rng.int(lo, hi) * (rng.next() < 0.5 ? -1 : 1);
+            const f = (a, b, x) => a * x + b;
+            let question, ans, cands, hint, steps, vars;
+            if (tier === 'hard') {
+              const a = nz(2, 6), b = nz(1, 9), x0 = nz(1, 4);
+              let t = nz(1, 6);
+              if (t === x0) t = -t;
+              const y0 = f(a, b, x0);
+              ans = f(a, b, t);
+              const aw = (y0 + b) / x0; // b의 부호를 잘못 옮긴 a
+              question = `일차함수 f(x) = ax ${b < 0 ? '−' : '+'} ${Math.abs(b)} 에서 f(${S(x0)}) = ${S(y0)} 일 때, f(${S(t)})의 값은? (단, a는 상수)`;
+              cands = [Number.isInteger(aw) ? aw * t + b : null, a * t - b, y0, a, -ans, ans + a];
+              hint = `먼저 f(${S(x0)}) = ${S(y0)} 에 x = ${S(x0)}을 대입해 a를 구하세요.`;
+              steps = [
+                `f(${S(x0)}) = a × (${S(x0)}) ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${S(y0)} 이므로 ${S(x0)}a = ${S(y0 - b)}, a = ${S(a)} 입니다.`,
+                `f(x) = ${lin(a, b)} 이므로 f(${S(t)}) = ${S(a)} × (${S(t)}) ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${S(ans)} 입니다.`
+              ];
+              vars = { 상수항: b, 조건x: x0, 조건값: y0, 구할x: t };
+            } else {
+              const a = nz(2, 5), b = tier === 'easy' ? rng.int(-6, 6) : nz(1, 9);
+              if (tier === 'easy') {
+                const p = rng.int(1, 5);
+                ans = f(a, b, p);
+                question = `일차함수 f(x) = ${lin(a, b)} 일 때, f(${p})의 값은?`;
+                cands = [a * p - b, f(a, b, -p), a * p, a + p + b, ans + 1];
+                steps = [`f(${p})는 x에 ${wj(p, '을/를')} 대입한 값입니다.`, `f(${p}) = ${S(a)} × ${p}${signedTerm(b, '')} = ${S(ans)} 입니다.`];
+                vars = { 기울기: a, 상수항: b, 대입값: p };
+              } else {
+                const p = nz(1, 5);
+                let q = nz(1, 5);
+                if (q === p) q = -q;
+                const plus = rng.next() < 0.5;
+                const fp = f(a, b, p), fq = f(a, b, q);
+                ans = plus ? fp + fq : fp - fq;
+                question = `일차함수 f(x) = ${lin(a, b)} 일 때, f(${S(p)}) ${plus ? '+' : '−'} f(${S(q)})의 값은?`;
+                cands = [plus ? fp - fq : fp + fq, plus ? fp + f(a, b, -q) : fp - f(a, b, -q), plus ? a * (p + q) + b : a * (p - q) + b, -ans, ans + 2];
+                steps = [
+                  `f(${S(p)}) = ${S(a)} × (${S(p)})${signedTerm(b, '')} = ${S(fp)} 입니다.`,
+                  `f(${S(q)}) = ${S(a)} × (${S(q)})${signedTerm(b, '')} = ${S(fq)} 입니다.`,
+                  `따라서 (${S(fp)}) ${plus ? '+' : '−'} (${S(fq)}) = ${S(ans)} 입니다.`
+                ];
+                vars = { 기울기: a, 상수항: b, 대입값: `${p}, ${q}` };
+              }
+              hint = '음수를 대입할 때는 괄호를 씌워 곱하세요. 예: 3 × (−2) = −6';
+            }
+            const distractors = [...new Set(cands.filter(x => x !== null && Number.isFinite(x) && x !== ans))].map(S);
+            const { options, answerIndex } = buildChoiceSet(rng, S(ans), distractors.concat([S(ans + 3), S(ans - 3)]));
+            return { question, variablesInfo: vars, options, answerIndex, hint, steps };
+          }
+        },
+        {
+          id: 'MID-21',
+          dayIndex: 20,
+          unit: '중2 · 도형의 닮음 (닮음비)',
+          standardCode: '[9수03-12]',
+          standardName: '도형의 닮음의 뜻과 닮은 도형의 성질을 이해하고, 닮음비를 구할 수 있다.',
+          sourceRef: '중학교 수학 2 교과서 (닮은 도형의 성질과 닮음비)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '닮음비가 주어진 대응변의 길이', normal: '대응변으로 닮음비를 구한 뒤 둘레의 길이', hard: '△ABC ∽ △DEF에서 두 변의 길이를 각각 구해 합' },
+          conceptSummary: '닮은 두 도형에서 대응하는 변의 길이의 비(닮음비)는 일정하며, 둘레의 길이의 비도 닮음비와 같습니다.',
+          formula: '닮음비 m : n  ⇒  (대응변) = (작은 쪽) × n/m,  둘레의 비 = m : n',
+          generate(rng, { tier } = {}) {
+            const RATIOS = [[1, 2], [2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [1, 3], [5, 6], [3, 7], [4, 7]];
+            const [m, n] = rng.pick(RATIOS);
+            const cm = x => `${x} cm`;
+            let question, ans, cands, steps, vars;
+            if (tier === 'easy') {
+              const k = rng.int(2, 6);
+              const s = m * k;
+              ans = n * k;
+              question = `서로 닮은 두 삼각형의 닮음비가 ${m} : ${n}이다. 작은 삼각형의 한 변의 길이가 ${s} cm일 때, 이에 대응하는 큰 삼각형의 변의 길이는?`;
+              cands = [s + n - m, s * n, (s * m) % n === 0 ? s * m / n : null, ans + m];
+              steps = [`닮음비가 ${m} : ${n}이므로 ${s} : x = ${m} : ${n} 입니다.`, `${m}x = ${s * n} 이므로 x = ${ans}(cm)입니다.`];
+              vars = { 닮음비: `${m} : ${n}`, 작은변: `${s}cm` };
+            } else if (tier === 'hard') {
+              let u, w, z;
+              for (let t = 0; t < 50; t++) {
+                u = rng.int(2, 7); w = rng.int(2, 7); z = rng.int(2, 7);
+                const sd = [u, w, z].sort((x, y) => x - y);
+                if (sd[2] < sd[0] + sd[1] && w !== z) break;
+                u = 4; w = 5; z = 6;
+              }
+              const AB = m * u, DE = n * u, BC = m * w, EF = n * w, DF = n * z, AC = m * z;
+              ans = AC + EF;
+              question = `△ABC ∽ △DEF이고 AB = ${AB} cm, BC = ${BC} cm, DE = ${DE} cm, DF = ${DF} cm일 때, AC + EF의 길이는?`;
+              cands = [DF + BC, EF + DF, AC + BC, ans + n];
+              steps = [
+                `대응변 AB와 DE에서 닮음비는 ${AB} : ${DE} = ${m} : ${n} 입니다.`,
+                `EF = BC × ${n}/${m} = ${BC} × ${n}/${m} = ${EF}(cm), AC = DF × ${m}/${n} = ${DF} × ${m}/${n} = ${AC}(cm) 입니다.`,
+                `따라서 AC + EF = ${AC} + ${EF} = ${ans}(cm)입니다.`
+              ];
+              vars = { AB: `${AB}cm`, BC: `${BC}cm`, DE: `${DE}cm`, DF: `${DF}cm` };
+            } else {
+              const u = rng.int(1, 3), w = rng.int(3 * u + 1, 3 * u + 6);
+              const a1 = m * u, a2 = n * u, P = m * w;
+              ans = n * w;
+              question = `서로 닮은 두 사각형에서 대응하는 한 쌍의 변의 길이가 각각 ${a1} cm, ${a2} cm이다. 작은 사각형의 둘레의 길이가 ${P} cm일 때, 큰 사각형의 둘레의 길이는?`;
+              cands = [P + a2 - a1, (P * a1) % a2 === 0 ? P * a1 / a2 : null, P + 4 * (a2 - a1) === ans ? null : P + 4 * (a2 - a1), 4 * a2, ans + n];
+              steps = [
+                `대응변의 길이의 비가 ${a1} : ${a2} = ${m} : ${n}이므로 닮음비는 ${m} : ${n} 입니다.`,
+                `둘레의 길이의 비도 닮음비와 같으므로 ${P} : x = ${m} : ${n} 입니다.`,
+                `${m}x = ${P * n} 이므로 x = ${ans}(cm)입니다.`
+              ];
+              vars = { 작은대응변: `${a1}cm`, 큰대응변: `${a2}cm`, 작은둘레: `${P}cm` };
+            }
+            const distractors = [...new Set(cands.filter(x => x !== null && x > 0 && x !== ans))].map(cm);
+            const { options, answerIndex } = buildChoiceSet(rng, cm(ans), distractors.concat([cm(ans + 1), cm(ans + 2)]));
+            return { question, variablesInfo: vars, options, answerIndex, hint: '닮음비는 대응하는 변끼리의 비입니다. 길이의 차이를 더하는 것이 아니라 비율을 곱해야 합니다.', steps };
+          }
+        },
+        {
+          id: 'MID-22',
+          dayIndex: 21,
+          unit: '중1 · 정수와 유리수의 대소 관계',
+          standardCode: '[9수01-04]',
+          standardName: '정수와 유리수의 대소 관계를 판단할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (수직선과 유리수의 대소 관계)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '음수를 포함한 정수 네 개의 대소', normal: '분수·소수가 섞인 유리수 네 개의 대소', hard: '두 유리수 사이에 있는 정수의 개수' },
+          conceptSummary: '수직선에서 오른쪽에 있는 수가 더 큽니다. 음수끼리는 절댓값이 클수록 작습니다. 분수와 소수는 같은 형태로 바꾸어 비교합니다.',
+          formula: '음수 < 0 < 양수,  음수끼리: 절댓값이 클수록 작다',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            // 유리수 하나를 표기 문자열과 값으로 만든다
+            const mkRat = (allowDec, forceNeg) => {
+              const d0 = rng.pick([2, 3, 4, 5, 6]);
+              let n0 = rng.int(1, 3 * d0);
+              if (n0 % d0 === 0) n0 += 1;
+              const g = gcd(n0, d0), nn = n0 / g, dd = d0 / g;
+              const neg = forceNeg === undefined ? rng.next() < 0.6 : forceNeg;
+              const dec = allowDec && [2, 4, 5].includes(dd) && rng.next() < 0.4;
+              const body = dec ? String(nn / dd) : `${nn}/${dd}`;
+              return { v: (neg ? -1 : 1) * nn / dd, s: (neg ? '−' : '') + body };
+            };
+            if (tier === 'hard') {
+              const lo = mkRat(true, true), hi = mkRat(true, false);
+              const c = Math.floor(hi.v) - Math.ceil(lo.v) + 1;
+              const cands = [c + 1, c - 1, c + 2, c - 2].filter(x => x >= 0);
+              const { options, answerIndex } = buildChoiceSet(rng, `${c}개`, cands.map(x => `${x}개`));
+              const ints = [];
+              for (let k = Math.ceil(lo.v); k <= Math.floor(hi.v); k++) ints.push(S(k));
+              return {
+                question: `두 수 ${lo.s}, ${hi.s} 사이에 있는 정수의 개수는?`,
+                variablesInfo: { 왼쪽: lo.s, 오른쪽: hi.s },
+                options,
+                answerIndex,
+                hint: '각 수가 어느 두 정수 사이에 있는지 먼저 확인하세요. 0도 정수입니다.',
+                steps: [
+                  `${wj(lo.s, '은/는')} ${wj(S(Math.floor(lo.v)), '과/와')} ${S(Math.ceil(lo.v))} 사이, ${wj(hi.s, '은/는')} ${wj(S(Math.floor(hi.v)), '과/와')} ${S(Math.ceil(hi.v))} 사이의 수입니다.`,
+                  `두 수 사이의 정수는 ${ints.join(', ') || '없음'} 으로 ${c}개입니다.`
+                ]
+              };
+            }
+            let items = [];
+            for (let t = 0; t < 100 && items.length < 4; t++) {
+              const it = tier === 'easy'
+                ? (() => { const x = rng.int(-9, 9); return { v: x, s: S(x) }; })()
+                : mkRat(true);
+              if (items.every(o => Math.abs(o.v - it.v) > 1e-9 && o.s !== it.s)) items.push(it);
+            }
+            if (tier === 'easy' && items.filter(o => o.v < 0).length < 2) items = [{ v: -7, s: '−7' }, { v: -2, s: '−2' }, { v: 0, s: '0' }, { v: 3, s: '3' }];
+            const big = rng.next() < 0.5;
+            const target = items.reduce((acc, o) => ((big ? o.v > acc.v : o.v < acc.v) ? o : acc));
+            const others = items.filter(o => o !== target).map(o => o.s);
+            const { options, answerIndex } = buildChoiceSet(rng, target.s, others);
+            const order = items.slice().sort((x, y) => x.v - y.v).map(o => o.s).join(' < ');
+            return {
+              question: `다음 수 중에서 가장 ${big ? '큰' : '작은'} 수는?  [ ${items.map(o => o.s).join(', ')} ]`,
+              variablesInfo: { 수들: items.map(o => o.s).join(', ') },
+              options,
+              answerIndex,
+              hint: '음수끼리는 절댓값이 큰 수가 더 작습니다. 분수는 소수로 바꾸어 비교해 보세요.',
+              steps: [
+                tier === 'easy' ? '수직선 위에 나타내면 오른쪽에 있는 수일수록 큽니다.' : `분수를 소수로 바꾸면 ${items.map(o => `${o.s} = ${S(Math.round(o.v * 100) / 100)}`).join(', ')} (반올림) 입니다.`,
+                `크기순으로 나열하면 ${order} 이므로 가장 ${big ? '큰' : '작은'} 수는 ${target.s} 입니다.`
+              ]
+            };
+          }
+        },
+        {
+          id: 'MID-23',
+          dayIndex: 22,
+          unit: '중1 · 정비례와 반비례',
+          standardCode: '[9수02-07]',
+          standardName: '정비례, 반비례 관계를 이해하고, 그 관계를 표, 식, 그래프로 나타낼 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (정비례 y = ax, 반비례 y = a/x)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '정비례 관계식 y = ax 세우기', normal: '반비례 관계식 y = a/x 세우기(음수 포함)', hard: 'y = ax와 y = b/x 그래프의 교점으로 b 구하기' },
+          conceptSummary: 'y가 x에 정비례하면 y = ax (y/x 일정), 반비례하면 y = a/x (xy 일정)입니다. 두 그래프가 만나는 점은 두 식을 모두 만족합니다.',
+          formula: '정비례: y = ax,  반비례: y = a/x (xy = a)',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const nz = (lo, hi) => rng.int(lo, hi) * (rng.next() < 0.5 ? -1 : 1);
+            let question, ans, cands, steps, vars, hint;
+            if (tier === 'hard') {
+              const a = nz(2, 5), p = nz(1, 4);
+              const qv = a * p;
+              ans = p * qv;
+              question = `정비례 관계 y = ${S(a)}x의 그래프와 반비례 관계 y = b/x의 그래프가 x좌표가 ${S(p)}인 점에서 만날 때, 상수 b의 값은?`;
+              cands = [qv, -ans, a + p, a * p * 2, ans + a];
+              hint = '교점은 두 그래프 위에 모두 있으므로, 먼저 y = ax에서 교점의 y좌표를 구하세요.';
+              steps = [
+                `교점의 x좌표가 ${S(p)}이므로 y = ${S(a)} × (${S(p)}) = ${S(qv)}, 교점은 (${S(p)}, ${S(qv)}) 입니다.`,
+                `이 점이 y = b/x 위에 있으므로 b = xy = (${S(p)}) × (${S(qv)}) = ${S(ans)} 입니다.`
+              ];
+              vars = { 정비례계수: a, 교점x: p };
+            } else if (tier === 'easy') {
+              const k = nz(2, 6), x1 = rng.int(1, 5);
+              let x2 = nz(1, 8);
+              if (x2 === x1) x2 = -x2;
+              const y1 = k * x1;
+              ans = k * x2;
+              question = `y가 x에 정비례하고, x = ${x1}일 때 y = ${S(y1)}이다. x = ${S(x2)}일 때 y의 값은?`;
+              cands = [(x1 * y1) % x2 === 0 ? x1 * y1 / x2 : null, y1 + (x2 - x1), -ans, k];
+              hint = 'y = ax에 주어진 x, y의 값을 대입해 a를 먼저 구하세요.';
+              steps = [`y = ax에 x = ${x1}, y = ${S(y1)}을 대입하면 a = ${S(k)}, 즉 y = ${S(k)}x 입니다.`, `x = ${S(x2)}을 대입하면 y = ${S(k)} × (${S(x2)}) = ${S(ans)} 입니다.`];
+              vars = { x1, y1, x2 };
+            } else {
+              const K = rng.pick([12, 18, 20, 24, 30, 36, 48, 60]) * (rng.next() < 0.5 ? -1 : 1);
+              const divs = [];
+              for (let d = 1; d <= Math.abs(K); d++) if (K % d === 0 && d !== Math.abs(K)) divs.push(d, -d);
+              const x1 = rng.pick(divs);
+              let x2 = rng.pick(divs);
+              if (x2 === x1) x2 = -x1;
+              const y1 = K / x1;
+              ans = K / x2;
+              question = `y가 x에 반비례하고, x = ${S(x1)}일 때 y = ${S(y1)}이다. x = ${S(x2)}일 때 y의 값은?`;
+              cands = [(y1 * x2) % x1 === 0 ? y1 * x2 / x1 : null, -ans, K, y1 - (x2 - x1)];
+              hint = '반비례 관계에서는 xy의 값이 항상 일정합니다.';
+              steps = [`y = a/x에서 a = xy = (${S(x1)}) × (${S(y1)}) = ${S(K)}, 즉 y = ${S(K)}/x 입니다.`, `x = ${S(x2)}을 대입하면 y = ${S(K)} ÷ (${S(x2)}) = ${S(ans)} 입니다.`];
+              vars = { x1, y1, x2 };
+            }
+            const distractors = [...new Set(cands.filter(x => x !== null && Number.isInteger(x) && x !== ans))].map(S);
+            const { options, answerIndex } = buildChoiceSet(rng, S(ans), distractors.concat([S(ans + 1), S(ans - 1)]));
+            return { question, variablesInfo: vars, options, answerIndex, hint, steps };
+          }
+        },
+        {
+          id: 'MID-24',
+          dayIndex: 23,
+          unit: '중1 · 부채꼴의 호의 길이와 넓이',
+          standardCode: '[9수03-06]',
+          standardName: '부채꼴의 중심각과 호의 관계를 이해하고, 이를 이용하여 부채꼴의 호의 길이와 넓이를 구할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (부채꼴의 호의 길이와 넓이)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '반지름·중심각으로 호의 길이', normal: '반지름·중심각으로 넓이', hard: '반지름·호의 길이로 넓이 (S = ½rl)' },
+          conceptSummary: '부채꼴의 호의 길이와 넓이는 중심각의 크기에 정비례합니다. 반지름 r, 중심각 x°이면 호의 길이 l = 2πr × x/360, 넓이 S = πr² × x/360 = ½rl 입니다.',
+          formula: 'l = 2πr × x/360,  S = πr² × x/360 = (1/2)rl',
+          generate(rng, { tier } = {}) {
+            const TH = [30, 40, 45, 60, 72, 80, 90, 100, 120, 135, 144, 150, 160, 200, 240, 270];
+            let r = 6, th = 60;
+            const ok = (rr, tt) => {
+              if (tier === 'easy') return (rr * tt) % 180 === 0 && rr * tt / 180 >= 2;
+              if (tier === 'hard') return (rr * tt) % 180 === 0 && rr * tt / 180 >= 2 && (rr * (rr * tt / 180)) % 2 === 0;
+              return (rr * rr * tt) % 360 === 0 && rr * rr * tt / 360 >= 2;
+            };
+            for (let t = 0; t < 200; t++) {
+              const rr = rng.int(3, 12), tt = rng.pick(TH);
+              if (ok(rr, tt)) { r = rr; th = tt; break; }
+            }
+            const arc = r * th / 180; // π의 계수
+            const area = r * r * th / 360;
+            let question, ans, cands, unit, steps;
+            if (tier === 'easy') {
+              ans = arc; unit = 'cm';
+              question = `반지름의 길이가 ${r} cm이고 중심각의 크기가 ${th}°인 부채꼴의 호의 길이는?`;
+              cands = [area, r * th / 360, 2 * r, arc * 2];
+              steps = [`호의 길이 = 2π × ${r} × ${th}/360 입니다.`, `계산하면 ${arc}π cm 입니다.`];
+            } else if (tier === 'hard') {
+              ans = r * arc / 2; unit = 'cm²';
+              question = `반지름의 길이가 ${r} cm이고 호의 길이가 ${arc}π cm인 부채꼴의 넓이는?`;
+              cands = [r * arc, r * r, (arc * arc) % 2 === 0 ? arc * arc / 2 : null, ans + r];
+              steps = [`반지름 r과 호의 길이 l을 알면 넓이는 S = (1/2)rl 입니다.`, `S = (1/2) × ${r} × ${arc}π = ${ans}π cm² 입니다.`];
+            } else {
+              ans = area; unit = 'cm²';
+              question = `반지름의 길이가 ${r} cm이고 중심각의 크기가 ${th}°인 부채꼴의 넓이는?`;
+              cands = [Number.isInteger(arc) ? arc : null, r * r, area * 2, 2 * r];
+              steps = [`부채꼴의 넓이 = π × ${r}² × ${th}/360 입니다.`, `계산하면 ${r * r} × ${th}/360 = ${area}이므로 ${area}π cm² 입니다.`];
+            }
+            const fmt = x => `${x}π ${unit}`;
+            const distractors = [...new Set(cands.filter(x => x !== null && Number.isInteger(x) && x >= 2 && x !== ans))].map(fmt);
+            const { options, answerIndex } = buildChoiceSet(rng, fmt(ans), distractors.concat([fmt(ans + 2), fmt(ans + 4)]));
+            return {
+              question,
+              variablesInfo: { 반지름: `${r}cm`, 조건: tier === 'hard' ? `호 ${arc}π cm` : `중심각 ${th}°` },
+              options,
+              answerIndex,
+              hint: tier === 'hard' ? '중심각을 몰라도 넓이 = (1/2) × 반지름 × 호의 길이로 구할 수 있습니다.' : '부채꼴은 원의 일부입니다. (원의 둘레 또는 넓이) × (중심각/360)으로 구하세요.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-25',
+          dayIndex: 24,
+          unit: '중2 · 경우의 수',
+          standardCode: '[9수04-05]',
+          standardName: '경우의 수를 구할 수 있다.',
+          sourceRef: '중학교 수학 2 교과서 (합의 법칙과 곱의 법칙, 대표 뽑기)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '곱의 법칙(옷 짝짓기)', normal: '대표 뽑기(자격이 다른 2명 / 같은 2명)', hard: '0이 포함된 카드로 자연수 만들기' },
+          conceptSummary: '두 사건이 동시에(잇달아) 일어나면 곱의 법칙을 씁니다. 자격이 다른 대표는 순서가 있으므로 n(n − 1), 자격이 같은 대표는 순서가 없으므로 n(n − 1)/2입니다. 0은 맨 앞자리에 올 수 없습니다.',
+          formula: '곱의 법칙: m × n,  회장·부회장: n(n − 1),  대표 2명: n(n − 1)/2',
+          generate(rng, { tier } = {}) {
+            const ga = x => `${comma(x)}가지`;
+            let question, ans, cands, steps;
+            if (tier === 'easy') {
+              const a = rng.int(2, 6), b = rng.int(2, 5);
+              ans = a * b;
+              question = `티셔츠 ${a}종류와 바지 ${b}종류가 있다. 티셔츠와 바지를 하나씩 짝지어 입는 방법의 수는?`;
+              cands = [a + b, a * b * 2, a * a, b * b];
+              steps = [`티셔츠를 고르는 방법은 ${a}가지, 그 각각에 대해 바지를 고르는 방법은 ${b}가지입니다.`, `곱의 법칙에 의해 ${a} × ${b} = ${ans}가지입니다.`];
+            } else if (tier === 'hard') {
+              const k = rng.int(3, 9), d = rng.pick([2, 3]);
+              let perm = 1;
+              for (let i = 0; i < d - 1; i++) perm *= (k - i);
+              ans = k * perm;
+              let pk1 = 1; for (let i = 0; i < d; i++) pk1 *= (k + 1 - i);
+              let pk = 1; for (let i = 0; i < d; i++) pk *= (k - i);
+              question = `0부터 ${k}까지의 정수가 하나씩 적힌 ${k + 1}장의 카드 중 ${d}장을 뽑아 만들 수 있는 ${d === 2 ? '두' : '세'} 자리 자연수의 개수는?`;
+              cands = [pk1, pk, Math.pow(k, d), Math.pow(k + 1, d)];
+              steps = [
+                `맨 앞자리에는 0이 올 수 없으므로 1부터 ${k}까지 ${k}가지입니다.`,
+                d === 2 ? `일의 자리에는 맨 앞에 쓴 카드를 뺀 나머지(0 포함) ${k}가지가 옵니다.` : `둘째 자리에는 맨 앞에 쓴 카드를 뺀 나머지(0 포함) ${k}가지, 셋째 자리에는 ${k - 1}가지가 옵니다.`,
+                `따라서 ${d === 2 ? `${k} × ${k}` : `${k} × ${k} × ${k - 1}`} = ${ans}개입니다.`
+              ];
+            } else {
+              const n = rng.int(4, 12);
+              const who = rng.pick(['학생', '후보', '선수', '회원']);
+              if (rng.next() < 0.5) {
+                ans = n * (n - 1);
+                question = `${n}명의 ${who} 중에서 회장 1명, 부회장 1명을 뽑는 경우의 수는?`;
+                cands = [n * (n - 1) / 2, n * n, 2 * n - 1, n * (n - 1) * 2];
+                steps = [`회장을 뽑는 경우는 ${n}가지, 회장을 뺀 나머지 중 부회장을 뽑는 경우는 ${n - 1}가지입니다.`, `자격이 다르므로 순서가 있어 ${n} × ${n - 1} = ${ans}가지입니다.`];
+              } else {
+                ans = n * (n - 1) / 2;
+                question = `${n}명의 ${who} 중에서 대표 2명을 뽑는 경우의 수는?`;
+                cands = [n * (n - 1), n * n, 2 * n - 1, ans + n];
+                steps = [`순서를 생각하여 2명을 뽑으면 ${n} × ${n - 1} = ${n * (n - 1)}가지입니다.`, `대표 2명은 자격이 같아 (A, B)와 (B, A)가 같은 경우이므로 ${n * (n - 1)} ÷ 2 = ${ans}가지입니다.`];
+              }
+            }
+            const unitFmt = tier === 'hard' ? (x => `${comma(x)}개`) : ga;
+            const distractors = [...new Set(cands.filter(x => Number.isInteger(x) && x > 0 && x !== ans))].map(unitFmt);
+            const { options, answerIndex } = buildChoiceSet(rng, unitFmt(ans), distractors.concat([unitFmt(ans + 1), unitFmt(ans + 2)]));
+            return {
+              question,
+              variablesInfo: { 유형: tier === 'easy' ? '곱의 법칙' : tier === 'hard' ? '카드로 자연수 만들기' : '대표 뽑기' },
+              options,
+              answerIndex,
+              hint: tier === 'hard' ? '맨 앞자리에 0이 올 수 없다는 점을 먼저 처리하세요.' : '순서(자격)가 있는지 없는지를 먼저 판단하세요.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-26',
+          dayIndex: 25,
+          unit: '중3 · 제곱근의 뜻과 대소 관계',
+          standardCode: '[9수01-07]',
+          standardName: '제곱근의 뜻과 성질을 알고, 제곱근의 대소 관계를 판단할 수 있다.',
+          sourceRef: '중학교 수학 3 교과서 (제곱근의 뜻과 성질, 대소 관계)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '제곱수의 제곱근(± 두 개)', normal: 'p < √x < q를 만족하는 자연수 x의 개수', hard: '√(an)이 자연수가 되는 가장 작은 n' },
+          conceptSummary: '양수 a의 제곱근은 ±√a 두 개입니다. a, b가 양수일 때 a < b ⇔ √a < √b 이고, √(자연수)가 자연수가 되려면 근호 안의 수가 제곱수여야 합니다.',
+          formula: 'x² = a (a > 0) ⇒ x = ±√a,  0 < a < b ⇔ √a < √b',
+          generate(rng, { tier } = {}) {
+            let question, correct, distractors, steps, hint;
+            if (tier === 'easy') {
+              const n = rng.int(2, 20), N = n * n;
+              question = `${N}의 제곱근을 모두 구하면?`;
+              correct = `±${n}`;
+              distractors = [`${n}`, `−${n}`, `±${N}`];
+              hint = '제곱하여 a가 되는 수가 a의 제곱근입니다. 양수와 음수 두 개가 있습니다.';
+              steps = [`${n}² = ${N}, (−${n})² = ${N} 입니다.`, `따라서 ${N}의 제곱근은 ±${n} 입니다.`];
+            } else if (tier === 'hard') {
+              const s = rng.pick([2, 3, 5, 6, 7, 10, 11, 14, 15]);
+              const m = rng.int(2, 6);
+              const a = s * m * m;
+              question = `√(${a}n)이 자연수가 되도록 하는 가장 작은 자연수 n의 값은?`;
+              correct = `${s}`;
+              distractors = [`${m}`, `${m * m}`, `${a}`, `${2 * s}`].filter(x => x !== correct);
+              hint = `${wj(a, '을/를')} 소인수분해하여 지수가 홀수인 소인수를 찾으세요.`;
+              steps = [
+                `${a} = ${m * m} × ${s} = ${m}² × ${s} 입니다.`,
+                `근호 안이 제곱수가 되려면 ${wj(s, '을/를')} 한 번 더 곱해야 하므로 가장 작은 n = ${s} 입니다.`,
+                `이때 √(${a} × ${s}) = √(${m * s}²) = ${m * s} 입니다.`
+              ];
+            } else {
+              const p = rng.int(1, 9), q = p + rng.int(1, 3);
+              const o1 = rng.next() < 0.5 ? '<' : '≤', o2 = rng.next() < 0.5 ? '<' : '≤';
+              const lo = p * p + (o1 === '<' ? 1 : 0), hi = q * q - (o2 === '<' ? 1 : 0);
+              const c = hi - lo + 1;
+              question = `부등식 ${p} ${o1} √x ${o2} ${wj(q, '을/를')} 만족시키는 자연수 x의 개수는?`;
+              correct = `${c}개`;
+              distractors = [q - p - 1, q * q - p * p, q * q - p * p + 1, q * q - p * p - 1, c + 2]
+                .filter(x => x >= 0 && x !== c).map(x => `${x}개`);
+              hint = '각 변이 모두 양수이므로 각 변을 제곱해도 부등호 방향은 그대로입니다.';
+              steps = [`각 변을 제곱하면 ${p * p} ${o1} x ${o2} ${q * q} 입니다.`, `이를 만족하는 자연수 x는 ${lo}부터 ${hi}까지이므로 ${hi} − ${lo} + 1 = ${c}개입니다.`];
+            }
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            return { question, variablesInfo: { 유형: tier || 'normal' }, options, answerIndex, hint, steps };
+          }
+        },
+        {
+          id: 'MID-27',
+          dayIndex: 26,
+          unit: '중2 · 단항식과 다항식의 곱셈과 나눗셈',
+          standardCode: '[9수02-10]',
+          standardName: '‘(단항식)×(다항식)’, ‘(다항식)÷(단항식)’과 같은 곱셈과 나눗셈의 원리를 이해하고, 그 계산을 할 수 있다.',
+          sourceRef: '중학교 수학 2 교과서 (단항식과 다항식의 곱셈·나눗셈, 전개)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '(단항식) × (다항식) 전개', normal: '(다항식) ÷ (단항식)', hard: '나눗셈과 곱셈이 섞인 식의 동류항 정리' },
+          conceptSummary: '(단항식) × (다항식)은 분배법칙으로 각 항에 곱하고, (다항식) ÷ (단항식)은 다항식의 각 항을 단항식으로 나눕니다. 같은 문자의 곱은 지수를 더하고, 나눗셈은 지수를 뺍니다.',
+          formula: 'kx(ax + b) = kax² + kbx,  (Ax² + Bx) ÷ Cx = (A/C)x + B/C',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const nz = (lo, hi) => rng.int(lo, hi) * (rng.next() < 0.5 ? -1 : 1);
+            const P = terms => { const t = terms.filter(([c]) => c !== 0); return t.length ? t.map(([c, v], i) => signedTerm(c, v, i === 0)).join('') : '0'; };
+            const lin = (p, c) => P([[p, 'x'], [c, '']]);
+            const mono = (k, v) => (k === 1 ? v : k === -1 ? `−${v}` : `${S(k)}${v}`);
+            let expr, correct, distractors, steps, hint;
+            if (tier === 'easy') {
+              const k = nz(2, 5), a = rng.int(1, 5), b = nz(1, 7);
+              expr = `${mono(k, 'x')}(${lin(a, b)})`;
+              correct = P([[k * a, 'x²'], [k * b, 'x']]);
+              distractors = [P([[k * a, 'x²'], [b, 'x']]), P([[k * a, 'x²'], [-k * b, 'x']]), P([[k * a, 'x'], [k * b, '']]), P([[k * a, 'x²'], [k * b, '']])];
+              hint = `${mono(k, 'x')}를 괄호 안의 두 항에 모두 곱하세요. x × x = x² 입니다.`;
+              steps = [`분배법칙으로 ${mono(k, 'x')} × ${mono(a, 'x')} + ${mono(k, 'x')} × (${S(b)}) 로 계산합니다.`, `${mono(k * a, 'x²')}, ${mono(k * b, 'x')} 이므로 ${correct} 입니다.`];
+            } else if (tier === 'hard') {
+              let C, p, q, k, a, b, X2, X1;
+              for (let t = 0; t < 50; t++) {
+                C = rng.int(2, 5); p = nz(1, 5); q = nz(1, 6); k = rng.int(1, 4); a = nz(1, 4); b = nz(1, 6);
+                X2 = p - k * a; X1 = q - k * b;
+                if (X2 !== 0 && X1 !== 0) break;
+                C = 3; p = 3; q = -3; k = 2; a = 1; b = -4; X2 = 1; X1 = 5;
+              }
+              expr = `(${P([[C * p, 'x³'], [C * q, 'x²']])}) ÷ ${C}x − ${k === 1 ? '' : k}x(${lin(a, b)})`;
+              correct = P([[X2, 'x²'], [X1, 'x']]);
+              distractors = [
+                P([[X2, 'x²'], [q + k * b, 'x']]), // 뒤 괄호의 둘째 항 부호를 안 바꿈
+                P([[p + k * a, 'x²'], [q + k * b, 'x']]), // 빼기를 더하기로 계산
+                P([[X2, 'x³'], [X1, 'x²']]), // 나눗셈에서 지수를 빼지 않음
+                P([[X2, 'x²'], [C * q - k * b, 'x']]) // 첫 항만 나눔
+              ];
+              hint = '나눗셈 부분과 곱셈 부분을 각각 먼저 계산한 뒤, 빼기의 부호에 주의하여 동류항끼리 모으세요.';
+              steps = [
+                `(${P([[C * p, 'x³'], [C * q, 'x²']])}) ÷ ${C}x = ${P([[p, 'x²'], [q, 'x']])} 입니다.`,
+                `${k === 1 ? '' : k}x(${lin(a, b)}) = ${P([[k * a, 'x²'], [k * b, 'x']])} 입니다.`,
+                `(${P([[p, 'x²'], [q, 'x']])}) − (${P([[k * a, 'x²'], [k * b, 'x']])}) = ${correct} 입니다.`
+              ];
+            } else {
+              const C = rng.int(2, 6), p = nz(1, 5), q = nz(1, 6);
+              expr = `(${P([[C * p, 'x²'], [C * q, 'x']])}) ÷ ${C}x`;
+              correct = lin(p, q);
+              distractors = [lin(p, C * q), P([[p, 'x²'], [q, 'x']]), lin(p, -q), lin(-p, q)];
+              hint = `다항식의 각 항을 ${C}x로 나누세요. 두 번째 항도 빠뜨리지 마세요.`;
+              steps = [`(${P([[C * p, 'x²'], [C * q, 'x']])}) ÷ ${C}x = ${mono(C * p, 'x²')}/${C}x ${C * q < 0 ? '−' : '+'} ${mono(Math.abs(C * q), 'x')}/${C}x 입니다.`, `각각 계산하면 ${correct} 입니다.`];
+            }
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            return { question: `다음 식을 간단히 하면?  [ ${expr} ]`, variablesInfo: { 식: expr }, options, answerIndex, hint, steps };
+          }
+        },
+        {
+          id: 'MID-28',
+          dayIndex: 27,
+          unit: '중1 · 입체도형의 겉넓이와 부피',
+          standardCode: '[9수03-08]',
+          standardName: '입체도형의 겉넓이와 부피를 구할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (원기둥·원뿔의 겉넓이와 부피)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '원기둥의 부피', normal: '원뿔의 부피(1/3 곱하기)', hard: '원뿔의 겉넓이(밑넓이 + 옆넓이)' },
+          conceptSummary: '원기둥의 부피는 (밑넓이) × (높이) = πr²h, 원뿔의 부피는 그 1/3인 (1/3)πr²h입니다. 원뿔의 겉넓이는 밑넓이 πr²와 옆넓이 πrl(l은 모선의 길이)의 합입니다.',
+          formula: '원기둥 V = πr²h,  원뿔 V = (1/3)πr²h,  원뿔 겉넓이 = πr² + πrl',
+          generate(rng, { tier } = {}) {
+            const r = rng.int(2, 8);
+            let question, ans, cands, unit, steps;
+            if (tier === 'easy') {
+              const h = rng.int(3, 10);
+              ans = r * r * h; unit = 'cm³';
+              question = `밑면의 반지름의 길이가 ${r} cm, 높이가 ${h} cm인 원기둥의 부피는?`;
+              cands = [2 * r * h, r * h, (r * r * h) % 3 === 0 ? r * r * h / 3 : null, 4 * r * r * h];
+              steps = [`밑넓이는 π × ${r}² = ${r * r}π cm² 입니다.`, `부피는 (밑넓이) × (높이) = ${r * r}π × ${h} = ${ans}π cm³ 입니다.`];
+            } else if (tier === 'hard') {
+              const l = r + rng.int(1, 8);
+              ans = r * r + r * l; unit = 'cm²';
+              question = `밑면의 반지름의 길이가 ${r} cm, 모선의 길이가 ${l} cm인 원뿔의 겉넓이는?`;
+              cands = [r * l, r * r + 2 * r * l, r * r + l * l, 2 * r * r + r * l];
+              steps = [`밑넓이는 π × ${r}² = ${r * r}π cm² 입니다.`, `옆넓이는 π × (반지름) × (모선) = π × ${r} × ${l} = ${r * l}π cm² 입니다.`, `겉넓이는 ${r * r}π + ${r * l}π = ${ans}π cm² 입니다.`];
+            } else {
+              let h = rng.int(2, 12);
+              if ((r * r * h) % 3 !== 0) h = 3 * rng.int(1, 4);
+              ans = r * r * h / 3; unit = 'cm³';
+              question = `밑면의 반지름의 길이가 ${r} cm, 높이가 ${h} cm인 원뿔의 부피는?`;
+              cands = [r * r * h, r * h, 2 * r * r * h / 3, 4 * r * r * h / 3];
+              steps = [`원뿔의 부피는 같은 밑면·높이의 원기둥 부피의 1/3입니다.`, `(1/3) × π × ${r}² × ${h} = (1/3) × ${r * r * h}π = ${ans}π cm³ 입니다.`];
+            }
+            const fmt = x => `${comma(x)}π ${unit}`;
+            const distractors = [...new Set(cands.filter(x => x !== null && Number.isInteger(x) && x !== ans))].map(fmt);
+            const { options, answerIndex } = buildChoiceSet(rng, fmt(ans), distractors.concat([fmt(ans + r), fmt(ans + 2 * r)]));
+            return {
+              question,
+              variablesInfo: { 반지름: `${r}cm`, 입체: tier === 'easy' ? '원기둥' : '원뿔' },
+              options,
+              answerIndex,
+              hint: tier === 'hard' ? '원뿔의 전개도는 밑면(원)과 옆면(부채꼴)으로 이루어집니다. 옆넓이는 πrl 입니다.' : '부피 = (밑넓이) × (높이)이고, 뿔은 기둥의 1/3입니다.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-29',
+          dayIndex: 28,
+          unit: '중1 · 상대도수',
+          standardCode: '[9수04-03]',
+          standardName: '상대도수를 구하고, 상대도수의 분포를 표나 그래프로 나타내고 해석할 수 있다.',
+          sourceRef: '중학교 수학 1 교과서 (상대도수와 그 분포)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '도수 ÷ 전체 도수로 상대도수', normal: '상대도수 × 전체 도수로 도수', hard: '두 계급의 상대도수와 도수의 합으로 전체 도수' },
+          conceptSummary: '(상대도수) = (그 계급의 도수) ÷ (전체 도수)이고, 상대도수의 총합은 1입니다. 따라서 (도수) = (상대도수) × (전체 도수)입니다.',
+          formula: '상대도수 = 도수 / 전체 도수,  도수 = 상대도수 × 전체 도수',
+          generate(rng, { tier } = {}) {
+            const dec = x => String(Math.round(x * 100) / 100);
+            let question, correct, cands, steps;
+            if (tier === 'hard') {
+              let r1 = 15, r2 = 25, T = 40;
+              for (let t = 0; t < 100; t++) {
+                const a = 5 * rng.int(1, 8), b = 5 * rng.int(1, 8), TT = 20 * rng.int(1, 10);
+                if (a !== b && a + b <= 60 && (TT * a) % 100 === 0 && (TT * b) % 100 === 0) { r1 = a; r2 = b; T = TT; break; }
+              }
+              const F = T * (r1 + r2) / 100;
+              question = `어떤 도수분포표에서 상대도수가 각각 ${dec(r1 / 100)}, ${dec(r2 / 100)}인 두 계급의 도수의 합이 ${F}일 때, 전체 도수는?`;
+              correct = `${T}`;
+              cands = [F * (r1 + r2) / 100, F * 100 / r1, F * 100 / r2, F + r1 + r2, T * 2];
+              steps = [
+                `두 계급의 상대도수의 합은 ${dec(r1 / 100)} + ${dec(r2 / 100)} = ${dec((r1 + r2) / 100)} 입니다.`,
+                `(도수의 합) = (상대도수의 합) × (전체 도수)이므로 전체 도수 = ${F} ÷ ${dec((r1 + r2) / 100)} = ${T} 입니다.`
+              ];
+            } else {
+              const T = rng.pick([20, 25, 40, 50, 80, 100]);
+              let f = rng.int(2, Math.floor(T * 0.45));
+              while ((f * 100) % T !== 0) f += 1;
+              const rel = f / T;
+              if (tier === 'easy') {
+                question = `전체 도수가 ${T}인 도수분포표에서 도수가 ${f}인 계급의 상대도수는?`;
+                correct = dec(rel);
+                cands = [f / 100, 1 - rel, rel * 10 <= 1 ? rel * 10 : rel / 10, rel + 0.1];
+                steps = [`(상대도수) = (그 계급의 도수) ÷ (전체 도수) 입니다.`, `${f} ÷ ${T} = ${dec(rel)} 입니다.`];
+              } else {
+                question = `전체 도수가 ${T}인 도수분포표에서 상대도수가 ${dec(rel)}인 계급의 도수는?`;
+                correct = `${f}`;
+                cands = [Math.round(rel * 100), T - f, Math.round(rel * 10), f + 2];
+                steps = [`(도수) = (상대도수) × (전체 도수) 입니다.`, `${dec(rel)} × ${T} = ${f} 입니다.`];
+              }
+            }
+            const two = x => Math.abs(x * 100 - Math.round(x * 100)) < 1e-9; // 소수 둘째 자리까지 깔끔한 값만
+            const distractors = [...new Set(cands.filter(x => Number.isFinite(x) && x > 0 && two(x)).map(dec))].filter(x => x !== correct);
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors.concat([dec(Number(correct) * 2), dec(Number(correct) + 1)]));
+            return {
+              question,
+              variablesInfo: { 유형: tier === 'easy' ? '상대도수' : tier === 'hard' ? '전체 도수' : '도수' },
+              options,
+              answerIndex,
+              hint: '상대도수 = (도수) ÷ (전체 도수) 관계식 하나로 세 값 중 어느 것이든 구할 수 있습니다.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-30',
+          dayIndex: 29,
+          unit: '중3 · 근호를 포함한 식의 계산',
+          standardCode: '[9수01-10]',
+          standardName: '근호를 포함한 식의 사칙 계산의 원리를 이해하고, 그 계산을 할 수 있다.',
+          sourceRef: '중학교 수학 3 교과서 (제곱근의 덧셈과 뺄셈, 분모의 유리화)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '근호 안이 같은 수의 덧셈·뺄셈', normal: '√(a²b) = a√b로 바꾼 뒤 덧셈·뺄셈', hard: '분모의 유리화가 섞인 세 항의 계산' },
+          conceptSummary: '근호 안의 수가 같은 것끼리만 더하고 뺄 수 있습니다(m√a + n√a = (m + n)√a). 근호 안의 제곱인수는 √(a²b) = a√b로 밖으로 꺼내고, 분모의 근호는 유리화합니다.',
+          formula: 'm√a ± n√a = (m ± n)√a,  √(a²b) = a√b,  c/√a = c√a/a',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const k = rng.pick([2, 3, 5, 6, 7]);
+            const rt = (c, kk = k) => (c === 1 ? `√${kk}` : c === -1 ? `−√${kk}` : `${S(c)}√${kk}`);
+            let expr, c, cands, steps;
+            if (tier === 'easy') {
+              const a = rng.int(2, 9);
+              let b = rng.int(2, 9);
+              const plus = rng.next() < 0.5;
+              if (!plus && Math.abs(a - b) < 2) b = a + 2 + rng.int(0, 3);
+              c = plus ? a + b : a - b;
+              expr = `${a}√${k} ${plus ? '+' : '−'} ${b}√${k}`;
+              cands = [plus ? a - b : a + b, a * b, -c];
+              steps = [`근호 안의 수가 ${k}로 같으므로 계수끼리 계산합니다.`, `(${a} ${plus ? '+' : '−'} ${b})√${k} = ${rt(c)} 입니다.`];
+            } else if (tier === 'hard') {
+              let a, m, b, s1, s2;
+              for (let t = 0; t < 50; t++) {
+                a = rng.int(2, 5); m = rng.int(1, 4); b = rng.int(1, 6); s1 = rng.next() < 0.5 ? 1 : -1; s2 = rng.next() < 0.5 ? 1 : -1;
+                c = a - s1 * m + s2 * b;
+                if (Math.abs(c) >= 2) break;
+                a = 4; m = 2; b = 3; s1 = 1; s2 = 1; c = 5;
+              }
+              expr = `√${a * a * k} ${s1 > 0 ? '−' : '+'} ${m * k}/√${k} ${s2 > 0 ? '+' : '−'} ${b === 1 ? '' : b}√${k}`;
+              const wrong = a - s1 * m * k + s2 * b; // 분모를 유리화하지 않고 분자를 그대로 계수로
+              cands = [wrong, a + s1 * m + s2 * b, a - s1 * m - s2 * b, -c];
+              steps = [
+                `√${a * a * k} = √(${a}² × ${k}) = ${a}√${k} 입니다.`,
+                `${m * k}/√${k} = ${m * k}√${k}/${k} = ${rt(m)} 입니다.`,
+                `따라서 ${a}√${k} ${s1 > 0 ? '−' : '+'} ${rt(m)} ${s2 > 0 ? '+' : '−'} ${rt(b)} = ${rt(c)} 입니다.`
+              ];
+            } else {
+              const a = rng.int(2, 5);
+              let b = rng.int(2, 5);
+              const plus = rng.next() < 0.6;
+              if (b === a) b = a === 5 ? 2 : a + 1;
+              if (!plus && Math.abs(a - b) < 2) b = a >= 4 ? a - 2 : a + 2;
+              c = plus ? a + b : a - b;
+              expr = `√${a * a * k} ${plus ? '+' : '−'} √${b * b * k}`;
+              cands = [plus ? a - b : a + b, a * b, -c];
+              steps = [`√${a * a * k} = ${a}√${k}, √${b * b * k} = ${b}√${k} 입니다.`, `(${a} ${plus ? '+' : '−'} ${b})√${k} = ${rt(c)} 입니다.`];
+            }
+            const correct = rt(c);
+            const distractors = [...new Set(cands.filter(x => Math.abs(x) >= 2 && x !== c))].map(x => rt(x))
+              .concat([rt(c, k === 2 ? 3 : 2), rt(c + 1), rt(c + 2)]); // 근호 안 착오, 계수 착오
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            return {
+              question: `다음 식을 계산하면?  [ ${expr} ]`,
+              variablesInfo: { 근호안: k, 식: expr },
+              options,
+              answerIndex,
+              hint: '근호 안을 가장 작은 자연수로 만든 다음, 근호 안의 수가 같은 것끼리 계수를 계산하세요.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-31',
+          dayIndex: 30,
+          unit: '중2 · 일차함수와 연립일차방정식',
+          standardCode: '[9수02-18]',
+          standardName: '두 일차함수의 그래프와 연립일차방정식의 관계를 설명할 수 있다.',
+          sourceRef: '중학교 수학 2 교과서 (두 그래프의 교점과 연립방정식의 해)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '기울기 1과 −1인 두 직선의 교점', normal: '일반적인 두 일차함수 그래프의 교점', hard: '교점의 x좌표로 미지의 y절편 k 구하기' },
+          conceptSummary: '두 일차함수의 그래프의 교점의 좌표는 두 식을 연립한 연립일차방정식의 해와 같습니다.',
+          formula: 'y = ax + b, y = cx + d의 교점: ax + b = cx + d를 푼 x와 그때의 y',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const lin = (p, c) => `${signedTerm(p, 'x', true)}${signedTerm(c, '')}`;
+            const nz = (lo, hi) => rng.int(lo, hi) * (rng.next() < 0.5 ? -1 : 1);
+            const pt = (x, y) => `(${S(x)}, ${S(y)})`;
+            if (tier === 'hard') {
+              const a = nz(1, 4);
+              let c = nz(1, 4);
+              if (c === a) c = -a;
+              const b = nz(1, 8), x0 = nz(1, 5);
+              const y0 = a * x0 + b, k = y0 - c * x0;
+              const cands = [y0, y0 + c * x0, (a + c) * x0 + b, -k, k + 1].filter(x => x !== k);
+              const { options, answerIndex } = buildChoiceSet(rng, S(k), [...new Set(cands)].map(S).concat([S(k + 2), S(k - 2)]));
+              return {
+                question: `두 일차함수 y = ${lin(a, b)}, y = ${signedTerm(c, 'x', true)} + k의 그래프의 교점의 x좌표가 ${S(x0)}일 때, 상수 k의 값은?`,
+                variablesInfo: { 직선1: `y = ${lin(a, b)}`, 직선2기울기: c, 교점x: x0 },
+                options,
+                answerIndex,
+                hint: '교점은 두 그래프 위에 모두 있습니다. 먼저 첫 번째 식에서 교점의 y좌표를 구하세요.',
+                steps: [
+                  `x = ${S(x0)}을 y = ${lin(a, b)}에 대입하면 y = ${S(y0)}, 교점은 ${pt(x0, y0)} 입니다.`,
+                  `이 점이 y = ${signedTerm(c, 'x', true)} + k 위에 있으므로 ${S(y0)} = ${S(c)} × (${S(x0)}) + k 입니다.`,
+                  `따라서 k = ${S(y0)} − (${S(c * x0)}) = ${S(k)} 입니다.`
+                ]
+              };
+            }
+            let a, c;
+            const x0 = tier === 'easy' ? rng.int(1, 5) : nz(1, 5);
+            const y0 = tier === 'easy' ? rng.int(1, 8) : nz(1, 9);
+            if (tier === 'easy') { a = 1; c = -1; } else { a = nz(1, 4); c = nz(1, 4); if (c === a) c = -a; }
+            const b = y0 - a * x0, d = y0 - c * x0;
+            const correct = pt(x0, y0);
+            const distractors = [pt(y0, x0), pt(-x0, y0), pt(x0, -y0), pt(x0 + 1, y0 + a), pt(x0, y0 + 1)];
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            return {
+              question: `두 일차함수 y = ${lin(a, b)}, y = ${lin(c, d)}의 그래프의 교점의 좌표는?`,
+              variablesInfo: { 직선1: `y = ${lin(a, b)}`, 직선2: `y = ${lin(c, d)}` },
+              options,
+              answerIndex,
+              hint: '두 식의 y가 같아지는 x를 구하세요. 즉 연립방정식의 해가 교점입니다.',
+              steps: [
+                `${lin(a, b)} = ${lin(c, d)} 에서 ${S(a - c)}x = ${S(d - b)} 이므로 x = ${S(x0)} 입니다.`,
+                `x = ${S(x0)}을 y = ${lin(a, b)}에 대입하면 y = ${S(y0)} 입니다.`,
+                `따라서 교점의 좌표는 ${correct} 입니다.`
+              ]
+            };
+          }
+        },
+        {
+          id: 'MID-32',
+          dayIndex: 31,
+          unit: '중2 · 삼각형의 외심과 내심',
+          standardCode: '[9수03-10]',
+          standardName: '삼각형의 외심과 내심의 성질을 이해하고 정당화할 수 있다.',
+          sourceRef: '중학교 수학 2 교과서 (삼각형의 외심·내심과 각의 크기)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '외심: ∠BOC = 2∠A', normal: '내심: ∠BIC = 90° + ∠A/2', hard: '내심 조건으로 ∠A를 구한 뒤 외심의 ∠BOC' },
+          conceptSummary: '외심 O는 세 꼭짓점에서 같은 거리에 있어 ∠BOC = 2∠A (∠A가 예각)이고, 내심 I는 세 내각의 이등분선의 교점이라 ∠BIC = 90° + (1/2)∠A 입니다.',
+          formula: '외심: ∠BOC = 2∠A,  내심: ∠BIC = 90° + ∠A/2',
+          generate(rng, { tier } = {}) {
+            const dg = x => `${x}°`;
+            let question, ans, cands, steps;
+            if (tier === 'easy') {
+              const A = 2 * rng.int(15, 44);
+              ans = 2 * A;
+              question = `삼각형 ABC의 외심을 O라 하자. ∠A = ${A}°일 때, ∠BOC의 크기는? (단, ∠A는 예각)`;
+              cands = [A, 180 - A, A / 2, 90 + A / 2, 180 - 2 * A];
+              steps = [`외심 O는 삼각형의 외접원의 중심이고, ∠BAC는 호 BC에 대한 원주각, ∠BOC는 중심각입니다.`, `따라서 ∠BOC = 2∠A = 2 × ${A}° = ${ans}° 입니다.`];
+            } else if (tier === 'hard') {
+              const t = rng.int(100, 134);
+              const A = 2 * (t - 90);
+              ans = 2 * A;
+              question = `삼각형 ABC의 내심을 I, 외심을 O라 하자. ∠BIC = ${t}°일 때, ∠BOC의 크기는? (단, ∠A는 예각)`;
+              cands = [A, t, 180 - A, 360 - 2 * t];
+              steps = [
+                `내심의 성질에서 ∠BIC = 90° + (1/2)∠A 이므로 ${t}° = 90° + (1/2)∠A, ∠A = ${A}° 입니다.`,
+                `외심의 성질에서 ∠BOC = 2∠A = 2 × ${A}° = ${ans}° 입니다.`
+              ];
+            } else {
+              const A = 2 * rng.int(15, 50);
+              ans = 90 + A / 2;
+              question = `삼각형 ABC의 내심을 I라 하자. ∠A = ${A}°일 때, ∠BIC의 크기는?`;
+              cands = [2 * A, 90 - A / 2, 180 - A, 90 + A];
+              steps = [
+                `∠B + ∠C = 180° − ${A}° = ${180 - A}° 이고, 내심은 각의 이등분선의 교점이므로 ∠IBC + ∠ICB = ${(180 - A) / 2}° 입니다.`,
+                `따라서 ∠BIC = 180° − ${(180 - A) / 2}° = ${ans}° 입니다.`
+              ];
+            }
+            const distractors = [...new Set(cands.filter(x => Number.isInteger(x) && x > 0 && x < 360 && x !== ans))].map(dg);
+            const { options, answerIndex } = buildChoiceSet(rng, dg(ans), distractors.concat([dg(ans + 10), dg(ans - 10)]));
+            return {
+              question,
+              variablesInfo: { 중심: tier === 'easy' ? '외심' : tier === 'hard' ? '내심·외심' : '내심' },
+              options,
+              answerIndex,
+              hint: '외심은 수직이등분선의 교점(꼭짓점까지 거리 같음), 내심은 각의 이등분선의 교점(변까지 거리 같음)입니다.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-33',
+          dayIndex: 32,
+          unit: '중3 · 분산과 표준편차',
+          standardCode: '[9수04-07]',
+          standardName: '분산과 표준편차를 구하고 자료의 분포를 설명할 수 있다.',
+          sourceRef: '중학교 수학 3 교과서 (산포도 - 편차, 분산, 표준편차)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '편차가 주어졌을 때 분산', normal: '자료에서 평균·편차를 구한 뒤 분산', hard: '평균 조건으로 미지의 값 x를 구한 뒤 분산' },
+          conceptSummary: '편차는 (자료) − (평균)이고, 편차의 합은 항상 0입니다. 분산은 편차의 제곱의 평균이고, 표준편차는 분산의 음이 아닌 제곱근입니다.',
+          formula: '분산 = (편차)²의 합 ÷ (자료의 개수),  표준편차 = √분산',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const dec = x => S(Math.round(x * 100) / 100);
+            const n = tier === 'hard' ? rng.pick([4, 5]) : 5;
+            let dev = [];
+            for (let t = 0; t < 100; t++) {
+              dev = Array.from({ length: n - 1 }, () => rng.int(-4, 4));
+              const last = -dev.reduce((x, y) => x + y, 0);
+              if (Math.abs(last) <= 5 && dev.concat([last]).some(x => x !== 0)) { dev.push(last); break; }
+              dev = [-2, 0, 3, -1, 0].slice(0, n);
+              if (n === 4) dev = [-2, 3, 1, -2];
+            }
+            const ss = dev.reduce((x, y) => x + y * y, 0);
+            const ans = ss / n;
+            const m = rng.int(5, 15);
+            const data = dev.map(d => m + d);
+            let question, cands, steps;
+            if (tier === 'easy') {
+              question = `어떤 자료의 편차가 다음과 같을 때, 분산은?  [ ${dev.map(S).join(', ')} ]`;
+              cands = [ss, dev.reduce((x, y) => x + Math.abs(y), 0) / n, ss / (n - 1)];
+              steps = [`편차의 제곱의 합은 ${dev.map(d => `(${S(d)})²`).join(' + ')} = ${ss} 입니다.`, `분산은 ${ss} ÷ ${n} = ${dec(ans)} 입니다.`];
+            } else if (tier === 'hard') {
+              const idx = rng.int(0, n - 1);
+              const shown = data.map((x, i) => (i === idx ? 'x' : String(x)));
+              const others = data.filter((_, i) => i !== idx);
+              const mu2 = others.reduce((x, y) => x + y, 0) / others.length;
+              const varOthers = others.reduce((x, y) => x + (y - mu2) * (y - mu2), 0) / others.length;
+              question = `다음 자료의 평균이 ${m}일 때, 분산은?  [ ${shown.join(', ')} ]`;
+              cands = [ss, varOthers, ss / (n - 1), data[idx]];
+              steps = [
+                `평균이 ${m}이므로 (자료의 합) = ${m} × ${n} = ${m * n}, x = ${m * n} − ${others.reduce((x, y) => x + y, 0)} = ${data[idx]} 입니다.`,
+                `편차는 ${dev.map(S).join(', ')} 이고, 편차의 제곱의 합은 ${ss} 입니다.`,
+                `분산은 ${ss} ÷ ${n} = ${dec(ans)} 입니다.`
+              ];
+            } else {
+              question = `다음 자료의 분산은?  [ ${data.join(', ')} ]`;
+              cands = [ss, m, ss / (n - 1), dev.reduce((x, y) => x + Math.abs(y), 0) / n];
+              steps = [
+                `평균은 (${data.join(' + ')}) ÷ ${n} = ${m} 입니다.`,
+                `편차는 ${dev.map(S).join(', ')} 이고, 편차의 제곱의 합은 ${ss} 입니다.`,
+                `분산은 ${ss} ÷ ${n} = ${dec(ans)} 입니다.`
+              ];
+            }
+            const correct = dec(ans);
+            const two = x => Math.abs(x * 100 - Math.round(x * 100)) < 1e-9; // 소수 둘째 자리까지 깔끔한 값만
+            const distractors = [...new Set(cands.filter(x => Number.isFinite(x) && x >= 0 && two(x)).map(dec))].filter(x => x !== correct);
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors.concat([dec(ans + 1), dec(ans + 2)]));
+            return {
+              question,
+              variablesInfo: { 자료수: n, 자료: tier === 'easy' ? '편차로 주어짐' : '지문 참조' },
+              options,
+              answerIndex,
+              hint: '분산은 편차를 제곱해서 평균을 낸 값입니다. 자료의 개수로 나누는 것을 잊지 마세요.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-34',
+          dayIndex: 33,
+          unit: '중3 · 이차방정식',
+          standardCode: '[9수02-20]',
+          standardName: '이차방정식을 풀 수 있고, 이를 활용하여 문제를 해결할 수 있다.',
+          sourceRef: '중학교 수학 3 교과서 (인수분해와 근의 공식을 이용한 이차방정식의 풀이)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '(x − a)(x − b) = 0 꼴', normal: '인수분해해서 푸는 x² + px + q = 0', hard: '근의 공식(짝수 공식)으로 무리수 근' },
+          conceptSummary: 'AB = 0이면 A = 0 또는 B = 0입니다. 인수분해가 되지 않으면 근의 공식 x = (−b ± √(b² − 4ac))/2a, 일차항 계수가 짝수(b = 2b′)이면 x = −b′ ± √(b′² − c) (a = 1)를 씁니다.',
+          formula: '(x − α)(x − β) = 0 ⇒ x = α 또는 x = β,  x² + 2b′x + c = 0 ⇒ x = −b′ ± √(b′² − c)',
+          generate(rng, { tier } = {}) {
+            const S = n => (n < 0 ? `−${-n}` : `${n}`);
+            const nz = (lo, hi) => rng.int(lo, hi) * (rng.next() < 0.5 ? -1 : 1);
+            const fac = r => (r > 0 ? `(x − ${r})` : `(x + ${-r})`);
+            if (tier === 'hard') {
+              const p = nz(1, 6), r = rng.pick([2, 3, 5, 6, 7, 10, 11, 13]);
+              const b = -2 * p, c = p * p - r;
+              const poly = `x²${signedTerm(b, 'x')}${signedTerm(c, '')}`;
+              const correct = `x = ${S(p)} ± √${r}`;
+              const distractors = [`x = ${S(-p)} ± √${r}`, `x = ${S(p)} ± √${4 * r}`, `x = ${S(p)} ± ${r}`, `x = ${S(2 * p)} ± √${r}`];
+              const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+              return {
+                question: `이차방정식 ${poly} = 0 의 해는?`,
+                variablesInfo: { 일차항계수: b, 상수항: c },
+                options,
+                answerIndex,
+                hint: '일차항의 계수가 짝수이면 짝수 공식 x = −b′ ± √(b′² − ac)를 쓰면 계산이 간단합니다.',
+                steps: [
+                  `x² ${b < 0 ? '−' : '+'} 2 × ${Math.abs(p)}x ${c < 0 ? '−' : '+'} ${Math.abs(c)} = 0 에서 b′ = ${S(-p)} 입니다.`,
+                  `x = −(${S(-p)}) ± √((${S(-p)})² − (${S(c)})) = ${S(p)} ± √${r} 입니다.`
+                ]
+              };
+            }
+            let r1, r2;
+            for (let t = 0; t < 50; t++) {
+              r1 = nz(1, tier === 'easy' ? 7 : 9); r2 = nz(1, tier === 'easy' ? 7 : 9);
+              if (Math.abs(r1) !== Math.abs(r2) && (tier === 'easy' || r1 + r2 !== 0)) break;
+              r1 = 3; r2 = -5;
+            }
+            const sol = (x, y) => `x = ${S(x)} 또는 x = ${S(y)}`;
+            const lhs = tier === 'easy' ? `${fac(r1)}${fac(r2)}` : `x²${signedTerm(-(r1 + r2), 'x')}${signedTerm(r1 * r2, '')}`;
+            const correct = sol(r1, r2);
+            const distractors = [sol(-r1, -r2), sol(r1, -r2), sol(-r1, r2)];
+            const { options, answerIndex } = buildChoiceSet(rng, correct, distractors);
+            const steps = tier === 'easy'
+              ? [`AB = 0이면 A = 0 또는 B = 0 입니다.`, `${fac(r1).slice(1, -1)} = 0 또는 ${fac(r2).slice(1, -1)} = 0 이므로 ${correct} 입니다.`]
+              : [`곱이 ${S(r1 * r2)}, 합이 ${S(-(r1 + r2))}인 두 정수는 ${S(-r1)}, ${S(-r2)} 입니다.`, `인수분해하면 ${fac(r1)}${fac(r2)} = 0 입니다.`, `따라서 ${correct} 입니다.`];
+            return {
+              question: `이차방정식 ${lhs} = 0 의 해는?`,
+              variablesInfo: { 식: `${lhs} = 0` },
+              options,
+              answerIndex,
+              hint: '(x − a) = 0 이면 x = a 입니다. 괄호 안의 부호와 해의 부호가 반대라는 점에 주의하세요.',
+              steps
+            };
+          }
+        },
+        {
+          id: 'MID-35',
+          dayIndex: 34,
+          unit: '중3 · 원주각의 성질',
+          standardCode: '[9수03-19]',
+          standardName: '원주각의 성질을 이해하고 정당화할 수 있다.',
+          sourceRef: '중학교 수학 3 교과서 (원주각과 중심각의 관계)',
+          difficulty: '★★☆ 표준',
+          tierGuide: { easy: '중심각으로 원주각 구하기', normal: '지름에 대한 원주각(90°) 활용', hard: '이등변삼각형 OAB와 짧은 호 위의 원주각' },
+          conceptSummary: '한 호에 대한 원주각의 크기는 그 호에 대한 중심각의 크기의 1/2입니다. 반원(지름)에 대한 원주각은 90°입니다.',
+          formula: '(원주각) = (1/2) × (중심각),  지름에 대한 원주각 = 90°',
+          generate(rng, { tier } = {}) {
+            const dg = x => `${x}°`;
+            let question, ans, cands, steps;
+            if (tier === 'easy') {
+              const th = 2 * rng.int(20, 85);
+              ans = th / 2;
+              question = `원 O에서 호 AB에 대한 중심각 ∠AOB의 크기가 ${th}°일 때, 호 AB에 대한 원주각 ∠APB의 크기는?`;
+              cands = [th, 2 * th, 180 - th / 2, 180 - th];
+              steps = [`원주각의 크기는 같은 호에 대한 중심각의 크기의 1/2입니다.`, `∠APB = (1/2) × ${th}° = ${ans}° 입니다.`];
+            } else if (tier === 'hard') {
+              const x = rng.int(15, 70);
+              ans = 90 + x;
+              question = `원 O 위의 두 점 A, B에 대하여 ∠OAB = ${x}°이다. 점 P가 두 호 AB 중 짧은 호 위의 점일 때, ∠APB의 크기는?`;
+              cands = [90 - x, 180 - 2 * x, 2 * x, 180 - x];
+              steps = [
+                `OA = OB(반지름)이므로 △OAB는 이등변삼각형이고 ∠AOB = 180° − 2 × ${x}° = ${180 - 2 * x}° 입니다.`,
+                `점 P가 짧은 호 위에 있으므로 ∠APB는 긴 호 AB에 대한 원주각이고, 그 중심각은 360° − ${180 - 2 * x}° = ${180 + 2 * x}° 입니다.`,
+                `따라서 ∠APB = (1/2) × ${180 + 2 * x}° = ${ans}° 입니다.`
+              ];
+            } else {
+              const x = rng.int(20, 70);
+              ans = 90 - x;
+              question = `선분 AB가 원 O의 지름이고 점 C는 원 위의 점이다. ∠CAB = ${x}°이면 ∠ABC의 크기는?`;
+              cands = [x, 180 - 2 * x, 90 + x, 2 * x, 180 - x];
+              steps = [`지름 AB에 대한 원주각이므로 ∠ACB = 90° 입니다.`, `삼각형 ABC에서 ∠ABC = 180° − 90° − ${x}° = ${ans}° 입니다.`];
+            }
+            const distractors = [...new Set(cands.filter(x => Number.isInteger(x) && x > 0 && x < 360 && x !== ans))].map(dg);
+            const { options, answerIndex } = buildChoiceSet(rng, dg(ans), distractors.concat([dg(ans + 10), dg(ans + 20)]));
+            return {
+              question,
+              variablesInfo: { 유형: tier === 'easy' ? '중심각' : tier === 'hard' ? '이등변삼각형' : '지름' },
+              options,
+              answerIndex,
+              hint: '원주각은 같은 호에 대한 중심각의 절반입니다. 지름에 대한 원주각은 항상 90°입니다.',
+              steps
             };
           }
         }
